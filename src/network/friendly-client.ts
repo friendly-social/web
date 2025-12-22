@@ -34,13 +34,14 @@ export class FriendlyClientImpl implements FriendlyClient {
         });
     }
 
-    setAuthToken(token: string | null) {
+    setAuthToken(token: string | null, userId: string | null) {
         this.authToken = token;
         if (token) {
-            this.client.defaults.headers.common['Authorization'] =
-                `Bearer ${token}`;
+            this.client.defaults.headers.common['X-User-Id'] = userId;
+            this.client.defaults.headers.common['X-Token'] = token;
         } else {
-            delete this.client.defaults.headers.common['Authorization'];
+            delete this.client.defaults.headers.common['X-User-Id'];
+            delete this.client.defaults.headers.common['X-Token'];
         }
     }
 
