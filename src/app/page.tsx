@@ -14,6 +14,9 @@ export default function Home() {
             avatar: null,
         });
         console.log(auth);
+        client.setAuthToken(auth.token, auth.id.toString());
+        const details = await client.getUserDetails();
+        console.log(details);
     };
 
     useEffect(() => {
