@@ -1,6 +1,7 @@
 import axios, {AxiosInstance} from 'axios';
 
 export interface FriendlyClient {
+    setAuthToken(token: string | null, userId: string | null): void;
     generateAccount(
         request: GenerateAccountRequest,
     ): Promise<GenerateAccountResponse>;
