@@ -20,6 +20,8 @@
     "@fontsource/roboto": "^5.2.9",
     "@mui/icons-material": "^7.3.6",
     "@mui/material": "^7.3.6",
+    "@mui/material-nextjs": "^7.3.6",
+    "@mui/system": "^7.3.6",
     "axios": "^1.13.2",
     "lucide": "^0.556.0",
     "lucide-react": "^0.556.0",

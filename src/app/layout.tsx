@@ -4,8 +4,8 @@ import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
-import {ThemeProvider} from '@/components/theme-provider';
 import {Suspense} from 'react';
+import {RootContainer} from '@/components/root-container';
 
 export const metadata: Metadata = {
     title: 'Friendly Web',
@@ -28,14 +28,7 @@ export default function RootLayout({
             </head>
             <body>
                 <Suspense>
-                    <ThemeProvider
-                        attribute="class"
-                        defaultTheme="system"
-                        enableSystem
-                        disableTransitionOnChange
-                    >
-                        {children}
-                    </ThemeProvider>
+                    <RootContainer>{children}</RootContainer>
                 </Suspense>
             </body>
         </html>
