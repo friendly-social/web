@@ -6,17 +6,9 @@ import {
     UserDetailsResponse,
 } from '@/network/friendly-client';
 import {useEffect, useState} from 'react';
-import {
-    Alert,
-    AppBar,
-    Avatar,
-    Button,
-    Chip,
-    IconButton,
-    Toolbar,
-    Typography,
-} from '@mui/material';
-import {CheckIcon, MenuIcon} from 'lucide-react';
+import {Badge} from '@/components/base/badges/badges';
+import {Avatar} from '@/components/base/avatar/avatar';
+import {QRCode} from '@/components/shared-assets/qr-code';
 
 const client: FriendlyClient = new FriendlyClientImpl();
 
@@ -24,7 +16,6 @@ export default function Home() {
     const [userDetails, setUserDetails] = useState<UserDetailsResponse | null>(
         null,
     );
-    const [isShowAlert, setIsShowAlert] = useState(false);
 
     const loadData = async () => {
         const auth = await client.generateAccount({
@@ -39,7 +30,6 @@ export default function Home() {
         console.log(details);
 
         setUserDetails(details);
-        setIsShowAlert(true);
     };
 
     useEffect(() => {
@@ -47,48 +37,34 @@ export default function Home() {
     }, []);
     return (
         <div className="flex flex-col">
-            <AppBar position="static">
-                <Toolbar>
-                    <IconButton
-                        size="large"
-                        edge="start"
-                        color="inherit"
-                        aria-label="menu"
-                        sx={{mr: 2}}
-                    >
-                        <MenuIcon />
-                    </IconButton>
-                    <Typography variant="h6" component="div" sx={{flexGrow: 1}}>
-                        Friendly
-                    </Typography>
-                    <Button color="inherit">Log out</Button>
-                </Toolbar>
-            </AppBar>
-            <Alert
-                hidden={!isShowAlert}
-                icon={<CheckIcon fontSize="inherit" />}
-                severity="success"
-                className="m-2"
-                onClose={() => {
-                    setIsShowAlert(false);
-                }}
-            >
-                New account successfully registered.
-            </Alert>
             <>
                 <div
                     className="flex flex-col gap-2 p-2 items-center pt-8"
                     hidden={userDetails === null}
                 >
-                    <Avatar>{userDetails?.nickname.toString()[0]}</Avatar>
+                    <Avatar
+                        size="md"
+                        initials={userDetails?.nickname
+                            .toString()[0]
+                            .toUpperCase()}
+                        alt={userDetails?.nickname.toString()}
+                    />
                     <p>{userDetails?.nickname}</p>
                     <p>{userDetails?.description}</p>
                     <h3>Interests:</h3>
                     <div className="flex flex-row gap-2">
                         {userDetails?.interests.map(interest => (
-                            <Chip label={interest} key={interest} />
+                            <Badge
+                                type="pill-color"
+                                color="brand"
+                                size="sm"
+                                key={interest}
+                            >
+                                {interest}
+                            </Badge>
                         ))}
                     </div>
+                    <QRCode value="https://github.com/kotleni" size="lg" />
                 </div>
             </>
         </div>
