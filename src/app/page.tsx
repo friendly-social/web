@@ -68,6 +68,7 @@ export default function Home() {
                 hidden={!isShowAlert}
                 icon={<CheckIcon fontSize="inherit" />}
                 severity="success"
+                className="m-2"
                 onClose={() => {
                     setIsShowAlert(false);
                 }}
