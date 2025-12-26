@@ -8,13 +8,21 @@
     "build": "next build",
     "start": "next start",
     "format": "eslint --fix '**/*.ts*'",
-    "lint" : "eslint '**/*.ts*'"
+    "lint": "eslint '**/*.ts*'"
   },
   "engines": {
     "node": ">=21.0.0",
     "pnpm": ">=10.12.0"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@fontsource/roboto": "^5.2.9",
+    "@mui/icons-material": "^7.3.6",
+    "@mui/material": "^7.3.6",
+    "@mui/material-nextjs": "^7.3.6",
+    "@mui/system": "^7.3.6",
+    "axios": "^1.13.2",
     "lucide": "^0.556.0",
     "lucide-react": "^0.556.0",
     "next": "16.0.7",
@@ -24,19 +32,19 @@
     "react-dom": "^19.2.1"
   },
   "devDependencies": {
-    "typescript": "^5.9.3",
     "@eslint/eslintrc": "^3.3.3",
     "@eslint/js": "^9.39.1",
-    "eslint": "9.39.1",
-    "eslint-config-prettier": "10.1.8",
-    "eslint-plugin-n": "17.23.1",
-    "eslint-plugin-prettier": "5.5.4",
-    "@typescript-eslint/parser": "^8.48.1",
+    "@tailwindcss/postcss": "^4.1.17",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@typescript-eslint/eslint-plugin": "^8.48.1",
-    "@tailwindcss/postcss": "^4.1.17",
-    "tailwindcss": "^4.1.17"
+    "@typescript-eslint/parser": "^8.48.1",
+    "eslint": "9.39.1",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-n": "17.23.1",
+    "eslint-plugin-prettier": "5.5.4",
+    "tailwindcss": "^4.1.17",
+    "typescript": "^5.9.3"
   }
 }
