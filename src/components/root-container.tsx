@@ -17,8 +17,10 @@ const theme = createTheme(themeOptions);
 export function RootContainer({children}: {children: React.ReactNode}) {
     return (
         <AppRouterCacheProvider>
-            <CssBaseline />
-            <ThemeProvider theme={theme}>{children}</ThemeProvider>
+            <ThemeProvider theme={theme}>
+                <CssBaseline />
+                {children}
+            </ThemeProvider>
         </AppRouterCacheProvider>
     );
 }
