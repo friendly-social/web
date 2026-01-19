@@ -18,8 +18,8 @@ importers:
         specifier: ^1.2.4
         version: 1.2.4(@types/react@19.2.7)(react@19.2.1)
       '@untitledui/icons':
-        specifier: ^0.0.19
-        version: 0.0.19(react@19.2.1)
+        specifier: ^0.0.20
+        version: 0.0.20(react@19.2.1)
       axios:
         specifier: ^1.13.2
         version: 1.13.2
@@ -1262,8 +1262,8 @@ packages:
     resolution: {integrity: sha512-BmxxndzEWhE4TIEEMBs8lP3MBWN3jFPs/p6gPm/wkv02o41hI6cq9AuSmGAaTTHPtA1FTi2jBre4A9rm5ZmX+Q==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@untitledui/icons@0.0.19':
-    resolution: {integrity: sha512-cZA7BBE5+piNpzO9CiXypbmGYSDqnT3WwHn6/TU7cUuYl7oUlwIn0AwW/kYDDkmJMPu/wRlnJDR1/OiXd4nqew==}
+  '@untitledui/icons@0.0.20':
+    resolution: {integrity: sha512-2PSt7BNERp0oeB75GCjFrEPfGrngDZdGtRDrx+HCpQzXGDKZhOP9EcSQ0lcWXfe0iqTWAiDt/1B4sXqI1WSmjg==}
     peerDependencies:
       react: '>= 16'
 
@@ -1771,6 +1771,7 @@ packages:
   next@16.0.7:
     resolution: {integrity: sha512-3mBRJyPxT4LOxAJI6IsXeFtKfiJUbjCLgvXO02fV8Wy/lIhPvP94Fe7dGhUgHXcQy4sSuYwQNcOLhIfOm0rL0A==}
     engines: {node: '>=20.9.0'}
+    deprecated: This version has a security vulnerability. Please upgrade to a patched version. See https://nextjs.org/blog/security-update-2025-12-11 for more details.
     hasBin: true
     peerDependencies:
       '@opentelemetry/api': ^1.1.0
@@ -3573,7 +3574,7 @@ snapshots:
       '@typescript-eslint/types': 8.48.1
       eslint-visitor-keys: 4.2.1
 
-  '@untitledui/icons@0.0.19(react@19.2.1)':
+  '@untitledui/icons@0.0.20(react@19.2.1)':
     dependencies:
       react: 19.2.1
 
