@@ -4,15 +4,15 @@ import {Badge} from '@/components/ui/badge';
 import {Separator} from '@/components/ui/separator';
 import {Activity} from 'lucide-react';
 import Link from 'next/link';
-import {redirect} from 'next/navigation';
 import {BackendService, formatNetworkError} from '@/services/backend-service';
 import {createFriendInviteLink} from '@/lib/utils';
 import {FriendCard} from './friend-card';
 import {QrCodeCard} from '@/app/qr-core-card';
 import {getTranslations} from 'next-intl/server';
-import {CookiesAsync} from '@/lib/cookies-async';
 import {ProfileHeader} from '@/app/profile-header';
 import {DiscoveryFeedBlock} from '@/app/discovery-feed-block';
+import {requireAuthentication} from '@/lib/auth';
+import {requirePassedBlockingQr} from '@/lib/blocking-qr';
 
 async function InterestsBlock({interests}: {interests: string[]}) {
     const t = await getTranslations('profile');
@@ -65,22 +65,19 @@ async function FriendsBlock({friends}: {friends: UserDetails[]}) {
 }
 
 export default async function Home() {
+    await requireAuthentication();
+    await requirePassedBlockingQr();
+
     const t = await getTranslations('profile');
     const backend: BackendService = new BackendService(
         new FriendlyClientImpl(),
     );
 
+    await backend.restoreAuthorizationIfPossible();
+
     const userResult = await backend.getUserDetails();
     const inviteTokenResult = await backend.generateFriendInvitationToken();
     const networkDetailsResult = await backend.getNetworkDetails();
-
-    if (!backend.restoreAuthorizationIsPossible()) {
-        redirect('/signIn');
-    }
-
-    if (CookiesAsync.get('blocking-qr-completed') === 'true') {
-        redirect('/blocking-qr');
-    }
 
     // TODO: Handle errors
     if (!userResult.ok || !inviteTokenResult.ok || !networkDetailsResult.ok) {
@@ -114,7 +111,7 @@ export default async function Home() {
             <div className="mx-auto md:p-8 md:pt-8 max-w-5xl">
                 <div className="bg-white dark:bg-zinc-950 md:rounded-xl md:border md:border-zinc-200 dark:md:border-zinc-800 min-h-[calc(100vh-64px)] md:min-h-0 overflow-hidden transition-colors">
                     <div className="flex flex-col gap-2 pb-12">
-                        <ProfileHeader />
+                        <ProfileHeader userDetails={user} />
                         <Separator className="dark:bg-zinc-800" />
 
                         <div className="flex flex-col md:flex-row gap-8">

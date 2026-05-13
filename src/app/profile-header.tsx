@@ -1,7 +1,6 @@
 'use client';
 
 import {useTranslations} from 'next-intl';
-import {useAppContext} from '@/app.context';
 import {createFileLink} from '@/lib/utils';
 import {EditProfileDialog} from '@/app/edit/dialog';
 import {Avatar, AvatarFallback, AvatarImage} from '@/components/ui/avatar';
@@ -9,11 +8,15 @@ import {Button} from '@/components/ui/button';
 import {LogOut, Pencil} from 'lucide-react';
 import Link from 'next/link';
 import {useCallback, useState} from 'react';
+import {UserDetails} from '@/types/user-details';
+import {useAppContext} from '@/app.context';
 
-export function ProfileHeader() {
+export function ProfileHeader({userDetails}: {userDetails: UserDetails}) {
     const t = useTranslations('profile');
-    const app = useAppContext();
-    const userDetails = app.userDetails;
+
+    // HAX: ??????
+    const appContext = useAppContext();
+    appContext.setUserDetails(userDetails);
 
     const avatarUrl = userDetails?.avatar
         ? createFileLink(userDetails.avatar)

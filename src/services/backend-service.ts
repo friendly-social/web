@@ -10,8 +10,7 @@ import {
 } from '@/network/friendly-client';
 import {NetworkError} from '@/network/errors';
 import {err, ok, Result} from '@/network/result';
-import {CookiesAsync} from '@/lib/cookies-async';
-import {Cookies} from '@/lib/cookies';
+import {clearAuthorization, getAuthorization, saveAuthorization} from '@/lib/storage';
 
 // FIXME: this is not localized
 export function formatNetworkError(error: NetworkError): string {
@@ -43,33 +42,23 @@ export class BackendService {
      *
      * @returns true if auth restored successfully.
      */
-    restoreAuthorizationIsPossible(): boolean {
-        const userId = CookiesAsync.get('userId');
-        const authToken = CookiesAsync.get('token');
+    async restoreAuthorizationIfPossible(): Promise<boolean> {
+        const authorization = await getAuthorization();
 
-        if (!userId || !authToken) return false;
+        if (!authorization) return false;
 
-        this.client.setAuthToken(authToken, userId);
+        this.client.setAuthToken(authorization.token, authorization.userId);
         return true;
     }
 
-    storeAuthorization(token: string, userId: string) {
+    async storeAuthorization(token: string, userId: string) {
         this.client.setAuthToken(token, userId);
-
-        CookiesAsync.set('userId', userId);
-        CookiesAsync.set('token', token);
+        await saveAuthorization(token, userId);
     }
 
-    clearAuthorization() {
+    async clearAuthorization() {
         this.client.setAuthToken(null, null);
-
-        if (typeof window === 'undefined') {
-            void CookiesAsync.remove('userId');
-            void CookiesAsync.remove('token');
-        } else {
-            Cookies.remove('userId');
-            Cookies.remove('token');
-        }
+        await clearAuthorization();
     }
 
     async getUserDetails(): Promise<Result<UserDetails, NetworkError>> {

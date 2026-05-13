@@ -12,7 +12,7 @@ import {
 import {Field, FieldError, FieldLabel} from '@/components/ui/field';
 import {useTranslations} from 'next-intl';
 import {Button} from '@/components/ui/button';
-import {CookiesAsync} from '@/lib/cookies-async';
+import {setBlockingQrCompleted} from '@/lib/storage';
 
 export function BlockingQR(): ReactNode {
     const t = useTranslations('blocking-qr');
@@ -50,7 +50,7 @@ export function BlockingQR(): ReactNode {
             if (result.data.type === 'FriendTokenExpired') return;
             linkExpired = false;
 
-            CookiesAsync.set('blocking-qr-completed', 'true');
+            await setBlockingQrCompleted(true);
         } finally {
             setLoading(false);
             if (!linkValid) {

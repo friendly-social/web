@@ -26,21 +26,21 @@ export function SessionProvider({children}: {children: React.ReactNode}) {
     const backend = useBackend();
     const [status, setStatus] = useState<SessionStatus>('loading');
 
-    const refresh = useCallback(() => {
-        const ok = backend.restoreAuthorizationIsPossible();
+    const refresh = useCallback(async () => {
+        const ok = await backend.restoreAuthorizationIfPossible();
         setStatus(ok ? 'authed' : 'guest');
     }, [backend]);
 
     const setAuthed = useCallback(() => setStatus('authed'), []);
 
-    const logOut = useCallback(() => {
-        backend.clearAuthorization();
+    const logOut = useCallback(async () => {
+        await backend.clearAuthorization();
         setStatus('guest');
     }, [backend]);
 
     useEffect(() => {
-        refresh();
-    }, [refresh]);
+        void refresh();
+    }, []);
 
     const value = useMemo(
         () => ({

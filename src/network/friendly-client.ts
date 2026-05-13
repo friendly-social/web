@@ -70,7 +70,7 @@ export class FriendlyClientImpl implements FriendlyClient {
 
                     return err({
                         type: 'unknown',
-                        message: `status=${e.response.status}`,
+                        message: `status=${e.response.status},message=${e.response?.data}`,
                     });
                 }
 

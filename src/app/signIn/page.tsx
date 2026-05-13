@@ -70,7 +70,7 @@ export default function SignInPage() {
         );
         setLoading(false);
         if (result.ok) {
-            backend.storeAuthorization(
+            await backend.storeAuthorization(
                 result.data.token,
                 result.data.id.toString(),
             );

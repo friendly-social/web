@@ -1,7 +1,9 @@
-import {getTranslations} from 'next-intl/server';
+'use client';
 
-export async function FeedEmptyState() {
-    const t = await getTranslations('profile.feed');
+import {useTranslations} from 'next-intl';
+
+export function FeedEmptyState() {
+    const t = useTranslations('profile.feed');
 
     return (
         <div className="flex min-h-64 flex-col items-center justify-center rounded-xl border border-dashed border-zinc-200 bg-zinc-50 px-6 text-center dark:border-zinc-800 dark:bg-zinc-900/40">
