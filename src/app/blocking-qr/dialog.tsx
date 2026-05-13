@@ -1,5 +1,5 @@
 import * as Dialog from '@radix-ui/react-dialog';
-import {useEffect, useState, ReactNode} from 'react';
+import {useState, ReactNode} from 'react';
 import {toast} from 'sonner';
 import {Link, HatGlasses} from 'lucide-react';
 import {useBackend} from '@/backend.context';
@@ -12,48 +12,9 @@ import {
 import {Field, FieldError, FieldLabel} from '@/components/ui/field';
 import {useTranslations} from 'next-intl';
 import {Button} from '@/components/ui/button';
+import {CookiesAsync} from '@/lib/cookies-async';
 
-export interface BlockingQRController {
-    shouldBlock: boolean;
-    setShouldBlock(value: boolean): void;
-}
-
-export function useBlockingQR(): BlockingQRController {
-    // Hi, Hacker Bro:
-    //
-    // 1) Yes, it's a client-side thing
-    // 2) Yes, you can just fork this repo, write a browser extension or modify localStorage
-    // 3) Yes, it's how it works on all platforms
-    //
-    // But the thing is that we don't care. To start gaining any benefit from
-    // the app you must be a part of master network. It's very hard to start a
-    // new network right away. You can do it, we encourage you to do that if
-    // you want, but it's not a task for an average user.
-    //
-    // Also, it's not reset when you log out from the app, so it's for first-time users only.
-    //
-    // Note for developers:
-    //
-    // * We will need to migrate to cookies instead of localStorage for SSR
-    const [shouldBlock, setShouldBlock] = useState(
-        () => localStorage.getItem('blocking-qr-completed') !== 'true',
-    );
-    useEffect(() => {
-        localStorage.setItem('blocking-qr-completed', `${!shouldBlock}`);
-    }, [shouldBlock]);
-    return {
-        shouldBlock,
-        setShouldBlock,
-    };
-}
-
-export interface BlockingQRProps {
-    controller: BlockingQRController;
-}
-
-export function BlockingQR({
-    controller: {setShouldBlock},
-}: BlockingQRProps): ReactNode {
+export function BlockingQR(): ReactNode {
     const t = useTranslations('blocking-qr');
     const [loading, setLoading] = useState(false);
     const [link, setLink] = useState('');
@@ -88,7 +49,8 @@ export function BlockingQR({
             resultSuccess = true;
             if (result.data.type === 'FriendTokenExpired') return;
             linkExpired = false;
-            setShouldBlock(false);
+
+            CookiesAsync.set('blocking-qr-completed', 'true');
         } finally {
             setLoading(false);
             if (!linkValid) {

@@ -1,15 +1,7 @@
-'use client';
+import {redirect} from 'next/navigation';
+import {CookiesAsync} from '@/lib/cookies-async';
 
-import {useEffect, ReactNode} from 'react';
-import {useRouter} from 'next/navigation';
-
-export default function Bypass(): ReactNode {
-    const router = useRouter();
-
-    useEffect(() => {
-        localStorage.setItem('blocking-qr-completed', 'true');
-        router.push('/');
-    }, []);
-
-    return;
+export default async function Bypass() {
+    await CookiesAsync.set('blocking-qr-completed', 'true');
+    redirect('/');
 }
