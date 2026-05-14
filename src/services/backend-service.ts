@@ -10,7 +10,11 @@ import {
 } from '@/network/friendly-client';
 import {NetworkError} from '@/network/errors';
 import {err, ok, Result} from '@/network/result';
-import {clearAuthorization, getAuthorization, saveAuthorization} from '@/lib/storage';
+import {
+    clearAuthorization,
+    getAuthorization,
+    saveAuthorization,
+} from '@/lib/storage';
 
 // FIXME: this is not localized
 export function formatNetworkError(error: NetworkError): string {

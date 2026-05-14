@@ -1,5 +1,4 @@
 import {useUserValidator, ValidateUserResult} from './user-validation';
-import {useAppContext} from '@/app.context';
 import * as Dialog from '@radix-ui/react-dialog';
 import {MutableAvatarContent} from '@/components/mutable-avatar';
 import {UsersEditRequest} from '@/network/friendly-client';
@@ -18,7 +17,6 @@ import {ReactNode, useState} from 'react';
 import {useTranslations} from 'next-intl';
 import {Button} from '@/components/ui/button';
 import {UserDetails} from '@/types/user-details';
-import {redirect} from 'next/navigation';
 
 interface EditProfileProps {
     userDetails: UserDetails;
