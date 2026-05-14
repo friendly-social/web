@@ -73,9 +73,12 @@ export default async function Home() {
 
     await backend.restoreAuthorizationIfPossible();
 
-    const userResult = await backend.getUserDetails();
-    const inviteTokenResult = await backend.generateFriendInvitationToken();
-    const networkDetailsResult = await backend.getNetworkDetails();
+    const [userResult, inviteTokenResult, networkDetailsResult] =
+        await Promise.all([
+            backend.getUserDetails(),
+            backend.generateFriendInvitationToken(),
+            backend.getNetworkDetails(),
+        ]);
 
     // TODO: Handle errors
     if (!userResult.ok || !inviteTokenResult.ok || !networkDetailsResult.ok) {
