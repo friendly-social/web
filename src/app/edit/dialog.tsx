@@ -17,8 +17,11 @@ import {Field, FieldError, FieldGroup, FieldLabel} from '@/components/ui/field';
 import {ReactNode, useState} from 'react';
 import {useTranslations} from 'next-intl';
 import {Button} from '@/components/ui/button';
+import {UserDetails} from '@/types/user-details';
+import {redirect} from 'next/navigation';
 
 interface EditProfileProps {
+    userDetails: UserDetails;
     open: boolean;
     setOpen: (value: boolean) => void;
 }
@@ -26,13 +29,11 @@ interface EditProfileProps {
 // TODO:
 // * use https://github.com/arvind-iyer-2001/zepto-chip/tree/master/src/components for interests
 export function EditProfileDialog({
+    userDetails,
     open,
     setOpen,
 }: EditProfileProps): ReactNode {
     const t = useTranslations('edit_profile_dialog');
-    const app = useAppContext();
-
-    const userDetails = app.requireUser();
 
     const [loading, setLoading] = useState(false);
     const [avatarLoading, setAvatarLoading] = useState(false);
@@ -85,7 +86,7 @@ export function EditProfileDialog({
         setLoading(false);
         if (result.ok) {
             setOpen(false);
-            app.setUserDetails({...userDetails, ...validated});
+            document.location.reload();
         } else {
             toast.error(t('error-connection'));
         }

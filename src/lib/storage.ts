@@ -11,6 +11,10 @@ export interface Authorization {
     token: string;
 }
 
+export async function clearStorage(): Promise<void> {
+    await CookiesAsync.clear();
+}
+
 export async function getAuthorization(): Promise<Authorization | undefined> {
     const userId = await CookiesAsync.get(KEYS.USER_ID);
     const token = await CookiesAsync.get(KEYS.TOKEN);

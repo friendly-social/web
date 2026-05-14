@@ -1,6 +1,5 @@
 import type {Metadata} from 'next';
 import './globals.css';
-import {AppContextProvider} from '@/app.context';
 import {Suspense} from 'react';
 import {Toaster} from '@/components/ui/sonner';
 import {RootContainer} from '@/components/root-container';
@@ -40,14 +39,12 @@ export default function RootLayout({
                     <BackendProvider>
                         <SessionProvider>
                             <QueryProvider>
-                                <AppContextProvider>
-                                    <IntlProvider>
-                                        <RootContainer>
-                                            {children}
-                                            <Toaster richColors />
-                                        </RootContainer>
-                                    </IntlProvider>
-                                </AppContextProvider>
+                                <IntlProvider>
+                                    <RootContainer>
+                                        {children}
+                                        <Toaster richColors />
+                                    </RootContainer>
+                                </IntlProvider>
                             </QueryProvider>
                         </SessionProvider>
                     </BackendProvider>

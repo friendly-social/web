@@ -54,4 +54,31 @@ export const CookiesAsync = {
             'expires=Thu, 01 Jan 1970 00:00:00 UTC; ' +
             'path=/;';
     },
+
+    clear: async (): Promise<void> => {
+        if (typeof window === 'undefined') {
+            const {cookies} = await import('next/headers');
+            const cookieStore = await cookies();
+            const allCookies = cookieStore.getAll();
+
+            for (const cookie of allCookies) {
+                cookieStore.delete(cookie.name);
+            }
+            return;
+        }
+
+        const cookies = document.cookie.split(';');
+
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i];
+            const eqPos = cookie.indexOf('=');
+            const name =
+                eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim();
+
+            document.cookie =
+                `${name}=; ` +
+                'expires=Thu, 01 Jan 1970 00:00:00 UTC; ' +
+                'path=/;';
+        }
+    },
 };

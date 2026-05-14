@@ -7,28 +7,27 @@ import {Avatar, AvatarFallback, AvatarImage} from '@/components/ui/avatar';
 import {Button} from '@/components/ui/button';
 import {LogOut, Pencil} from 'lucide-react';
 import Link from 'next/link';
-import {useCallback, useState} from 'react';
+import {useState} from 'react';
 import {UserDetails} from '@/types/user-details';
-import {useAppContext} from '@/app.context';
 
 export function ProfileHeader({userDetails}: {userDetails: UserDetails}) {
     const t = useTranslations('profile');
-
-    // HAX: ??????
-    const appContext = useAppContext();
-    appContext.setUserDetails(userDetails);
 
     const avatarUrl = userDetails?.avatar
         ? createFileLink(userDetails.avatar)
         : '';
 
     const [openEdit, setOpenEdit] = useState(false);
-    const onEditClick = useCallback(() => setOpenEdit(true), [setOpenEdit]);
+    const onEditClick = () => setOpenEdit(true);
 
     return (
         <div className="flex flex-row gap-6 w-full p-8">
             {userDetails && (
-                <EditProfileDialog open={openEdit} setOpen={setOpenEdit} />
+                <EditProfileDialog
+                    userDetails={userDetails}
+                    open={openEdit}
+                    setOpen={setOpenEdit}
+                />
             )}
             <Avatar className="w-24 h-24 border-2 border-white dark:border-zinc-800 shadow-sm">
                 <AvatarImage src={avatarUrl} />
