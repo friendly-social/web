@@ -1,19 +1,16 @@
 'use client';
 
-import {createContext, useContext, useMemo} from 'react';
+import {createContext, useContext} from 'react';
 import {BackendService} from '@/services/backend-service';
-import {FriendlyClient, FriendlyClientImpl} from '@/network/friendly-client';
+import {getBackend} from '@/lib/backend';
 
 const BackendContext = createContext<BackendService | null>(null);
 
 export function BackendProvider({children}: {children: React.ReactNode}) {
-    const service = useMemo(() => {
-        const client: FriendlyClient = new FriendlyClientImpl();
-        return new BackendService(client);
-    }, []);
+    const backend = getBackend();
 
     return (
-        <BackendContext.Provider value={service}>
+        <BackendContext.Provider value={backend}>
             {children}
         </BackendContext.Provider>
     );

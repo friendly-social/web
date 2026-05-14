@@ -1,6 +1,6 @@
 import type {Metadata} from 'next';
 import './globals.css';
-import {Suspense} from 'react';
+import {ReactNode, Suspense} from 'react';
 import {Toaster} from '@/components/ui/sonner';
 import {RootContainer} from '@/components/root-container';
 import {BackendProvider} from '@/backend.context';
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 export default function RootLayout({
     children,
 }: Readonly<{
-    children: React.ReactNode;
+    children: ReactNode;
 }>) {
     const locale = useLocale();
 
@@ -33,6 +33,7 @@ export default function RootLayout({
                 <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
                 <meta name="apple-mobile-web-app-title" content="Friendly" />
                 <meta name="apple-mobile-web-app-capable" content="yes" />
+                <title>Friendly Web</title>
             </head>
             <body className="bg-[#fafafa]">
                 <Suspense>

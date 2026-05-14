@@ -1,10 +1,9 @@
 import {UserDetails} from '@/types/user-details';
-import {FriendlyClientImpl} from '@/network/friendly-client';
 import {Badge} from '@/components/ui/badge';
 import {Separator} from '@/components/ui/separator';
 import {Activity} from 'lucide-react';
 import Link from 'next/link';
-import {BackendService, formatNetworkError} from '@/services/backend-service';
+import {formatNetworkError} from '@/services/backend-service';
 import {createFriendInviteLink} from '@/lib/utils';
 import {FriendCard} from './friend-card';
 import {QrCodeCard} from '@/app/qr-core-card';
@@ -13,6 +12,7 @@ import {ProfileHeader} from '@/app/profile-header';
 import {DiscoveryFeedBlock} from '@/app/discovery-feed-block';
 import {requireAuthentication} from '@/lib/auth';
 import {requirePassedBlockingQr} from '@/lib/blocking-qr';
+import {getBackend} from '@/lib/backend';
 
 async function InterestsBlock({interests}: {interests: string[]}) {
     const t = await getTranslations('profile');
@@ -69,9 +69,7 @@ export default async function Home() {
     await requirePassedBlockingQr();
 
     const t = await getTranslations('profile');
-    const backend: BackendService = new BackendService(
-        new FriendlyClientImpl(),
-    );
+    const backend = getBackend();
 
     await backend.restoreAuthorizationIfPossible();
 
