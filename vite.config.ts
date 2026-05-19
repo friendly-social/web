@@ -2,6 +2,7 @@ import {defineConfig, type Plugin} from 'vite';
 import react from '@vitejs/plugin-react';
 import manifest from './package.json';
 import {execFileSync} from 'child_process';
+import { VitePWA } from 'vite-plugin-pwa';
 
 function run(cmd: string, args: string[]) {
     try {
@@ -60,7 +61,33 @@ function appVersionPlugin(): Plugin {
 }
 
 export default defineConfig({
-    plugins: [react(), appVersionPlugin()],
+    plugins: [
+        react(),
+        appVersionPlugin(),
+        VitePWA({
+            registerType: 'autoUpdate',
+            manifest: {
+                name: 'Friendly: Private Social Network',
+                // TODO: Wait until VitePWA allows localization
+                // name_localized: {
+                //     'ru': 'Friendly: приватная социальная сеть',
+                // },
+                short_name: 'Friendly',
+                description: 'They say you are connected to anyone with 6 degrees of separation. But instead of chasing the entire world, why not try to focus on expanding the network you already have? Friendly is a private social network built on real connections.',
+                // TODO: Wait until VitePWA allows localization
+                // description_localized: {
+                //     'ru': 'Говорят, все люди в мире разделены всего шестью рукопожатиями. Но вместо того чтобы пытаться охватить весь мир, почему бы не уделить внимание расширению уже существующего круга знакомств? Friendly – это приватная социальная сеть, построенная на реальных связях.',
+                // },
+                icons: [
+                    {
+                        src: 'public/favicon.svg',
+                        type: 'image/svg+xml',
+                        sizes: 'any',
+                    },
+                ],
+            },
+        }),
+    ],
     resolve: {
         alias: {
             '@': '/src',
