@@ -46,7 +46,8 @@
         "typescript-eslint": "^8.59.2",
         "use-intl": "^4.11.0",
         "zod": "^4.4.3",
-        "zustand": "^5.0.13"
+        "zustand": "^5.0.13",
+        "@faker-js/faker": "^10.4.0"
     },
     "devDependencies": {
         "@eslint/eslintrc": "^3.3.5",
