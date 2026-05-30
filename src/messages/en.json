@@ -60,7 +60,13 @@
             "queue_error" : "We couldn't load your connection feed.",
             "accept_success" : "Connection request sent.",
             "request_success" : "Friend request accepted.",
-            "skip_success" : "Card removed from your queue."
+            "skip_success" : "Card removed from your queue.",
+            "email_binding" : {
+                "description": "You have swiped more than 20 times. Do you want to bind email?",
+                "confirm": "Yes",
+                "later": "Later",
+                "decline": "No, don't offer again"
+            }
         },
         "unknown_error" : "An unknown error occurred."
     },

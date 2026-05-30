@@ -3,7 +3,7 @@ import {useBlockingQR, BlockingQR} from '@/app/blocking-qr/dialog';
 import {useAppContext, useAppContextRef} from '@/app.context';
 import {UserDetails} from '@/types/user-details';
 import {FeedItem} from '@/network/friendly-client';
-import {useEffect, useMemo, useState, useCallback} from 'react';
+import {useEffect, useMemo, useState, useCallback, useRef} from 'react';
 import {toast} from 'sonner';
 import {Avatar, AvatarFallback, AvatarImage} from '@/components/ui/avatar';
 import {Badge} from '@/components/ui/badge';
@@ -85,6 +85,17 @@ function FeedReviewDeck({
     const [isAnimating, setIsAnimating] = useState(false);
     const isBusy = pendingCardId !== null;
 
+    const app = useAppContext();
+    const userEmail = useMemo(() => localStorage.getItem('notNotifyEmail') === 'true' ?
+        '_' : app.userDetails?.email, [app.userDetails]);
+    const countReviewRef = useRef(0);
+    const [emailBindingStatus, setEmailBindingStatus] = useState(0);
+
+    const handleDeclineEmailBinding = () => {
+        setEmailBindingStatus(0);
+        localStorage.setItem('notNotifyEmail', 'true');
+    }
+
     const handleCardClick = (card: FeedItem) => {
         setSelectedCard(card);
         setIsDialogOpen(true);
@@ -95,6 +106,13 @@ function FeedReviewDeck({
 
         setPendingCardId(getFeedItemKey(selectedCard));
         setIsAnimating(true);
+
+        // eslint-disable-next-line eqeqeq
+        if (userEmail == null) {
+             countReviewRef.current = countReviewRef.current + 1;
+             if (countReviewRef.current === 20)
+                setEmailBindingStatus(1);
+        }
 
         try {
             await onReview(selectedCard, direction);
@@ -334,6 +352,24 @@ function FeedReviewDeck({
                     </Dialog.Content>
                 </Dialog.Portal>
             </Dialog.Root>
+
+            {/* Email binding after 20 swipes */}
+            <Dialog.Root open={emailBindingStatus === 1} onOpenChange={() => setEmailBindingStatus(0)}>
+                <Dialog.Portal>
+                    <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
+                    <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-fit max-w-sm rounded-2xl p-6 bg-white dark:bg-zinc-950 shadow-lg">
+                        <>
+                            <h2 className="text-center">{t('email_binding.description')}</h2>
+                            <div className="flex flex-row gap-2 mt-4">
+                                <Button onClick={() => setEmailBindingStatus(2)}>{t('email_binding.confirm')}</Button>
+                                <Button onClick={() => setEmailBindingStatus(0)}>{t('email_binding.later')}</Button>
+                                <Button onClick={handleDeclineEmailBinding}>{t('email_binding.decline')}</Button>
+                            </div>
+                        </>
+                    </Dialog.Content>
+                </Dialog.Portal>
+            </Dialog.Root>
+            <EditProfileDialog open={emailBindingStatus === 2} setOpen={() => setEmailBindingStatus(0)} />
         </>
     );
 }
