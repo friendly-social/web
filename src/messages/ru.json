@@ -3,17 +3,16 @@
         "loading": "Загрузка...",
         "title": "Создать аккаунт",
         "nickname": "Никнейм",
-        "nickname-placeholder" : "Как вас лучше называть?",
+        "nickname-placeholder": "Как вас лучше называть?",
         "description": "Описание",
-        "description-placeholder" : "Расскажите что-нибудь о себе",
+        "description-placeholder": "Расскажите что-нибудь о себе",
         "interests": "Интересы (через запятую)",
         "social-link": "Ссылка на соцсеть (необязательно)",
-        "interests-placeholder" : "Чай, котики",
+        "interests-placeholder": "Чай, котики",
         "error-connection": "Не можем установить связь с сервером",
         "sign-up": "Зарегистрироваться",
         "already-have-account": "У вас уже есть аккаунт?",
         "sign-in": "Войти"
-
     },
     "sign-in": {
         "title": "Вход в аккаунт",
@@ -61,7 +60,12 @@
             "queue_error": "Не удалось загрузить ленту знакомств.",
             "accept_success": "Запрос на дружбу отправлен.",
             "request_success": "Запрос в друзья принят.",
-            "skip_success": "Карточка скрыта из очереди."
+            "skip_success": "Карточка скрыта из очереди.",
+            "email_binding": {
+                "description": "Похоже вам нравится наше приложение. Если вы не хотите потерять доступ к аккаунту - привяжите почту.",
+                "confirm": "Привязать",
+                "decline": "Не показывать больше"
+            }
         },
         "unknown_error": "Произошла неизвестная ошибка."
     },
@@ -69,12 +73,12 @@
         "title": "Изменить профиль",
         "save": "Сохранить",
         "nickname": "Никнейм",
-        "nickname-placeholder" : "Как вас лучше называть?",
+        "nickname-placeholder": "Как вас лучше называть?",
         "description": "Описание",
-        "description-placeholder" : "Расскажите что-нибудь о себе",
+        "description-placeholder": "Расскажите что-нибудь о себе",
         "interests": "Интересы",
-        "interests-placeholder" : "Чай, котики",
-        "social-link" : "Ссылка для связи",
+        "interests-placeholder": "Чай, котики",
+        "social-link": "Ссылка для связи",
         "error-connection": "Не можем установить связь с сервером",
         "remove-avatar": "Удалить аватар",
         "select-avatar": "Выбрать аватар...",
@@ -94,13 +98,13 @@
             "nickname-empty": "Никнейм не может быть пустым",
             "nickname-long": "Никнейм слишком длинный (256 максимум)",
             "description-empty": "Описание не может быть пустым",
-            "description-long" : "Описание слишком длинное (1024 максимум)",
-            "interests-too-many" : "Максимальное количество интересов 100",
-            "interest-empty" : "Нельзя добавить пустой интерес",
-            "interest-too-long" : "Интерес слишком длинный (64 максимум)",
-            "interest-duplicate" : "Интерес {interest} повторяется",
-            "social-link-too-long" : "Ссылка для связи слишком длинная (2048 максимум)",
-            "social-link-invalid" : "Ожидается ссылка"
+            "description-long": "Описание слишком длинное (1024 максимум)",
+            "interests-too-many": "Максимальное количество интересов 100",
+            "interest-empty": "Нельзя добавить пустой интерес",
+            "interest-too-long": "Интерес слишком длинный (64 максимум)",
+            "interest-duplicate": "Интерес {interest} повторяется",
+            "social-link-too-long": "Ссылка для связи слишком длинная (2048 максимум)",
+            "social-link-invalid": "Ожидается ссылка"
         }
     },
     "adjuster": {

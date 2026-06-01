@@ -1,4 +1,3 @@
-
 import {useBlockingQR, BlockingQR} from '@/app/blocking-qr/dialog';
 import {useAppContext, useAppContextRef} from '@/app.context';
 import {FeedItem} from '@/network/friendly-client';
@@ -19,15 +18,12 @@ import {
     QrCodeIcon,
     X,
     RotateCcw,
-    ChevronDown,
-    ChevronUp,
 } from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import { useNavigate} from 'react-router';
 import {useBackend} from '@/backend.context';
 import {formatNetworkError} from '@/services/backend-service';
 import {
-    cn,
     createFileLink,
     createFriendInviteLink,
     truncateString,
@@ -38,6 +34,8 @@ import {useTranslations} from 'use-intl';
 import {EditProfileDialog} from '@/app/edit/dialog';
 import * as Dialog from '@radix-ui/react-dialog';
 import {FriendsBlock} from "./friends/friends-block";
+import {useUserAccessHashes} from '@/components/useraccesshashes-provider';
+import {ProfileDescription} from '@/components/profile-description';
 
 type SwipeDirection = 'left' | 'right';
 
@@ -59,6 +57,14 @@ function FeedEmptyState() {
         </div>
     );
 }
+
+type EmailBindingSuggestionStatus =
+    | 'pending'
+    | 'suggested'
+    | 'declined'
+    | 'accepted';
+
+const FEED_CARDS_BEFORE_EMAIL_BINDING_SUGGESTION = 20;
 
 function FeedReviewDeck({
     cards,
@@ -84,6 +90,31 @@ function FeedReviewDeck({
     const [isAnimating, setIsAnimating] = useState(false);
     const isBusy = pendingCardId !== null;
 
+    const app = useAppContext();
+    const [swipeCount, setSwipeCount] = useState<number>(() => {
+        return parseInt(localStorage.getItem('feed-swipes') ?? '0', 10);
+    });
+    const isNeedSuggestEmail = useMemo(() => {
+        if (swipeCount > FEED_CARDS_BEFORE_EMAIL_BINDING_SUGGESTION) {
+            return false;
+        }
+        return !app.userDetails?.email;
+    }, [app.userDetails?.email, swipeCount]);
+
+    const [emailSuggestionStatus, setEmailSuggestionStatus] =
+        useState<EmailBindingSuggestionStatus>('pending');
+
+    const increaseSwipesCounter = () => {
+        const prevValue = parseInt(
+            localStorage.getItem('feed-swipes') ?? '0',
+            10,
+        );
+        const nextCount = prevValue + 1;
+        localStorage.setItem('feed-swipes', nextCount.toString());
+        setSwipeCount(nextCount);
+        return nextCount;
+    };
+
     const handleCardClick = (card: FeedItem) => {
         setSelectedCard(card);
         setIsDialogOpen(true);
@@ -94,6 +125,15 @@ function FeedReviewDeck({
 
         setPendingCardId(getFeedItemKey(selectedCard));
         setIsAnimating(true);
+
+        const updatedCount = increaseSwipesCounter();
+
+        if (
+            isNeedSuggestEmail &&
+            updatedCount === FEED_CARDS_BEFORE_EMAIL_BINDING_SUGGESTION
+        ) {
+            setEmailSuggestionStatus('suggested');
+        }
 
         try {
             await onReview(selectedCard, direction);
@@ -153,8 +193,8 @@ function FeedReviewDeck({
                     const badgeLabel = card.isRequest
                         ? t('requests_badge')
                         : card.isExtendedNetwork
-                            ? t('extended_network')
-                            : null;
+                          ? t('extended_network')
+                          : null;
                     const avatarUrl = card.details.avatar
                         ? createFileLink(card.details.avatar)
                         : '';
@@ -189,9 +229,9 @@ function FeedReviewDeck({
                                     <p className="mt-2 text-xs text-zinc-600 dark:text-zinc-400 overflow-hidden text-ellipsis">
                                         {card.details.description
                                             ? truncateString(
-                                                card.details.description,
-                                                60,
-                                            )
+                                                  card.details.description,
+                                                  60,
+                                              )
                                             : t('no_description')}
                                     </p>
                                 </div>
@@ -229,10 +269,10 @@ function FeedReviewDeck({
                                                     {selectedCard.isRequest
                                                         ? t('requests_badge')
                                                         : selectedCard.isExtendedNetwork
-                                                            ? t(
+                                                          ? t(
                                                                 'extended_network',
                                                             )
-                                                            : null}
+                                                          : null}
                                                 </Badge>
                                             )}
                                         </div>
@@ -255,10 +295,10 @@ function FeedReviewDeck({
                                                 src={
                                                     selectedCard.details.avatar
                                                         ? createFileLink(
-                                                            selectedCard
-                                                                .details
-                                                                .avatar,
-                                                        )
+                                                              selectedCard
+                                                                  .details
+                                                                  .avatar,
+                                                          )
                                                         : undefined
                                                 }
                                                 className="object-cover w-full h-full"
@@ -298,24 +338,24 @@ function FeedReviewDeck({
 
                                     <div className="p-6 pt-0">
                                         <div className="flex gap-4">
-	                                            <Button
-	                                                variant="outline"
-	                                                className="flex-1 h-12 cursor-pointer"
-	                                                disabled={isBusy}
-	                                                onClick={() =>
-	                                                    void handleReview('left')
-	                                                }
-	                                            >
+                                            <Button
+                                                variant="outline"
+                                                className="flex-1 h-12 cursor-pointer"
+                                                disabled={isBusy}
+                                                onClick={() =>
+                                                    void handleReview('left')
+                                                }
+                                            >
                                                 <X className="h-5 w-5 mr-2" />
                                                 {t('skip')}
                                             </Button>
-	                                            <Button
-	                                                className="flex-1 h-12 cursor-pointer"
-	                                                disabled={isBusy}
-	                                                onClick={() =>
-	                                                    void handleReview('right')
-	                                                }
-	                                            >
+                                            <Button
+                                                className="flex-1 h-12 cursor-pointer"
+                                                disabled={isBusy}
+                                                onClick={() =>
+                                                    void handleReview('right')
+                                                }
+                                            >
                                                 {selectedCard.isRequest ? (
                                                     <Check className="h-5 w-5 mr-2" />
                                                 ) : (
@@ -333,6 +373,47 @@ function FeedReviewDeck({
                     </Dialog.Content>
                 </Dialog.Portal>
             </Dialog.Root>
+
+            {/* Ask about email binding after 20 swipes */}
+            <Dialog.Root
+                open={emailSuggestionStatus === 'suggested'}
+                onOpenChange={() => setEmailSuggestionStatus('pending')}
+            >
+                <Dialog.Portal>
+                    <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
+                    <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-fit max-w-sm rounded-2xl p-6 bg-white dark:bg-zinc-950 shadow-lg">
+                        <>
+                            <h2 className="text-center">
+                                {t('email_binding.description')}
+                            </h2>
+                            <div className="w-full flex flex-row grow-1 gap-2 mt-4">
+                                <Button
+                                    className="grow-1"
+                                    onClick={() =>
+                                        setEmailSuggestionStatus('declined')
+                                    }
+                                >
+                                    {t('email_binding.decline')}
+                                </Button>
+                                <Button
+                                    className="grow-2"
+                                    onClick={() =>
+                                        setEmailSuggestionStatus('accepted')
+                                    }
+                                >
+                                    {t('email_binding.confirm')}
+                                </Button>
+                            </div>
+                        </>
+                    </Dialog.Content>
+                </Dialog.Portal>
+            </Dialog.Root>
+            <EditProfileDialog
+                open={emailSuggestionStatus === 'accepted'}
+                setOpen={isOpen => {
+                    if (!isOpen) setEmailSuggestionStatus('declined');
+                }}
+            />
         </>
     );
 }
@@ -341,8 +422,6 @@ function ProfileHeader({logOut}: {logOut: () => void}) {
     const t = useTranslations('profile');
     const app = useAppContext();
     const userDetails = app.userDetails;
-
-    const [expanded, setExpanded] = useState(false);
 
     const avatarUrl = useMemo(
         () => (userDetails?.avatar ? createFileLink(userDetails.avatar) : ''),
@@ -372,29 +451,9 @@ function ProfileHeader({logOut}: {logOut: () => void}) {
                     {userDetails?.nickname}
                 </p>
 
-                <p
-                    className={cn(
-                        'text-neutral-700 dark:text-zinc-400 wrap-break-word whitespace-pre-wrap transition-all duration-300 ease-in-out',
-                        !expanded && 'line-clamp-4 sm:line-clamp-3',
-                    )}
-                >
-                    {userDetails?.description}
-                </p>
-
-                <button
-                    onClick={() => setExpanded(v => !v)}
-                    className="mt-1 flex items-center gap-1 text-sm text-blue-500 hover:underline cursor-pointer"
-                >
-                    {expanded ? (
-                        <>
-                            <ChevronUp className="w-4 h-4" /> Show less
-                        </>
-                    ) : (
-                        <>
-                            <ChevronDown className="w-4 h-4" /> Show more
-                        </>
-                    )}
-                </button>
+                <ProfileDescription
+                    description={userDetails?.description ?? ''}
+                />
             </div>
 
             <div className="flex sm:flex-col gap-2 sm:ml-auto w-full sm:w-auto">
@@ -526,6 +585,14 @@ function DiscoveryFeedBlock() {
 function QrCodeCard({url}: {url: string | null}) {
     const t = useTranslations('profile');
     const queryClient = useQueryClient();
+    const backend = useBackend();
+
+    async function forceRefresh() {
+        await backend.friendsGenerateForce();
+        void queryClient.invalidateQueries({
+            queryKey: ['inviteToken'],
+        });
+    }
 
     return (
         <div className="md:w-1/4 md:h-fit md:mt-4 md:mr-8 flex flex-col items-center md:items-start p-4 md:rounded-xl md:border md:border-zinc-200 dark:md:border-zinc-800 md:bg-white dark:md:bg-zinc-900 text-sm">
@@ -561,11 +628,7 @@ function QrCodeCard({url}: {url: string | null}) {
                     <Button
                         variant="outline"
                         className="flex-1 dark:bg-zinc-950 dark:hover:bg-zinc-800 cursor-pointer"
-                        onClick={() => {
-                            void queryClient.invalidateQueries({
-                                queryKey: ['inviteToken'],
-                            });
-                        }}
+                        onClick={() => void forceRefresh()}
                     >
                         <RotateCcw className="s-4" />
                     </Button>
@@ -604,7 +667,6 @@ export default function Home() {
         queryKey: ['inviteToken'],
         queryFn: () => backend.generateFriendInvitationToken(),
         enabled: session.status === 'authed',
-        refetchOnWindowFocus: false,
     });
 
     const networkQuery = useQuery({
@@ -632,10 +694,10 @@ export default function Home() {
         userResult && !userResult.ok
             ? formatNetworkError(userResult.error)
             : inviteResult && !inviteResult.ok
-                ? formatNetworkError(inviteResult.error)
-                : networkResult && !networkResult.ok
-                    ? formatNetworkError(networkResult.error)
-                    : null;
+              ? formatNetworkError(inviteResult.error)
+              : networkResult && !networkResult.ok
+                ? formatNetworkError(networkResult.error)
+                : null;
 
     const isLoading =
         session.status === 'loading' ||

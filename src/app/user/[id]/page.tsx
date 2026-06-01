@@ -1,20 +1,19 @@
 
 import { useBackend } from '@/backend.context';
 import { AvatarImage, AvatarFallback, Avatar } from '@/components/ui/avatar';
-import { createFileLink, cn } from '@/lib/utils';
+import { createFileLink } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
-import { Activity, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { Activity, Loader2 } from 'lucide-react';
 import { useTranslations } from 'use-intl';
-import { useState, useMemo } from 'react';
+import {  useMemo } from 'react';
 import { UserDetails } from '@/types/user-details';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useUserAccessHashes } from '@/components/useraccesshashes-provider';
 import { useParams } from 'react-router';
+import { ProfileDescription } from '@/components/profile-description';
 
 function ProfileHeader({userDetails}: {userDetails: UserDetails}) {
-    const [expanded, setExpanded] = useState(false);
-
     const avatarUrl = useMemo(
         () => (userDetails?.avatar ? createFileLink(userDetails.avatar) : ''),
         [userDetails],
@@ -36,29 +35,7 @@ function ProfileHeader({userDetails}: {userDetails: UserDetails}) {
                     {userDetails?.nickname}
                 </p>
 
-                <p
-                    className={cn(
-                        'text-neutral-700 dark:text-zinc-400 wrap-break-word whitespace-pre-wrap transition-all duration-300 ease-in-out',
-                        !expanded && 'line-clamp-4 sm:line-clamp-3',
-                    )}
-                >
-                    {userDetails?.description}
-                </p>
-
-                <button
-                    onClick={() => setExpanded(v => !v)}
-                    className="mt-1 flex items-center gap-1 text-sm text-blue-500 hover:underline cursor-pointer"
-                >
-                    {expanded ? (
-                        <>
-                            <ChevronUp className="w-4 h-4" /> Show less
-                        </>
-                    ) : (
-                        <>
-                            <ChevronDown className="w-4 h-4" /> Show more
-                        </>
-                    )}
-                </button>
+                <ProfileDescription description={userDetails?.description ?? ''} />
             </div>
         </div>
     );

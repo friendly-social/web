@@ -106,6 +106,11 @@ export class BackendService {
         return mapResult(result, data => data.token);
     }
 
+    friendsGenerateForce: typeof this.client.friendsGenerateForce =
+        (...args) => {
+            return this.client.friendsGenerateForce(...args);
+        };
+
     async getNetworkDetails(): Promise<
         Result<NetworkDetailsResponse, NetworkError>
         > {

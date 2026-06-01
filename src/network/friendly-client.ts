@@ -25,6 +25,9 @@ export interface FriendlyClient {
     generateFriendInvitationToken(): Promise<
         Result<GenerateFriendInvitationTokenResponse, NetworkError>
     >;
+    friendsGenerateForce(): Promise<
+        Result<FriendsGenerateForceResponse, NetworkError>
+    >;
     addFriend(
         request: AddFriendRequest,
     ): Promise<Result<AddFriendResponse, NetworkError>>;
@@ -185,6 +188,18 @@ export class FriendlyClientImpl implements FriendlyClient {
         );
     }
 
+    async friendsGenerateForce(): Promise<
+        Result<FriendsGenerateForceResponse, NetworkError>
+        > {
+        return this.safeRequest(
+            this.client
+                .post<GenerateFriendInvitationTokenResponse>(
+                    '/friends/generate/force',
+                )
+                .then(r => r.data),
+        );
+    }
+
     async addFriend(
         request: AddFriendRequest,
     ): Promise<Result<AddFriendResponse, NetworkError>> {
@@ -308,6 +323,10 @@ export interface EditField<T> {
 }
 
 export interface GenerateFriendInvitationTokenResponse {
+    token: string;
+}
+
+export interface FriendsGenerateForceResponse {
     token: string;
 }
 

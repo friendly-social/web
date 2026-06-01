@@ -1,14 +1,14 @@
 {
-    "sign-up" : {
-        "loading" : "Loading...",
+    "sign-up": {
+        "loading": "Loading...",
         "title": "Create account",
-        "nickname" : "Nickname",
-        "nickname-placeholder" : "How do you want to be called?",
-        "description" : "Description",
-        "description-placeholder" : "Tell people something about yourself",
-        "interests" : "Interests (Separated by comma)",
-        "social-link" : "Social link (Optional)",
-        "interests-placeholder" : "Tea, kittens",
+        "nickname": "Nickname",
+        "nickname-placeholder": "How do you want to be called?",
+        "description": "Description",
+        "description-placeholder": "Tell people something about yourself",
+        "interests": "Interests (Separated by comma)",
+        "social-link": "Social link (Optional)",
+        "interests-placeholder": "Tea, kittens",
         "error-connection": "Can't get to our servers :(",
         "sign-up": "Sign Up",
         "already-have-account": "Already have an account?",
@@ -25,55 +25,60 @@
         "unknown-email": "This email is not linked to any account",
         "error-connection": "Can't get to our servers :("
     },
-    "profile" : {
-        "edit_profile" : "Edit",
-        "log_out" : "Log out",
-        "interests" : "Interests",
-        "friends" : {
-            "title" : "Friends",
-            "see_all" : "All friends",
-            "no_friends" : "Ask someone for invite link to start connecting"
+    "profile": {
+        "edit_profile": "Edit",
+        "log_out": "Log out",
+        "interests": "Interests",
+        "friends": {
+            "title": "Friends",
+            "see_all": "All friends",
+            "no_friends": "Ask someone for invite link to start connecting"
         },
-        "qr" : {
-            "title" : "QR code",
-            "desc" : "Share your profile to make connections.",
-            "copy" : "Copy",
-            "save" : "Save",
+        "qr": {
+            "title": "QR code",
+            "desc": "Share your profile to make connections.",
+            "copy": "Copy",
+            "save": "Save",
             "copied": "Link Copied!"
         },
-        "feed" : {
-            "title" : "Connection feed",
-            "desc" : "Incoming requests and new people you may want to add.",
-            "requests_badge" : "Friend request",
-            "request_hint" : "Wants to connect with you",
-            "suggested_hint" : "Looks like a strong match for your circle",
-            "extended_network" : "Extended network",
-            "network_context" : "Connection context",
-            "common_friends" : "{count} common friends",
-            "no_description" : "No profile note yet.",
-            "empty_title" : "You are all caught up",
-            "empty_desc" : "No more requests or suggestions right now.",
-            "retry" : "Retry",
-            "skip" : "Skip",
-            "accept" : "Accept",
-            "connect" : "Connect",
-            "queue_error" : "We couldn't load your connection feed.",
-            "accept_success" : "Connection request sent.",
-            "request_success" : "Friend request accepted.",
-            "skip_success" : "Card removed from your queue."
+        "feed": {
+            "title": "Connection feed",
+            "desc": "Incoming requests and new people you may want to add.",
+            "requests_badge": "Friend request",
+            "request_hint": "Wants to connect with you",
+            "suggested_hint": "Looks like a strong match for your circle",
+            "extended_network": "Extended network",
+            "network_context": "Connection context",
+            "common_friends": "{count} common friends",
+            "no_description": "No profile note yet.",
+            "empty_title": "You are all caught up",
+            "empty_desc": "No more requests or suggestions right now.",
+            "retry": "Retry",
+            "skip": "Skip",
+            "accept": "Accept",
+            "connect": "Connect",
+            "queue_error": "We couldn't load your connection feed.",
+            "accept_success": "Connection request sent.",
+            "request_success": "Friend request accepted.",
+            "skip_success": "Card removed from your queue.",
+            "email_binding": {
+                "description": "Seems like you enjoy our app. If you want to access your account later, bind a email.",
+                "confirm": "Yes",
+                "decline": "No, don't offer again"
+            }
         },
-        "unknown_error" : "An unknown error occurred."
+        "unknown_error": "An unknown error occurred."
     },
     "edit_profile_dialog": {
         "title": "Edit Profile",
         "save": "Save",
-        "nickname" : "Nickname",
-        "nickname-placeholder" : "How do you want to be called?",
-        "description" : "Description",
-        "description-placeholder" : "Tell people something about yourself",
-        "interests" : "Interests",
-        "interests-placeholder" : "Tea, kittens",
-        "social-link" : "Social link",
+        "nickname": "Nickname",
+        "nickname-placeholder": "How do you want to be called?",
+        "description": "Description",
+        "description-placeholder": "Tell people something about yourself",
+        "interests": "Interests",
+        "interests-placeholder": "Tea, kittens",
+        "social-link": "Social link",
         "error-connection": "Can't get to our servers :(",
         "remove-avatar": "Remove avatar",
         "select-avatar": "Select avatar...",
@@ -93,13 +98,13 @@
             "nickname-empty": "Nickname cannot be empty",
             "nickname-long": "Nickname is too long (256 max)",
             "description-empty": "Description cannot be empty",
-            "description-long" : "Description is too long (1024 max)",
-            "interests-too-many" : "Max amount of interests is 100",
-            "interest-empty" : "Cannot have empty interest",
-            "interest-too-long" : "Interest is too long (64 max)",
-            "interest-duplicate" : "Interest {interest} is duplicate",
-            "social-link-too-long" : "Social link is too long (2048 max)",
-            "social-link-invalid" : "A link is expected"
+            "description-long": "Description is too long (1024 max)",
+            "interests-too-many": "Max amount of interests is 100",
+            "interest-empty": "Cannot have empty interest",
+            "interest-too-long": "Interest is too long (64 max)",
+            "interest-duplicate": "Interest {interest} is duplicate",
+            "social-link-too-long": "Social link is too long (2048 max)",
+            "social-link-invalid": "A link is expected"
         }
     },
     "adjuster": {
