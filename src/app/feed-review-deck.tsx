@@ -6,11 +6,18 @@ import {Button} from '@/components/ui/button';
 import {createFileLink, truncateString} from '@/lib/utils';
 import {FeedItem} from '@/network/friendly-client';
 import {Activity, Loader2} from 'lucide-react';
-import {useMemo, useState} from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 import {useTranslations} from 'use-intl';
 import {EditProfileDialog} from '@/app/edit/dialog';
 import {SuggestEmailBindingDialog} from '@/app/suggest-email-binding-dialog';
 import {FeedDialog} from '@/app/feed-dialog';
+import {useLocation} from "react-router";
+
+interface FeedLocationState {
+    feedDialogueState?: {
+        selectedCard: FeedItem;
+    };
+}
 
 export type EmailBindingSuggestionStatus =
     | 'pending'
@@ -66,6 +73,7 @@ export function FeedReviewDeck({
     const isBusy = pendingCardId !== null;
 
     const app = useAppContext();
+    const location = useLocation();
     const [swipeCount, setSwipeCount] = useState<number>(() => {
         return parseInt(localStorage.getItem('feed-swipes') ?? '0', 10);
     });
@@ -134,6 +142,22 @@ export function FeedReviewDeck({
             setPendingCardId(null);
         }
     };
+
+    const initialFeedState = useRef(
+        (location.state as FeedLocationState | null)?.feedDialogueState,
+    );
+
+    useEffect(() => {
+        const feedState = initialFeedState.current;
+
+        // eslint-disable-next-line eqeqeq
+        if (feedState == null) {
+            return;
+        }
+
+        setIsDialogOpen(true);
+        setSelectedCard(feedState.selectedCard);
+    }, []);
 
     if (isLoading) {
         return (

@@ -35,6 +35,15 @@ export function FeedDialog({
             id: friend.id,
             accessHash: friend.accessHash,
         });
+
+        await navigate('/', {
+            state: {
+                feedDialogueState: {
+                    selectedCard,
+                }
+            },
+            replace: true,
+        });
         await navigate(`/user/${friend.id}`);
     }
 
@@ -71,6 +80,7 @@ export function FeedDialog({
                             );
                             return (
                                 <Avatar
+                                    key={friend.id}
                                     className="w-10 h-10 -ms-4 border-2 border-white dark:border-zinc-800 cursor-pointer"
                                     onClick={() => void routeToUser(friend)}
                                 >
