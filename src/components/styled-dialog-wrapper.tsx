@@ -20,13 +20,13 @@ export function StyledDialogWrapper({
     return (
         <Dialog.Root open={open} onOpenChange={onOpenChange}>
             <Dialog.Portal>
-                <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
+                <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-2" />
                 <Dialog.Content
                     {...(preventDefault && {
                         onInteractOutside: e => e.preventDefault(),
                     })}
                     className={cn(
-                        'fixed left-1/2 top-1/2 -translate-x-1/2 w-full max-w-lg max-h-dvh overflow-y-auto',
+                        'z-2 fixed left-1/2 top-1/2 -translate-x-1/2 w-full max-w-lg max-h-dvh overflow-y-auto',
                         contentClassName,
                     )}
                 >

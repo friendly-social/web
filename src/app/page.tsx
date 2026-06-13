@@ -1,7 +1,7 @@
 import {useBlockingQR, BlockingQR} from '@/app/blocking-qr/dialog';
 import {useAppContext, useAppContextRef} from '@/app.context';
+import {TopBar} from './top-bar';
 import {useEffect, useMemo, useState, useCallback} from 'react';
-import {Avatar, AvatarFallback, AvatarImage} from '@/components/ui/avatar';
 import {Badge} from '@/components/ui/badge';
 import {Separator} from '@/components/ui/separator';
 import {Activity, Loader2, LogOut, Pencil} from 'lucide-react';
@@ -9,19 +9,17 @@ import {Button} from '@/components/ui/button';
 import {useNavigate} from 'react-router';
 import {useBackend} from '@/backend.context';
 import {formatNetworkError} from '@/services/backend-service';
-import {
-    createFileLink,
-    createFriendInviteLink,
-    getAvatarFallbackForNickname,
-} from '@/lib/utils';
+import {createFileLink, createFriendInviteLink} from '@/lib/utils';
 import {useQuery, useQueryClient} from '@tanstack/react-query';
 import {useSession} from '@/components/session-provider';
 import {useTranslations} from 'use-intl';
 import {EditProfileDialog} from '@/app/edit/dialog';
+import {LogoutDialog} from '@/app/log-out-dialog';
 import {ProfileDescription} from '@/components/profile-description';
 import {FriendsBlock} from '@/app/friends/friends-block';
 import {DiscoveryFeedBlock} from '@/app/discovery-feed-block';
 import {QrCodeCard} from '@/app/qrcode-card';
+import {StyledAvatar} from '@/components/styled-avatar';
 
 function ProfileHeader({logOut}: {logOut: () => void}) {
     const t = useTranslations('profile');
@@ -35,20 +33,30 @@ function ProfileHeader({logOut}: {logOut: () => void}) {
 
     const [openEdit, setOpenEdit] = useState(false);
     const onEditClick = useCallback(() => setOpenEdit(true), []);
+    const [openLogout, setOpenLogout] = useState(false);
 
     return (
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 w-full p-4 sm:p-8">
             {userDetails && (
                 <EditProfileDialog open={openEdit} setOpen={setOpenEdit} />
             )}
+            <LogoutDialog
+                open={openLogout}
+                onOpenChange={setOpenLogout}
+                hasEmail={!!userDetails?.email}
+                onLogout={logOut}
+                onBindEmail={() => {
+                    setOpenLogout(false);
+                    setOpenEdit(true);
+                }}
+            />
 
             <div className="flex flex-row sm:flex-col items-center sm:items-start gap-4">
-                <Avatar className="w-20 h-20 sm:w-24 sm:h-24 border-2 border-white dark:border-zinc-800 shadow-sm">
-                    <AvatarImage src={avatarUrl} />
-                    <AvatarFallback>
-                        {getAvatarFallbackForNickname(userDetails?.nickname)}
-                    </AvatarFallback>
-                </Avatar>
+                <StyledAvatar
+                    avatarClassName="w-20 h-20 sm:w-24 sm:h-24 border-2 border-white dark:border-zinc-800 shadow-sm"
+                    src={avatarUrl}
+                    nickname={userDetails?.nickname}
+                />
             </div>
 
             <div className="flex flex-1 flex-col gap-2 min-w-0 items-center sm:items-start">
@@ -74,7 +82,7 @@ function ProfileHeader({logOut}: {logOut: () => void}) {
                 <Button
                     className="cursor-pointer flex-1 sm:flex-none"
                     variant="secondary"
-                    onClick={logOut}
+                    onClick={() => setOpenLogout(true)}
                 >
                     <LogOut className="w-4 h-4" />
                     <p className="hidden sm:block">{t('log_out')}</p>
@@ -107,7 +115,17 @@ function InterestsBlock({interests}: {interests: string[]}) {
     );
 }
 
-export default function Home() {
+export default function Content() {
+    return (
+        <div className="min-h-screen bg-zinc-50 dark:bg-black">
+            <TopBar />
+            <div className="h-16" />
+            <Home />
+        </div>
+    );
+}
+
+function Home() {
     const t = useTranslations('profile');
 
     const app = useAppContext();
@@ -232,11 +250,9 @@ export default function Home() {
     }
 
     return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-black">
-            <div className="mx-auto md:p-8 md:pt-8 max-w-5xl">
-                <div className="bg-white dark:bg-zinc-950 md:rounded-xl md:border md:border-zinc-200 dark:md:border-zinc-800 min-h-[calc(100vh-64px)] md:min-h-0 overflow-hidden transition-colors">
-                    {content}
-                </div>
+        <div className="mx-auto md:p-8 md:pt-4 max-w-5xl">
+            <div className="bg-white dark:bg-zinc-950 md:rounded-xl md:border md:border-zinc-200 dark:md:border-zinc-800 min-h-[calc(100vh-64px)] md:min-h-0 overflow-hidden transition-colors">
+                {content}
             </div>
         </div>
     );

@@ -22,6 +22,11 @@ export function truncateString(str: string, maxLength: number): string {
     return str.substring(0, maxLength - 3) + '...';
 }
 
+export function normalizeLink(str: string) {
+    if (str.startsWith('https://') || str.startsWith('http://')) return str;
+    return `https://${str}`;
+}
+
 export function getAvatarFallbackForNickname(
     nickname: string | undefined,
 ): string | undefined {

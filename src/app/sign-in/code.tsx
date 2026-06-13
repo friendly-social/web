@@ -31,6 +31,7 @@ export function CodeDialog(props: CodeDialogProps): ReactNode {
         <StyledDialogWrapper
             open={open}
             onOpenChange={setOpen}
+            preventDefault={true}
             contentClassName="-translate-y-1/2 p-5"
         >
             <CodeDialogContent {...props} />

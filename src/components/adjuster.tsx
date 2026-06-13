@@ -26,10 +26,17 @@ export type AdjusterPayload =
           data: File;
       };
 
+export interface AdjusterCrop {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+
 export interface AdjusterProps {
     payload: AdjusterPayload;
     setOpen: (value: boolean) => void;
-    onAdjusted: (file: File) => void;
+    onAdjusted: (file: File, result: AdjusterCrop) => void;
 }
 
 export function Adjuster({
@@ -68,7 +75,7 @@ export function Adjuster({
 interface AdjusterContentProps {
     payload: AdjusterPayload & {type: 'open'};
     setOpen: (value: boolean) => void;
-    onAdjusted: (file: File) => void;
+    onAdjusted: (file: File, result: AdjusterCrop) => void;
 }
 
 function AdjusterContent({
@@ -94,8 +101,13 @@ function AdjusterContent({
     async function onContinue() {
         setOpen(false);
         if (!crop) return;
-        const rendered = await render(payload.data, crop);
-        onAdjusted(rendered);
+
+        onAdjusted(payload.data, {
+            x: crop.x,
+            y: crop.y,
+            width: crop.width,
+            height: crop.height,
+        });
     }
 
     const onImageLoad: ReactEventHandler<HTMLImageElement> = e => {
@@ -159,47 +171,4 @@ function AdjusterContent({
             </div>
         </>
     );
-}
-
-async function render(file: File, crop: PercentCrop): Promise<File> {
-    const src = URL.createObjectURL(file);
-    try {
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        if (!context) {
-            return file;
-        }
-        const format = file.type;
-        if (!format) {
-            return file;
-        }
-        const image: HTMLImageElement = await new Promise((resolve, reject) => {
-            const result = new Image();
-            result.onload = () => resolve(result);
-            result.onerror = reject;
-            result.src = src;
-        });
-        const width = image.naturalWidth;
-        const height = image.naturalHeight;
-        canvas.width = (width * crop.width) / 100;
-        canvas.height = (height * crop.height) / 100;
-        const offsetX = (-width * crop.x) / 100;
-        const offsetY = (-height * crop.y) / 100;
-        context.drawImage(image, offsetX, offsetY, width, height);
-        return await new Promise((resolve, reject) =>
-            canvas.toBlob(blob => {
-                if (!blob) {
-                    reject(new Error('Canvas toBlob returned !blob'));
-                } else {
-                    const result = new File([blob], file.name, {
-                        type: file.type,
-                        lastModified: file.lastModified,
-                    });
-                    resolve(result);
-                }
-            }, format),
-        );
-    } finally {
-        URL.revokeObjectURL(src);
-    }
 }

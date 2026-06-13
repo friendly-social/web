@@ -1,9 +1,9 @@
-import {AdjusterPayload, Adjuster} from '@/components/adjuster';
+import {AdjusterPayload, Adjuster, AdjusterCrop} from '@/components/adjuster';
 import {FileDescriptor} from '@/types/file-descriptor';
 import {resizeImage} from '@/network/image';
 import {createFileLink} from '@/lib/utils';
 import {toast} from 'sonner';
-import {Pencil, Trash2, ImageIcon} from 'lucide-react';
+import {Pencil, Trash2, ImageIcon, Upload} from 'lucide-react';
 import {useBackend} from '@/backend.context';
 import {Spinner} from '@/components/ui/spinner';
 import {
@@ -12,10 +12,9 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {Upload} from 'lucide-react';
-import {Avatar, AvatarFallback, AvatarImage} from '@/components/ui/avatar';
 import {ReactNode, useState, useRef} from 'react';
 import {useTranslations} from 'use-intl';
+import {StyledAvatar} from './styled-avatar';
 
 interface MutableAvatarContentProps {
     nickname: string;
@@ -68,23 +67,20 @@ export function MutableAvatarContent({
         }
     }
 
-    async function onAdjusted(file: File | null) {
+    async function onAdjusted(file: File | null, crop: AdjusterCrop) {
         if (!file) {
             setAvatar(null);
             setAvatarUrl(null);
             return;
         }
         const previousAvatarUrl = avatarUrl;
-        setAvatarUrl(URL.createObjectURL(file));
         setLoading(true);
         try {
-            const compressed = await resizeImage({
-                file,
-                maxSizeBytes: 204_800, // 200kb
-            });
+            const compressed = await resizeImage(file, crop);
             const result = await backend.uploadFile(compressed);
             if (result.ok) {
                 setAvatar(result.data);
+                setAvatarUrl(createFileLink(result.data));
                 if (previousAvatarUrl) URL.revokeObjectURL(previousAvatarUrl);
             } else {
                 toast.error(t('error-connection'));
@@ -95,34 +91,30 @@ export function MutableAvatarContent({
         }
     }
 
-    const fallback = getAvatarFallbackForNickname(nickname);
-
     return (
         <div className="w-full flex justify-center">
             <Adjuster
                 payload={adjuster}
                 setOpen={adjusterSetOpen}
-                onAdjusted={file => void onAdjusted(file)}
+                onAdjusted={(file, result) => void onAdjusted(file, result)}
             />
             <AvatarDropdown
-                onDelete={() => void onAdjusted(null)}
+                onDelete={() =>
+                    void onAdjusted(null, {x: 0, y: 0, width: 0, height: 0})
+                }
                 onSelect={() => avatarInputRef?.current?.click()}
                 show={!!avatar}
             >
                 <div className="relative cursor-pointer">
-                    <Avatar className="w-22 h-22 border-2 border-white dark:border-zinc-800 shadow-sm">
-                        <AvatarImage
-                            className={loading ? 'blur-xs brightness-80' : ''}
-                            src={avatarUrl ?? undefined}
-                        />
-                        <AvatarFallback>
-                            {fallback ? (
-                                <span className="text-xl">{fallback}</span>
-                            ) : (
-                                <Upload />
-                            )}
-                        </AvatarFallback>
-                    </Avatar>
+                    <StyledAvatar
+                        avatarClassName="w-22 h-22 border-2 border-white dark:border-zinc-800 shadow-sm"
+                        avatarImageClassName={
+                            loading ? 'blur-xs brightness-80' : undefined
+                        }
+                        src={avatarUrl ?? undefined}
+                        nickname={nickname}
+                        fallbackContent={<Upload />}
+                    />
                     <div className="size-6 absolute bottom-1 right-1 rounded-full bg-white border border-zinc-200 dark:bg-zinc-800 dark:border-zinc-600">
                         <Pencil className="size-full p-1" />
                     </div>
@@ -146,15 +138,6 @@ export function MutableAvatarContent({
             />
         </div>
     );
-}
-
-function getAvatarFallbackForNickname(nickname: string): string | undefined {
-    if (nickname.trim().length === 0) return;
-    const words = nickname.toUpperCase().split(' ');
-    return words
-        .slice(0, 2)
-        .map(word => word[0])
-        .join('');
 }
 
 interface AvatarDropdownProps {

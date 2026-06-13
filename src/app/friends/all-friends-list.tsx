@@ -1,13 +1,13 @@
 import {UserDetails} from '@/types/user-details';
 import {useMemo} from 'react';
 import {useTranslations} from 'use-intl';
+import {cn, createFileLink} from '@/lib/utils';
 import {Button} from '@/components/ui/button';
 import {X} from 'lucide-react';
-import {AvatarImage, AvatarFallback, Avatar} from '@/components/ui/avatar';
-import {createFileLink} from '@/lib/utils';
 import {Dialog} from 'radix-ui';
 import {useUserAccessHashes} from '@/components/useraccesshashes-provider';
 import {StyledDialogWrapper} from '@/components/styled-dialog-wrapper';
+import {StyledAvatar} from '@/components/styled-avatar';
 
 interface AllFriendsListProps {
     friends: UserDetails[];
@@ -31,14 +31,18 @@ function FriendListItem({id, friend, onClick}: FriendListItemProps) {
         <button
             id={id}
             onClick={onClick}
-            className="p-4 grow-1 flex flex-row items-center gap-4 rounded-xl cursor-pointer hover:bg-zinc-200/30 hover:dark:bg-zinc-200/50"
+            className={cn(
+                'p-2 grow-1 flex flex-row',
+                'items-center gap-4 rounded-xl',
+                'cursor-pointer',
+                'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
+            )}
         >
-            <Avatar className="w-16 h-16">
-                <AvatarImage src={avatarUrl} />
-                <AvatarFallback>
-                    {friend?.nickname.toString().slice(0, 2)}
-                </AvatarFallback>
-            </Avatar>
+            <StyledAvatar
+                avatarClassName="w-12 h-12"
+                src={avatarUrl}
+                nickname={friend.nickname}
+            />
             <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                 {friend?.nickname}
             </p>
@@ -89,7 +93,7 @@ export function AllFriendsList({friends, open, setOpen}: AllFriendsListProps) {
                             </Dialog.Close>
                         </div>
 
-                        <div className="flex flex-col gap-4">
+                        <div className="flex flex-col p-2">
                             {friends.map(friend => (
                                 <FriendListItem
                                     id={friend.id.toString()}

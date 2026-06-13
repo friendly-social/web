@@ -32,6 +32,7 @@ export function SessionProvider({children}: {children: React.ReactNode}) {
     const setAuthed = useCallback(() => setStatus('authed'), []);
 
     const logOut = useCallback(() => {
+        localStorage.clear();
         backend.clearAuthorization();
         setStatus('guest');
     }, [backend]);

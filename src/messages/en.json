@@ -29,6 +29,7 @@
         "edit_profile": "Edit",
         "log_out": "Log out",
         "interests": "Interests",
+        "open_social": "Contact",
         "friends": {
             "title": "Friends",
             "see_all": "All friends",
@@ -141,6 +142,13 @@
         "description": "Do you really want to remove this user from your friends list?",
         "action": "Remove",
         "cancel": "Cancel"
+    },
+    "log_out_dialog": {
+        "title": "Are you sure?",
+        "title_no_email": "You have no email bound. Are you sure you want to log out?",
+        "bind_email": "Bind email",
+        "yes": "Yes",
+        "no": "No"
     },
     "redirect": {
         "friend-token-expired": {

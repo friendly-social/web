@@ -1,8 +1,7 @@
-import {Avatar, AvatarFallback, AvatarImage} from '@/components/ui/avatar';
 import {Badge} from '@/components/ui/badge';
 import {Button} from '@/components/ui/button';
 import {useUserAccessHashes} from '@/components/useraccesshashes-provider';
-import {createFileLink, getAvatarFallbackForNickname} from '@/lib/utils';
+import {createFileLink} from '@/lib/utils';
 import {FeedItem} from '@/network/friendly-client';
 import {UserDetails} from '@/types/user-details';
 import {Check, Heart, X} from 'lucide-react';
@@ -10,6 +9,7 @@ import {Dialog} from 'radix-ui';
 import {useNavigate} from 'react-router';
 import {useTranslations} from 'use-intl';
 import {SwipeDirection} from '@/app/feed-review-deck';
+import {StyledAvatar} from '@/components/styled-avatar';
 
 interface FeedDialogProps {
     selectedCard: FeedItem;
@@ -74,29 +74,17 @@ export function FeedDialog({
                             </Badge>
                         )}
                         {selectedCard.commonFriends.slice(0, 5).map(friend => {
-                            const avatar = friend.avatar;
-                            const fallback = getAvatarFallbackForNickname(
-                                friend.nickname,
-                            );
                             return (
-                                <Avatar
-                                    key={friend.id}
-                                    className="w-10 h-10 -ms-4 border-2 border-white dark:border-zinc-800 cursor-pointer"
+                                <StyledAvatar
+                                    avatarClassName="w-10 h-10 -ms-4 border-2 border-white dark:border-zinc-800 cursor-pointer"
+                                    src={
+                                        friend.avatar
+                                            ? createFileLink(friend.avatar)
+                                            : undefined
+                                    }
+                                    nickname={friend.nickname}
                                     onClick={() => void routeToUser(friend)}
-                                >
-                                    <AvatarImage
-                                        src={
-                                            avatar
-                                                ? createFileLink(avatar)
-                                                : undefined
-                                        }
-                                    />
-                                    <AvatarFallback>
-                                        <span className="text-xl">
-                                            {fallback}
-                                        </span>
-                                    </AvatarFallback>
-                                </Avatar>
+                                />
                             );
                         })}
                     </div>
@@ -111,23 +99,17 @@ export function FeedDialog({
                 </div>
 
                 <div className="relative w-full aspect-square shrink-0 overflow-hidden">
-                    <Avatar className="w-full h-full rounded-none object-cover">
-                        <AvatarImage
-                            src={
-                                selectedCard.details.avatar
-                                    ? createFileLink(
-                                          selectedCard.details.avatar,
-                                      )
-                                    : undefined
-                            }
-                            className="object-cover w-full h-full"
-                        />
-                        <AvatarFallback className="text-6xl font-semibold w-full h-full flex items-center justify-center rounded-none bg-zinc-200 dark:bg-zinc-800">
-                            {selectedCard.details.nickname
-                                .slice(0, 2)
-                                .toUpperCase()}
-                        </AvatarFallback>
-                    </Avatar>
+                    <StyledAvatar
+                        avatarClassName="w-full h-full rounded-none object-cover"
+                        src={
+                            selectedCard.details.avatar
+                                ? createFileLink(selectedCard.details.avatar)
+                                : undefined
+                        }
+                        nickname={selectedCard.details.nickname}
+                        avatarImageClassName="object-cover w-full h-full"
+                        fallbackClassName="text-6xl font-semibold w-full h-full flex items-center justify-center rounded-none bg-zinc-200 dark:bg-zinc-800"
+                    />
 
                     <div className="absolute bottom-4 left-4 right-4 z-10 flex flex-wrap gap-2">
                         {selectedCard.details.interests.map(interest => (

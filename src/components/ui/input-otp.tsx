@@ -19,6 +19,7 @@ function InputOTP({
                 containerClassName,
             )}
             className={cn('disabled:cursor-not-allowed', className)}
+            pasteTransformer={(pasted) => pasted.replace(/[\s\t\r]+/g, '')}
             {...props}
         />
     );
