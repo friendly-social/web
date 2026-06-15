@@ -4,8 +4,10 @@ import {useMemo} from 'react';
 import {createFileLink} from '@/lib/utils';
 import {useNavigate} from 'react-router';
 import {StyledAvatar} from '@/components/styled-avatar';
+import {useTranslations} from 'use-intl';
 
 export function FriendCard({friend}: {friend: UserDetails}) {
+    const t = useTranslations('profile.friends');
     const userAccessHashes = useUserAccessHashes();
     const navigate = useNavigate();
 
@@ -23,21 +25,28 @@ export function FriendCard({friend}: {friend: UserDetails}) {
     };
 
     return (
-        <button onClick={() => void openFriendPage()}>
-            <div className="w-40 h-50 flex flex-col items-center gap-2 bg-white dark:bg-zinc-900 hover:bg-zinc-200 hover:dark:bg-zinc-700 rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 shadow-2xs cursor-pointer">
+        <div
+            key={friend.id}
+            className="shrink-0 w-45 cursor-pointer"
+            onClick={() => void openFriendPage()}
+        >
+            <div className="flex flex-col items-center gap-3 bg-white dark:bg-zinc-950 hover:bg-zinc-50 hover:dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 shadow-sm transition-colors h-58">
                 <StyledAvatar
                     avatarClassName="w-16 h-16"
                     src={avatarUrl}
                     nickname={friend.nickname}
                 />
-                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                    {friend?.nickname}
-                </p>
-                <p className="text-sm text-neutral-500 dark:text-zinc-400 text-center">
-                    {friend?.description.substring(0, 16)}
-                    ...
-                </p>
+                <div className="flex flex-col flex-1 items-center min-w-0 w-full min-h-0">
+                    <h3 className="truncate text-sm font-semibold text-zinc-950 dark:text-zinc-50 max-w-full">
+                        {friend.nickname}
+                    </h3>
+                    <p className="text-center mt-2 w-full text-xs text-zinc-600 dark:text-zinc-400 wrap-anywhere line-clamp-3">
+                        {friend.description
+                            ? friend.description
+                            : t('no_description')}
+                    </p>
+                </div>
             </div>
-        </button>
+        </div>
     );
 }

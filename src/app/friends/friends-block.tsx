@@ -25,8 +25,8 @@ export function FriendsBlock({friends}: {friends: UserDetails[]}) {
                         {t('friends.see_all')}
                     </Link>
                 </h3>
-                <div className="flex flex-row gap-2 flex-nowrap">
-                    {friends.slice(0, 3).map(friend => (
+                <div className="flex gap-2 overflow-x-auto pb-4">
+                    {friends.map(friend => (
                         <FriendCard key={friend.id} friend={friend} />
                     ))}
                     <p hidden={friends.length > 0}>{t('friends.no_friends')}</p>

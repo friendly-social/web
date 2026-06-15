@@ -8,7 +8,7 @@ import {Check, Heart, X} from 'lucide-react';
 import {Dialog} from 'radix-ui';
 import {useNavigate} from 'react-router';
 import {useTranslations} from 'use-intl';
-import {SwipeDirection} from '@/app/feed-review-deck';
+import {SwipeDirection} from '@/app/feed/feed-review-deck';
 import {StyledAvatar} from '@/components/styled-avatar';
 
 interface FeedDialogProps {

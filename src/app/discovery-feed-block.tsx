@@ -1,5 +1,5 @@
 import {Heart} from 'lucide-react';
-import {FeedReviewDeck, SwipeDirection} from '@/app/feed-review-deck';
+import {FeedReviewDeck, SwipeDirection} from '@/app/feed/feed-review-deck';
 import {formatNetworkError} from '@/services/backend-service';
 import {useCallback, useEffect, useState} from 'react';
 import {FeedItem} from '@/network/friendly-client';
