@@ -40,7 +40,7 @@ export function FeedDialog({
             state: {
                 feedDialogueState: {
                     selectedCard,
-                }
+                },
             },
             replace: true,
         });

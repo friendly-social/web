@@ -12,7 +12,7 @@ import {EditProfileDialog} from '@/app/edit/dialog';
 import {SuggestEmailBindingDialog} from '@/app/suggest-email-binding-dialog';
 import {FeedDialog} from '@/app/feed/feed-dialog';
 import {StyledAvatar} from '@/components/styled-avatar';
-import {useLocation} from "react-router";
+import {useLocation} from 'react-router';
 
 interface FeedLocationState {
     feedDialogueState?: {
