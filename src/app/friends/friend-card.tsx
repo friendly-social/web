@@ -22,6 +22,7 @@ export function FriendCard({friend}: {friend: UserDetails}) {
             accessHash: friend.accessHash,
         });
         await navigate(`/user/${friend.id}`);
+        window.scrollTo(0, 0);
     };
 
     return (

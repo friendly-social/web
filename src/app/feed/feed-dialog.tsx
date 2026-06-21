@@ -34,6 +34,7 @@ export function FeedDialog({
             accessHash: friend.accessHash,
         });
         await navigate(`/user/${friend.id}`);
+        window.scrollTo(0, 0);
     }
 
     return (
