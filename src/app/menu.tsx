@@ -4,14 +4,22 @@ import {User, Newspaper, MessageCircle, BookUser} from 'lucide-react';
 import {useTranslations} from 'use-intl';
 import {cn} from '@/lib/utils';
 import {Link, useLocation} from 'react-router';
-import {ReactNode} from 'react';
+import {ReactNode, useMemo} from 'react';
+import {useQuery} from '@tanstack/react-query';
+import {useBackend} from '@/backend.context';
+import {NotificationDotIcon} from '@/components/ui/icons/notification-dot';
 
 interface MenuItem {
     path: string;
     title: string;
     icon: ReactNode;
     releaseTag?: string;
+    hasNotify?: boolean;
 }
+
+type RuntimeMenuOptions = Partial<
+    Record<MenuItem['title'], Pick<MenuItem, 'hasNotify'>>
+>;
 
 const MENURAIL_ITEMS: MenuItem[] = [
     {path: '/', title: 'profile', icon: <User />},
@@ -30,9 +38,41 @@ export function MenuRail() {
     const t = useTranslations('menu');
     const {pathname} = useLocation();
 
+    const backend = useBackend();
+    const feedQuery = useQuery({
+        queryKey: ['feedQueue'],
+        queryFn: () => backend.getFeedQueue(),
+    });
+
+    const hasFeedNotify = useMemo(
+        () =>
+            feedQuery.data?.ok
+                ? feedQuery.data.data.entries.some(item => item.isRequest)
+                : false,
+        [feedQuery.data],
+    );
+
+    const runtimeMenuOptions = useMemo<RuntimeMenuOptions>(
+        () => ({
+            feed: {
+                hasNotify: hasFeedNotify,
+            },
+        }),
+        [hasFeedNotify],
+    );
+
+    const menuItems = useMemo(
+        () =>
+            MENURAIL_ITEMS.map(item => ({
+                ...item,
+                hasNotify: runtimeMenuOptions[item.title]?.hasNotify,
+            })),
+        [runtimeMenuOptions],
+    );
+
     return (
         <div className="h-full p-1 flex flex-col gap-1.5 lg:p-4 lg:min-w-55">
-            {MENURAIL_ITEMS.map(item => (
+            {menuItems.map(item => (
                 <Link key={item.path} to={item.path}>
                     <Button
                         variant="ghost"
@@ -46,6 +86,9 @@ export function MenuRail() {
                         <p className="hidden lg:block">
                             {t(item.title as Parameters<typeof t>[0])}
                         </p>{' '}
+                        {item.hasNotify && (
+                            <NotificationDotIcon className="hidden size-3 lg:block" />
+                        )}
                         <Badge hidden={!item.releaseTag} variant="secondary">
                             {item.releaseTag}
                         </Badge>
