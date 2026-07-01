@@ -2,7 +2,7 @@ import {useAppContext} from '@/app.context';
 import {StyledDialogWrapper} from '@/components/styled-dialog-wrapper';
 import {Badge} from '@/components/ui/badge';
 import {Button} from '@/components/ui/button';
-import {createFileLink, truncateString} from '@/lib/utils';
+import {createFileLink} from '@/lib/utils';
 import {useEmailBindingSuggestion} from '@/lib/email-binding-suggestion';
 import {FeedItem} from '@/network/friendly-client';
 import {Activity, Loader2} from 'lucide-react';
@@ -10,7 +10,7 @@ import {useState} from 'react';
 import {useTranslations} from 'use-intl';
 import {EditProfileDialog} from '@/app/edit/dialog';
 import {SuggestEmailBindingDialog} from '@/app/suggest-email-binding-dialog';
-import {FeedDialog} from '@/app/feed-dialog';
+import {FeedDialog} from '@/app/feed/feed-dialog';
 import {StyledAvatar} from '@/components/styled-avatar';
 
 export type SwipeDirection = 'left' | 'right';
@@ -145,18 +145,18 @@ export function FeedReviewDeck({
                     return (
                         <div
                             key={getFeedItemKey(card)}
-                            className="shrink-0 w-48 cursor-pointer"
+                            className="shrink-0 w-45 cursor-pointer"
                             onClick={() => handleCardClick(card)}
                         >
-                            <div className="flex flex-col items-center gap-3 bg-white dark:bg-zinc-950 hover:bg-zinc-50 hover:dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 shadow-sm transition-colors min-h-58">
+                            <div className="flex flex-col items-center gap-3 bg-white dark:bg-zinc-950 hover:bg-zinc-50 hover:dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 shadow-sm transition-colors h-58">
                                 <StyledAvatar
                                     avatarClassName="w-16 h-16 border border-zinc-200 dark:border-zinc-800"
                                     src={avatarUrl}
                                     nickname={card.details.nickname}
                                     fallbackClassName="text-sm font-semibold"
                                 />
-                                <div className="text-center min-w-0 flex-1">
-                                    <h3 className="truncate text-sm font-semibold text-zinc-950 dark:text-zinc-50">
+                                <div className="flex flex-col flex-1 items-center min-w-0 w-full min-h-0">
+                                    <h3 className="truncate text-sm font-semibold text-zinc-950 dark:text-zinc-50 max-w-full">
                                         {card.details.nickname}
                                     </h3>
                                     {badgeLabel && (
@@ -167,12 +167,9 @@ export function FeedReviewDeck({
                                             {badgeLabel}
                                         </Badge>
                                     )}
-                                    <p className="mt-2 text-xs text-zinc-600 dark:text-zinc-400 overflow-hidden text-ellipsis">
+                                    <p className="text-center mt-2 w-full text-xs text-zinc-600 dark:text-zinc-400 wrap-anywhere line-clamp-3">
                                         {card.details.description
-                                            ? truncateString(
-                                                  card.details.description,
-                                                  60,
-                                              )
+                                            ? card.details.description
                                             : t('no_description')}
                                     </p>
                                 </div>

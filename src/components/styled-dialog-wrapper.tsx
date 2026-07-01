@@ -26,7 +26,7 @@ export function StyledDialogWrapper({
                         onInteractOutside: e => e.preventDefault(),
                     })}
                     className={cn(
-                        'z-2 fixed left-1/2 top-1/2 -translate-x-1/2 w-full max-w-lg max-h-dvh overflow-y-auto',
+                        'z-2 fixed left-1/2 top-1/2 -translate-x-1/2 w-full max-w-lg max-h-dvh overflow-y-auto h-[100dvh] overflow-hidden',
                         contentClassName,
                     )}
                 >

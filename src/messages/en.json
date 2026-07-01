@@ -33,7 +33,8 @@
         "friends": {
             "title": "Friends",
             "see_all": "All friends",
-            "no_friends": "Ask someone for invite link to start connecting"
+            "no_friends": "Ask someone for invite link to start connecting",
+            "no_description": "No profile note yet."
         },
         "qr": {
             "title": "QR code",

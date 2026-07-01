@@ -71,11 +71,11 @@ export function AllFriendsList({friends, open, setOpen}: AllFriendsListProps) {
             <div
                 className="
                             rounded-xl bg-white dark:bg-zinc-900
-                            shadow-xl
+                            shadow-xl max-h-full min-h-0 overflow-hidden
                             "
             >
-                <div className="p-0">
-                    <div className="flex flex-col">
+                <div className="p-0 h-full">
+                    <div className="flex flex-col max-h-full overflow-hidden">
                         <div className="relative flex items-center mt-1 mx-1">
                             <Dialog.Title className="w-full text-md font-semibold text-center pt-2">
                                 {t('friends.see_all')}
@@ -93,7 +93,7 @@ export function AllFriendsList({friends, open, setOpen}: AllFriendsListProps) {
                             </Dialog.Close>
                         </div>
 
-                        <div className="flex flex-col p-2">
+                        <div className="flex flex-col p-2 overflow-y-auto min-h-0">
                             {friends.map(friend => (
                                 <FriendListItem
                                     id={friend.id.toString()}
