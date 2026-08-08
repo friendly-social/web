@@ -6,6 +6,7 @@ import {
 } from '@tanstack/react-query';
 import {useEffect, useRef, useState} from 'react';
 import {useSession} from '@/components/session-provider';
+import {isRetryableNetworkError} from '@/network/errors';
 
 export function QueryProvider({children}: {children: React.ReactNode}) {
     const session = useSession();
@@ -21,7 +22,8 @@ export function QueryProvider({children}: {children: React.ReactNode}) {
             new QueryClient({
                 defaultOptions: {
                     queries: {
-                        retry: 3,
+                        retry: (failureCount, error) =>
+                            isRetryableNetworkError(error) && failureCount < 3,
                         retryDelay: attempt =>
                             Math.min(1_000 * 2 ** attempt, 10_000),
                         refetchOnWindowFocus: true,

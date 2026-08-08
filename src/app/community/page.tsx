@@ -1,6 +1,8 @@
 import {useBackend} from '@/backend.context';
 import {Button} from '@/components/ui/button';
 import {
+    InfiniteData,
+    QueryKey,
     useInfiniteQuery,
     useMutation,
     useQuery,
@@ -9,12 +11,19 @@ import {
 import {Loader2, MessageCircle, AlertCircle, Clock} from 'lucide-react';
 import {useTranslations} from 'use-intl';
 import {useState, useCallback, useMemo} from 'react';
-import {CommunityPost} from '@/network/friendly-client';
+import {
+    CommunityPost,
+    ListCommunityPostsResponse,
+} from '@/network/friendly-client';
 import {toast} from 'sonner';
 import {StyledAvatar} from '@/components/styled-avatar';
 import {createFileLink} from '@/lib/utils';
 import {MarkdownArea} from '@/components/ui/markdown-area';
 import {Textarea} from '@/components/ui/textarea';
+import {unwrap} from '@/network/result';
+import {NetworkError} from '@/network/errors';
+import {UserDetails} from '@/types/user-details';
+import {formatNetworkError} from '@/services/backend-service';
 
 export function CommunityPage() {
     const t = useTranslations('community');
@@ -22,14 +31,17 @@ export function CommunityPage() {
     const queryClient = useQueryClient();
     const [newPostText, setNewPostText] = useState('');
 
-    const postsQuery = useInfiniteQuery({
+    const postsQuery = useInfiniteQuery<
+        ListCommunityPostsResponse,
+        NetworkError,
+        InfiniteData<ListCommunityPostsResponse, string | null>,
+        QueryKey,
+        string | null
+    >({
         queryKey: ['communityPosts'],
-        queryFn: ({pageParam}) => backend.listPosts(pageParam),
-        initialPageParam: null as string | null,
-        getNextPageParam: lastPage =>
-            lastPage.ok && lastPage.data.nextId !== null
-                ? lastPage.data.nextId
-                : undefined,
+        queryFn: ({pageParam}) => backend.listPosts(pageParam).then(unwrap),
+        initialPageParam: null,
+        getNextPageParam: lastPage => lastPage.nextId ?? undefined,
     });
 
     const loadMore = () => {
@@ -70,6 +82,8 @@ export function CommunityPage() {
         await createPostMutation.mutateAsync(newPostText);
     }, [newPostText, createPostMutation]);
 
+    const isLoadingError = postsQuery.isError && postsQuery.data === undefined;
+
     let content;
 
     if (postsQuery.isLoading) {
@@ -78,12 +92,14 @@ export function CommunityPage() {
                 <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
             </div>
         );
-    } else if (postsQuery.isError) {
+    } else if (isLoadingError) {
         content = (
             <div className="flex flex-col h-[50vh] gap-4 w-full items-center justify-center">
                 <AlertCircle className="h-10 w-10 animate-pulse text-foreground/80" />
                 <h3 className="text-center">
-                    {postsQuery.error?.message ?? t('unknown_error')}
+                    {postsQuery.error
+                        ? formatNetworkError(postsQuery.error)
+                        : t('unknown_error')}
                 </h3>
                 <Button
                     variant="outline"
@@ -96,23 +112,9 @@ export function CommunityPage() {
         );
     } else {
         const pages = postsQuery.data?.pages ?? [];
-        const posts = pages.flatMap(p => (p.ok ? p.data.data : []));
+        const posts = pages.flatMap(p => p.data);
 
-        if (posts.length === 0 && pages.length > 0 && !pages[0].ok) {
-            content = (
-                <div className="flex flex-col h-[50vh] gap-4 w-full items-center justify-center">
-                    <AlertCircle className="h-10 w-10 animate-pulse text-foreground/80" />
-                    <h3 className="text-center">{t('unknown_error')}</h3>
-                    <Button
-                        variant="outline"
-                        className="mt-2"
-                        onClick={() => void postsQuery.refetch()}
-                    >
-                        {t('retry')}
-                    </Button>
-                </div>
-            );
-        } else if (posts.length === 0) {
+        if (posts.length === 0) {
             content = (
                 <div className="flex flex-col h-[50vh] gap-4 w-full items-center justify-center px-6 text-center">
                     <MessageCircle className="w-12 h-12 text-muted-foreground" />
@@ -181,17 +183,15 @@ function CreatePostCard({
 }: CreatePostCardProps) {
     const t = useTranslations('community');
     const backend = useBackend();
-    const userQuery = useQuery({
+    const userQuery = useQuery<UserDetails, NetworkError>({
         queryKey: ['userDetails'],
-        queryFn: () => backend.getUserDetails(),
+        queryFn: () => backend.getUserDetails().then(unwrap),
     });
 
     const avatarUrl = useMemo(
         () =>
-            userQuery.data?.ok && userQuery.data?.data?.avatar
-                ? createFileLink(userQuery.data.data.avatar)
-                : '',
-        [userQuery],
+            userQuery.data?.avatar ? createFileLink(userQuery.data.avatar) : '',
+        [userQuery.data],
     );
 
     return (
@@ -200,11 +200,7 @@ function CreatePostCard({
                 <StyledAvatar
                     avatarClassName="w-10 h-10"
                     src={avatarUrl}
-                    nickname={
-                        userQuery?.data?.ok
-                            ? userQuery?.data?.data?.nickname
-                            : ''
-                    }
+                    nickname={userQuery.data?.nickname ?? ''}
                 />
                 <div className="w-full flex-1 flex flex-col gap-2 min-w-0">
                     <Textarea

@@ -1,7 +1,7 @@
 import {useAppContext} from '@/app.context';
 import {Button} from '@/components/ui/button';
 import {useEmailBindingSuggestion} from '@/lib/email-binding-suggestion';
-import {FeedItem} from '@/network/friendly-client';
+import {FeedItem, FeedQueueResponse} from '@/network/friendly-client';
 import {Activity, BookUser, Loader2} from 'lucide-react';
 import {useCallback, useEffect, useState} from 'react';
 import {useTranslations} from 'use-intl';
@@ -13,6 +13,8 @@ import {useQuery} from '@tanstack/react-query';
 import {formatNetworkError} from '@/services/backend-service';
 import {toast} from 'sonner';
 import {cn} from '@/lib/utils';
+import {unwrap} from '@/network/result';
+import {NetworkError} from '@/network/errors';
 
 export type SwipeDirection = 'left' | 'right';
 
@@ -41,9 +43,9 @@ export default function FeedPage() {
 
     const backend = useBackend();
 
-    const feedQuery = useQuery({
+    const feedQuery = useQuery<FeedQueueResponse, NetworkError>({
         queryKey: ['feedQueue'],
-        queryFn: () => backend.getFeedQueue(),
+        queryFn: () => backend.getFeedQueue().then(unwrap),
     });
 
     const [cards, setCards] = useState<FeedItem[]>([]);
@@ -60,19 +62,20 @@ export default function FeedPage() {
     } = useEmailBindingSuggestion(app.userDetails?.email ?? null);
 
     useEffect(() => {
-        if (!feedQuery.data?.ok) {
+        if (!feedQuery.data) {
             return;
         }
 
-        setCards(feedQuery.data.data.entries);
-        if (feedQuery.data.data.entries.length > 0)
-            setSelectedCard(feedQuery.data.data.entries[0]);
+        setCards(feedQuery.data.entries);
+        if (feedQuery.data.entries.length > 0)
+            setSelectedCard(feedQuery.data.entries[0]);
     }, [feedQuery.data]);
 
-    const feedErrorMessage =
-        feedQuery.data && !feedQuery.data.ok
-            ? formatNetworkError(feedQuery.data.error)
-            : null;
+    const feedErrorMessage = feedQuery.error
+        ? formatNetworkError(feedQuery.error)
+        : null;
+
+    const isLoadingError = feedQuery.isError && feedQuery.data === undefined;
 
     const onReview = useCallback(
         async (card: FeedItem, direction: SwipeDirection) => {
@@ -138,7 +141,7 @@ export default function FeedPage() {
         );
     }
 
-    if (feedQuery.isError) {
+    if (isLoadingError) {
         return (
             <div className="flex h-full flex-col items-center justify-center rounded-xl border border-destructive/30 bg-card px-6 text-center">
                 <Activity className="h-8 w-8 text-destructive" />

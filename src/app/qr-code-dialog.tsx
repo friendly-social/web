@@ -8,6 +8,8 @@ import {Copy, Loader2, RotateCcw} from 'lucide-react';
 import QRCode from 'react-qr-code';
 import {toast} from 'sonner';
 import {useTranslations} from 'use-intl';
+import {unwrap} from '@/network/result';
+import {NetworkError} from '@/network/errors';
 
 export interface QrCodeDialogProps {
     open: boolean;
@@ -20,15 +22,15 @@ export function QrCodeDialog({open, setOpen}: QrCodeDialogProps) {
     const backend = useBackend();
     const user = useAppContext().userDetails;
 
-    const inviteQuery = useQuery({
+    const inviteQuery = useQuery<string, NetworkError>({
         queryKey: ['inviteToken'],
-        queryFn: () => backend.generateFriendInvitationToken(),
+        queryFn: () => backend.generateFriendInvitationToken().then(unwrap),
         enabled: open,
     });
 
     const url =
-        user?.id && inviteQuery.data?.ok
-            ? createFriendInviteLink(user.id, inviteQuery.data.data)
+        user?.id && inviteQuery.data
+            ? createFriendInviteLink(user.id, inviteQuery.data)
             : null;
 
     async function forceRefresh() {

@@ -74,6 +74,7 @@ export class FriendlyClientImpl implements FriendlyClient {
         this.baseUrl = baseUrl;
         this.client = axios.create({
             baseURL: this.baseUrl,
+            timeout: 15_000,
             headers: {
                 'Content-Type': 'application/json',
             },

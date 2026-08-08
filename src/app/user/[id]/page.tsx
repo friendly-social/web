@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import {ConfirmationDialog} from '@/components/confirmation-dialog';
 import {StyledAvatar} from '@/components/styled-avatar';
+import {unwrap} from '@/network/result';
 
 interface ProfileDropdownProps {
     onRemoveFriend: () => void;
@@ -177,14 +178,17 @@ export default function UserPage() {
     const userQuery = useQuery({
         queryKey: ['user', id],
         queryFn: async () => {
-            if (!id)
-                return Promise.reject(new Error('Id is null or undefined'));
+            if (!id) throw new Error('Id is null or undefined');
+
             const idNum = parseInt(id);
             const userPair = await userAccessHashes.service.get(idNum);
-            const accessHash = userPair.accessHash;
-            return backend.getUserDetailsById(parseInt(id), accessHash);
+            return unwrap(
+                await backend.getUserDetailsById(idNum, userPair.accessHash),
+            );
         },
     });
+
+    const isLoadingError = userQuery.isError && userQuery.data === undefined;
 
     let content;
 
@@ -194,18 +198,18 @@ export default function UserPage() {
                 <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
             </div>
         );
-    } else if (userQuery.isError || !userQuery.data?.ok) {
+    } else if (isLoadingError) {
         content = (
             <div className="flex flex-col h-[50vh] gap-4 w-full items-center justify-center">
                 <Activity className="h-10 w-10 animate-pulse text-foreground/80" />
                 <h3>{userQuery.error?.message ?? t('unknown_error')}</h3>
             </div>
         );
-    } else {
+    } else if (userQuery.data) {
         content = (
             <div className="flex flex-col gap-2 pb-12">
                 <ProfileHeader
-                    userDetails={userQuery.data.data}
+                    userDetails={userQuery.data}
                     onRemoveFriend={declineFriend}
                 />
                 <Separator />
@@ -213,7 +217,7 @@ export default function UserPage() {
                 <div className="flex flex-col md:flex-row gap-8">
                     <div className="flex-1 flex flex-col gap-8 p-8 min-w-0">
                         <InterestsBlock
-                            interests={userQuery.data.data?.interests ?? []}
+                            interests={userQuery.data?.interests ?? []}
                         />
                     </div>
                 </div>

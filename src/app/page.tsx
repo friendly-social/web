@@ -10,6 +10,10 @@ import {useBackend} from '@/backend.context';
 import {formatNetworkError} from '@/services/backend-service';
 import {createFileLink} from '@/lib/utils';
 import {useQuery, useQueryClient} from '@tanstack/react-query';
+import {unwrap} from '@/network/result';
+import {NetworkError} from '@/network/errors';
+import {UserDetails} from '@/types/user-details';
+import {NetworkDetailsResponse} from '@/network/friendly-client';
 import {useSession} from '@/components/session-provider';
 import {useTranslations} from 'use-intl';
 import {EditProfileDialog} from '@/app/edit/dialog';
@@ -147,42 +151,39 @@ export default function Home() {
         void navigate('/sign-up');
     };
 
-    const userQuery = useQuery({
+    const userQuery = useQuery<UserDetails, NetworkError>({
         queryKey: ['userDetails'],
-        queryFn: () => backend.getUserDetails(),
+        queryFn: () => backend.getUserDetails().then(unwrap),
         enabled: session.status === 'authed',
     });
 
-    const networkQuery = useQuery({
+    const networkQuery = useQuery<NetworkDetailsResponse, NetworkError>({
         queryKey: ['networkDetails', blockingQR],
-        queryFn: () => backend.getNetworkDetails(),
+        queryFn: () => backend.getNetworkDetails().then(unwrap),
         enabled: session.status === 'authed',
     });
-
-    const userResult = userQuery.data ?? null;
-    const networkResult = networkQuery.data ?? null;
 
     useEffect(() => {
-        if (userResult?.ok) {
-            appRef.current.setUserDetails(userResult.data);
+        if (userQuery.data) {
+            appRef.current.setUserDetails(userQuery.data);
         }
-    }, [appRef, userResult]);
+    }, [appRef, userQuery.data]);
 
-    const hasResultError =
-        (userResult && !userResult.ok) || (networkResult && !networkResult.ok);
+    const isLoadingError =
+        (userQuery.isError && userQuery.data === undefined) ||
+        (networkQuery.isError && networkQuery.data === undefined);
 
-    const errorMessage =
-        userResult && !userResult.ok
-            ? formatNetworkError(userResult.error)
-            : networkResult && !networkResult.ok
-              ? formatNetworkError(networkResult.error)
-              : null;
+    const errorMessage = userQuery.error
+        ? formatNetworkError(userQuery.error)
+        : networkQuery.error
+          ? formatNetworkError(networkQuery.error)
+          : null;
 
     const isLoading = session.status === 'loading' || userQuery.isLoading;
-    const isError = userQuery.isError || hasResultError;
+    const isError = isLoadingError;
 
     const user = app.userDetails;
-    const friends = networkResult?.ok ? networkResult.data.friends : [];
+    const friends = networkQuery.data?.friends ?? [];
 
     let content;
 
