@@ -1,0 +1,35 @@
+appId: team.friendly.app.electron
+productName: Friendly
+
+files:
+  - main.js
+  - preload.js
+  - package.json
+  - node_modules/**/*
+
+extraResources:
+  - from: ../dist
+    to: web-out
+
+directories:
+  output: dist
+
+mac:
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+
+linux:
+  target:
+    - target: AppImage
+      arch:
+        - x64
+        - arm64

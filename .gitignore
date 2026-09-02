@@ -45,3 +45,7 @@ tags
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# electron sub-project
+/electron/node_modules
+/electron/dist/
