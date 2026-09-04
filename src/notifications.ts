@@ -3,8 +3,10 @@ import {AppContext} from '@/app.context';
 import {
     getMessaging,
     getToken,
+    isSupported,
     onMessage,
     MessagePayload,
+    Messaging,
 } from 'firebase/messaging';
 
 // Erm... Actually, these are not private
@@ -19,26 +21,66 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const messaging = getMessaging(app);
+
+const VAPID_KEY =
+    'BAEj5IbZiBmuUHKNu1Z3hoM5OHEEETG63Lg7mcxxG-kX5t-r5minZEeZTFC-qlW5vYir7mSt3eruuZbr0WcORX0';
 
 const swiped = Number(localStorage.getItem('feed-swipes') ?? '0');
+
+let messagingPromise: Promise<Messaging | null> | undefined;
+
+/**
+ * Push is not available everywhere: iOS Safari outside of an installed PWA has
+ * no push support at all, and `getMessaging` throws there. This module is
+ * imported from the entry point, so a throw on the top level would take down
+ * the whole app instead of just the notifications. Hence lazy resolution, and
+ * "no messaging" is a normal state, not an error.
+ */
+async function getMessagingOrNull(): Promise<Messaging | null> {
+    messagingPromise ??= (async () => {
+        try {
+            if (!(await isSupported())) return null;
+            const messaging = getMessaging(app);
+            onMessage(messaging, message => void postMessage(message));
+            return messaging;
+        } catch (error) {
+            console.warn('Push notifications are unavailable', error);
+            return null;
+        }
+    })();
+    return messagingPromise;
+}
 
 export function main(app: AppContext) {
     if (
         swiped > 20 ||
         localStorage.getItem('request-notifications') === 'true'
     ) {
-        void window.Notification.requestPermission().then(permission => {
-            if (permission !== 'granted') return;
-            void getToken(messaging, {
-                vapidKey:
-                    'BAEj5IbZiBmuUHKNu1Z3hoM5OHEEETG63Lg7mcxxG-kX5t-r5minZEeZTFC-qlW5vYir7mSt3eruuZbr0WcORX0',
-            }).then(token => {
-                setFirebaseToken(token);
-                void nudge(app);
-            });
-        });
+        void requestToken(app);
     }
+}
+
+async function requestToken(app: AppContext) {
+    const messaging = await getMessagingOrNull();
+    if (!messaging) return;
+
+    // `isSupported` already checked that Notification exists.
+    const permission = await window.Notification.requestPermission();
+    if (permission !== 'granted') return;
+
+    let token;
+    try {
+        token = await getToken(messaging, {vapidKey: VAPID_KEY});
+    } catch (error) {
+        // No service worker, blocked permission, network -- nothing to do here.
+        // The next app start will nudge again.
+        console.warn('Failed to obtain a push token', error);
+        return;
+    }
+    if (!token) return;
+
+    setFirebaseToken(token);
+    await nudge(app);
 }
 
 /**
@@ -61,12 +103,24 @@ export async function nudge(app: AppContext) {
     if (!firebaseToken) return;
     if (firebaseToken === getUploadedToken()) return;
 
-    while (true) {
+    // Bounded with a growing pause: an unreachable backend used to turn this
+    // into a request flood that pinned the tab, and `nudge` is awaited during
+    // sign-in, so an endless loop hung the whole flow. Giving up is safe --
+    // the doc comment above already relies on the next app start retrying.
+    for (let attempt = 0; attempt < 5; attempt++) {
+        if (attempt > 0) {
+            await sleep(Math.min(1_000 * 2 ** (attempt - 1), 30_000));
+        }
         const result = await app.backend.authFirebase({firebaseToken});
-        if (result.ok) break;
+        if (result.ok) {
+            setUploadedToken(firebaseToken);
+            return;
+        }
     }
+}
 
-    setUploadedToken(firebaseToken);
+function sleep(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 export function logout() {
@@ -103,4 +157,7 @@ async function postMessage(payload: MessagePayload) {
     );
     registration?.active?.postMessage(payload);
 }
-onMessage(messaging, message => void postMessage(message));
+
+// Bring up the foreground-message bridge as early as before, just without the
+// possibility of taking the app down with it.
+void getMessagingOrNull();

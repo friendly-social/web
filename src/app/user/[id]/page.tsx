@@ -15,6 +15,7 @@ import {
     Ellipsis,
 } from 'lucide-react';
 import {useTranslations} from 'use-intl';
+import {useErrorMessage} from '@/network/error-message';
 import {useMemo, useState, useEffect} from 'react';
 import {UserDetails} from '@/types/user-details';
 import {Badge} from '@/components/ui/badge';
@@ -161,6 +162,7 @@ function InterestsBlock({interests}: {interests: string[]}) {
 
 export default function UserPage() {
     const t = useTranslations('profile');
+    const errorMessage = useErrorMessage();
     const navigate = useNavigate();
     const app = useAppContext();
     const backend = useBackend();
@@ -239,7 +241,7 @@ export default function UserPage() {
         content = (
             <div className="flex flex-col h-[50vh] gap-4 w-full items-center justify-center">
                 <Activity className="h-10 w-10 animate-pulse text-foreground/80" />
-                <p>{userQuery.error?.message ?? t('unknown_error')}</p>
+                <p>{errorMessage(userQuery.error)}</p>
             </div>
         );
     } else {

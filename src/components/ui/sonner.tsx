@@ -24,6 +24,16 @@ const Toaster = ({...props}: ToasterProps) => {
                 error: <OctagonXIcon className="size-4" />,
                 loading: <Loader2Icon className="size-4 animate-spin" />,
             }}
+            toastOptions={{
+                classNames: {
+                    // Toasts now carry a description, and sonner gives title and
+                    // description the same size and colour -- without a weight
+                    // jump the two lines read as one paragraph. Dimming the
+                    // description instead would push it under 4.5:1 on the
+                    // rich-colour background.
+                    title: 'font-semibold!',
+                },
+            }}
             style={
                 {
                     '--normal-bg': 'var(--popover)',

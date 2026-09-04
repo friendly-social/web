@@ -103,7 +103,9 @@ export default function SignUpPage() {
                 backend.setAuthorization(result.data);
                 session.setAuthed();
                 await handleAddFriend();
-                await Notifications.nudge(app);
+                // Same as in the sign-in dialog: the token upload retries on
+                // its own, sign-up should not wait for it.
+                void Notifications.nudge(app);
                 void navigate('/');
             } else {
                 toast.error(t('error-connection'));

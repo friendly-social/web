@@ -26,23 +26,6 @@ import {
 import {NetworkError} from '@/network/errors';
 import {err, ok, Result} from '@/network/result';
 
-// FIXME: this is not localized
-export function formatNetworkError(error: NetworkError): string {
-    switch (error.type) {
-        case 'unauthorized':
-            return `Unauthorized (status ${error.status})`;
-        case 'network':
-            return `Network error: ${error.message}`;
-        case 'parse':
-            return `Parse error: ${error.message}`;
-        case 'status':
-            return `Status: ${error.status}`;
-        case 'unknown':
-        default:
-            return `Unknown error: ${error.message}`;
-    }
-}
-
 export function mapResult<T, U>(
     result: Result<T, NetworkError>,
     map: (value: T) => U,

@@ -8,6 +8,7 @@ import {
 } from '@tanstack/react-query-persist-client';
 import {useMemo} from 'react';
 import {get, set, del} from 'idb-keyval';
+import {isRetriable} from '@/network/errors';
 import {ReactNode} from 'react';
 
 /**
@@ -33,8 +34,15 @@ export function QueryProvider({children}: {children: React.ReactNode}) {
         const client = new QueryClient({
             defaultOptions: {
                 queries: {
-                    retry: true,
-                    retryDelay: 1_000,
+                    // Bounded on purpose: with endless retries a query never
+                    // reaches its error state, so every "Retry" branch in the
+                    // UI is dead code and an offline user only ever sees a
+                    // spinner. `refetchOnReconnect` brings the data back once
+                    // the network does.
+                    retry: (failureCount, error) =>
+                        failureCount < 3 && isRetriable(error),
+                    retryDelay: attempt =>
+                        Math.min(1_000 * 2 ** attempt, 30_000),
                     refetchOnWindowFocus: true,
                     refetchOnReconnect: true,
                     refetchOnMount: true,

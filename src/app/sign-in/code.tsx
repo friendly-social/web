@@ -82,25 +82,33 @@ function CodeDialogContent({email}: CodeDialogProps): ReactNode {
             return;
         }
         setLoading(true);
-        const code = Number(value);
-        const result = await backend.authLogin({email, code});
-        if (!result.ok) {
-            if (result.error.type === 'status') {
-                setError(true);
-            } else {
-                toast.error(t('error-connection'));
+        // `finally`, because every early return below used to leave the button
+        // disabled with a spinner on it forever -- the only way out was closing
+        // the dialog.
+        try {
+            const code = Number(value);
+            const result = await backend.authLogin({email, code});
+            if (!result.ok) {
+                if (result.error.type === 'status') {
+                    setError(true);
+                } else {
+                    toast.error(t('error-connection'));
+                }
+                return;
             }
-            return;
+            authService.save(app, result.data);
+            backend.setAuthorization(result.data);
+            session.setAuthed();
+            blockingQR.dismissBlockingQR();
+            await handleAddFriend();
+            // Uploading the push token is a background concern: it retries with
+            // a backoff, and sign-in should not wait out those attempts.
+            void Notifications.nudge(app);
+            localStorage.setItem('request-notifications', 'true');
+            void navigate('/');
+        } finally {
+            setLoading(false);
         }
-        authService.save(app, result.data);
-        backend.setAuthorization(result.data);
-        session.setAuthed();
-        blockingQR.dismissBlockingQR();
-        await handleAddFriend();
-        await Notifications.nudge(app);
-        localStorage.setItem('request-notifications', 'true');
-        void navigate('/');
-        setLoading(false);
     }
 
     return (

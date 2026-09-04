@@ -32,10 +32,10 @@ function self(app: AppContext): Resource<UserDetailsResponse> {
 }
 
 function ensureSelf(app: AppContext): Promise<UserDetailsResponse> {
-    return app.queryClient.ensureQueryData({
-        ...selfOptions(app),
-        retry: true,
-    });
+    // No `retry` override here: this is awaited while creating a post, and an
+    // endless retry means the submit button spins forever instead of the
+    // mutation reporting the failure.
+    return app.queryClient.ensureQueryData(selfOptions(app));
 }
 
 function setSelf(app: AppContext, value?: UserDetailsResponse) {

@@ -20,9 +20,11 @@ import {
     ActivityDetailsReply,
     ActivityId,
 } from '@/network/friendly-client';
+import {useErrorMessage} from '@/network/error-message';
 
 export function ActivityPage() {
     const t = useTranslations('activity');
+    const errorMessage = useErrorMessage();
     const app = useAppContext();
 
     const activityQuery = useInfiniteQuery(activity.listOptions(app));
@@ -40,7 +42,7 @@ export function ActivityPage() {
             <div className="flex flex-col h-[50vh] gap-4 w-full items-center justify-center">
                 <AlertCircle className="h-10 w-10 animate-pulse text-foreground/80" />
                 <p className="text-center">
-                    {activityQuery.error?.message ?? t('unknown-error')}
+                    {errorMessage(activityQuery.error)}
                 </p>
                 <Button
                     variant="outline"

@@ -12,6 +12,7 @@ import {users} from '@/services/users-service';
 import {useAppContext} from '@/app.context';
 import {Clock} from 'lucide-react';
 import {useTranslations} from 'use-intl';
+import {useErrorMessage} from '@/network/error-message';
 import {CommunityPostDetailsPlain} from '@/network/friendly-client';
 import {StyledAvatar} from '@/components/styled-avatar';
 import {createFileLink} from '@/lib/utils';
@@ -408,6 +409,7 @@ function useDeleteMutation({details}: UseDeleteMutationProps) {
     const app = useAppContext();
     const navigate = useNavigate();
     const t = useTranslations('replies');
+    const errorMessage = useErrorMessage();
 
     async function navigateReplies(descriptor: CommunityPostDescriptor) {
         await navigate(`/community/${descriptor.id}/replies`);
@@ -444,7 +446,9 @@ function useDeleteMutation({details}: UseDeleteMutationProps) {
             }
         },
         onError: error => {
-            toast.error(error.message ?? t('post_create_error'));
+            toast.error(t('post_delete_error'), {
+                description: errorMessage(error),
+            });
         },
     });
 }
@@ -458,6 +462,7 @@ function useCreateMutation({details, onSuccess}: UseCreateMutationProps) {
     const app = useAppContext();
     const navigate = useNavigate();
     const t = useTranslations('replies');
+    const errorMessage = useErrorMessage();
 
     async function navigateReplies(descriptor: CommunityPostDescriptor) {
         await navigate(`/community/${descriptor.id}/replies`);
@@ -500,7 +505,9 @@ function useCreateMutation({details, onSuccess}: UseCreateMutationProps) {
             }
         },
         onError: error => {
-            toast.error(error.message ?? t('post_create_error'));
+            toast.error(t('post_create_error'), {
+                description: errorMessage(error),
+            });
         },
     });
 }

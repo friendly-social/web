@@ -31,9 +31,11 @@ import {newPost} from '@/services/new-post-service';
 import {StyledAvatar} from '@/components/styled-avatar';
 import {createFileLink} from '@/lib/utils';
 import {CommunityPostCard} from './post';
+import {useErrorMessage} from '@/network/error-message';
 
 export function CommunityPage() {
     const t = useTranslations('community');
+    const errorMessage = useErrorMessage();
     const backend = useBackend();
     const queryClient = useQueryClient();
     const app = useAppContext();
@@ -108,7 +110,9 @@ export function CommunityPage() {
             virtualizer.scrollToOffset(0);
         },
         onError: error => {
-            toast.error(error.message ?? t('post_create_error'));
+            toast.error(t('post_create_error'), {
+                description: errorMessage(error),
+            });
         },
     });
 
@@ -194,7 +198,7 @@ export function CommunityPage() {
                 <div className="flex flex-col h-[50vh] gap-4 w-full items-center justify-center">
                     <AlertCircle className="h-10 w-10 animate-pulse text-foreground/80" />
                     <p className="text-center">
-                        {postsQuery.error?.message ?? t('unknown_error')}
+                        {errorMessage(postsQuery.error)}
                     </p>
                     <Button
                         variant="outline"

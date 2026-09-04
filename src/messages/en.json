@@ -183,14 +183,12 @@
         "clear-draft": "Clear",
         "post_create_error": "Failed to create post",
         "retry": "Retry",
-        "unknown_error": "Something went wrong",
         "empty_title": "No posts yet",
         "empty_desc": "Be the first to share something with the community!",
         "load-more": "Load more"
     },
     "activity": {
         "retry": "Retry",
-        "unknown-error": "Something went wrong",
         "empty-title": "Nothing here yet",
         "empty-desc": "Recent activity will appear here",
         "load-more": "Load more",
@@ -217,6 +215,7 @@
     "replies": {
         "reply-placeholder": "Type your reply...",
         "post_create_error": "Failed to create post",
+        "post_delete_error": "Failed to delete post",
         "retry": "Retry",
         "unknown_error": "Something went wrong",
         "no-replies": "No replies yet",
@@ -271,5 +270,12 @@
     },
     "markdown": {
         "image": "Image"
+    },
+    "errors": {
+        "network": "Can't get to our servers :(",
+        "server": "Our servers are having trouble, try again in a moment",
+        "request": "The server refused this request",
+        "unauthorized": "Your session has expired, please sign in again",
+        "unknown": "Something went wrong"
     }
 }
