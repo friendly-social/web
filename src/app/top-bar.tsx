@@ -1,8 +1,31 @@
 import {ReactNode} from 'react';
+import {Button} from '@/components/ui/button';
+import {X} from 'lucide-react';
 import {Link} from 'react-router';
 import {cn} from '@/lib/utils';
+import {useState} from 'react';
 
-export function TopBar(): ReactNode {
+export interface CloseButtonProps {
+    onClick: () => void;
+}
+
+export interface TopBarContext {
+    closeButton: CloseButtonProps | null;
+    setCloseButton: (props: CloseButtonProps | null) => void;
+}
+
+export function useTopBarContext(): TopBarContext {
+    const [closeButton, setCloseButton] = useState<CloseButtonProps | null>(
+        null,
+    );
+
+    return {
+        closeButton,
+        setCloseButton,
+    };
+}
+
+export function TopBar({closeButton}: TopBarContext): ReactNode {
     return (
         <div className={cn('w-full h-16', 'flex flex-col items-center')}>
             <div
@@ -23,6 +46,16 @@ export function TopBar(): ReactNode {
                         src="/banner-dark.svg"
                     />
                 </Link>
+                <div className="flex-1" />
+                {closeButton && (
+                    <Button
+                        className="h-10 w-10 ghost cursor-pointer block md:hidden"
+                        variant="ghost"
+                        onClick={closeButton.onClick}
+                    >
+                        <X />
+                    </Button>
+                )}
             </div>
             <div className="w-full h-px bg-border" />
         </div>

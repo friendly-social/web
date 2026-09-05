@@ -1,4 +1,8 @@
 import {MainPostCard} from '@/app/community/replies/main-post';
+import {useLocation} from 'react-router';
+import {useScaffoldContext} from '@/app/scaffold';
+import {cn} from '@/lib/utils';
+import {X} from 'lucide-react';
 import {communityPosts} from '@/services/community-posts-service';
 import {CommunityPostId} from '@/network/friendly-client';
 import {CommunityDetailsResponse} from '@/network/friendly-client';
@@ -6,7 +10,7 @@ import {Button} from '@/components/ui/button';
 import {useInfiniteQuery} from '@tanstack/react-query';
 import {Loader2, MessageCircle, AlertCircle} from 'lucide-react';
 import {useTranslations} from 'use-intl';
-import React, {useRef, useEffect} from 'react';
+import React, {useRef, useEffect, useLayoutEffect} from 'react';
 import {useNavigate, useParams} from 'react-router';
 import {CommunityPostCard} from '../post';
 import {useAppContext} from '@/app.context';
@@ -26,6 +30,28 @@ export function RepliesPage() {
     if (!idInt) return;
 
     const replyTo = communityPosts.useDetails(app, idInt);
+
+    const location = useLocation().state as {popDepth: number} | undefined;
+    const popDepth = location?.popDepth ?? 0;
+
+    function navigateUp() {
+        if (popDepth) {
+            void navigate(-popDepth);
+        } else {
+            void navigate('/community', {replace: true});
+        }
+    }
+
+    const {topBar} = useScaffoldContext();
+
+    useLayoutEffect(() => {
+        topBar.setCloseButton({
+            onClick: navigateUp,
+        });
+        return () => {
+            topBar.setCloseButton(null);
+        };
+    }, [location]);
 
     let content;
 
@@ -52,15 +78,36 @@ export function RepliesPage() {
             </div>
         );
     } else {
-        content = <ReplyContent id={idInt} replyTo={replyTo.data!} />;
+        content = (
+            <ReplyContent
+                id={idInt}
+                replyTo={replyTo.data!}
+                popDepth={popDepth + 1}
+            />
+        );
     }
 
     return (
         <div
-            key={idInt}
-            className="flex flex-col w-full h-full max-w-2xl mx-auto"
+            className={cn(
+                'flex flex-row h-full justify-center px-4',
+                'md:ps-14 md:px-0 md:pe-2',
+            )}
         >
-            {content}
+            <div key={idInt} className="flex flex-col w-full h-full max-w-2xl">
+                {content}
+            </div>
+            <Button
+                className={cn(
+                    'h-10 w-10 mt-2 ms-2',
+                    'cursor-pointer',
+                    'hidden md:block',
+                )}
+                onClick={navigateUp}
+                variant="ghost"
+            >
+                <X className="w-full h-full" />
+            </Button>
         </div>
     );
 }
@@ -68,9 +115,10 @@ export function RepliesPage() {
 interface ReplyContentProps {
     id: CommunityPostId;
     replyTo: CommunityDetailsResponse;
+    popDepth: number;
 }
 
-function ReplyContent({id, replyTo}: ReplyContentProps) {
+function ReplyContent({id, replyTo, popDepth}: ReplyContentProps) {
     const app = useAppContext();
     const t = useTranslations('replies');
 
@@ -161,6 +209,7 @@ function ReplyContent({id, replyTo}: ReplyContentProps) {
                             key={`${replyTo.post.id}-${post.id}`}
                             postId={post.id}
                             minimizeToolbar={true}
+                            popDepth={popDepth}
                         />
                     ))}
                     <div
@@ -201,6 +250,7 @@ function ReplyContent({id, replyTo}: ReplyContentProps) {
                         postId={post.id}
                         minimizeToolbar={false}
                         minimizeText={true}
+                        popDepth={popDepth}
                     />
                 ))}
             </div>
@@ -210,10 +260,14 @@ function ReplyContent({id, replyTo}: ReplyContentProps) {
     return (
         <div
             ref={scrollableRef}
-            className="h-full w-full p-4 overflow-y-auto scrollbar-none"
+            className="h-full w-full py-4 overflow-y-auto scrollbar-none"
         >
             {upstream}
-            <MainPostCard postRef={postRef} details={replyTo} />
+            <MainPostCard
+                postRef={postRef}
+                details={replyTo}
+                popDepth={popDepth}
+            />
             {replies}
             <div hidden={!postsQuery.hasNextPage}>
                 <Button

@@ -155,7 +155,7 @@ export function ProfilePage() {
 
     let content;
 
-    if (userQuery.cache === 'empty') {
+    if (userQuery.cache === 'empty' || networkQuery.isPending) {
         content = (
             <div className="flex h-[50vh] w-full items-center justify-center">
                 <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />

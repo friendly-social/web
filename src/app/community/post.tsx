@@ -19,6 +19,7 @@ export interface CommunityPostCardProps {
     postId: CommunityPostId;
     minimizeText?: boolean;
     minimizeToolbar?: boolean;
+    popDepth: number;
 }
 
 export function CommunityPostCard(props: CommunityPostCardProps) {
@@ -34,10 +35,16 @@ export function CommunityPostCard(props: CommunityPostCardProps) {
                     post={post}
                     minimizeText={props.minimizeText}
                     minimizeToolbar={props.minimizeToolbar}
+                    popDepth={props.popDepth}
                 />
             );
         case 'deleted':
-            return <CommunityPostCardDeleted post={post} />;
+            return (
+                <CommunityPostCardDeleted
+                    post={post}
+                    popDepth={props.popDepth}
+                />
+            );
     }
 }
 
@@ -45,12 +52,14 @@ export interface CommunityPostCardPlainProps {
     post: CommunityPostDetailsPlain;
     minimizeText?: boolean;
     minimizeToolbar?: boolean;
+    popDepth: number;
 }
 
 function CommunityPostCardPlain({
     post,
     minimizeText,
     minimizeToolbar,
+    popDepth,
 }: CommunityPostCardPlainProps) {
     const t = useTranslations('post');
     const navigate = useNavigate();
@@ -62,7 +71,11 @@ function CommunityPostCardPlain({
     const postTime = new Date(post.instant);
 
     async function navigateReplies() {
-        await navigate(`/community/${post.id}/replies`);
+        await navigate(`/community/${post.id}/replies`, {
+            state: {
+                popDepth,
+            },
+        });
     }
 
     async function navigateProfile(event: React.MouseEvent) {
@@ -144,15 +157,23 @@ function CommunityPostCardPlain({
 
 interface CommunityPostCardDeletedProps {
     post: CommunityPostDetailsDeleted;
+    popDepth: number;
 }
 
-function CommunityPostCardDeleted({post}: CommunityPostCardDeletedProps) {
+function CommunityPostCardDeleted({
+    post,
+    popDepth,
+}: CommunityPostCardDeletedProps) {
     const t = useTranslations('post');
     const navigate = useNavigate();
     const postTime = new Date(post.instant);
 
     async function navigateReplies() {
-        await navigate(`/community/${post.id}/replies`);
+        await navigate(`/community/${post.id}/replies`, {
+            state: {
+                popDepth,
+            },
+        });
     }
 
     return (

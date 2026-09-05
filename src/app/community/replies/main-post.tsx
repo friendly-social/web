@@ -23,6 +23,7 @@ import {RefObject, useEffect, useRef, useState, useMemo} from 'react';
 interface MainPostCardProps {
     details: CommunityDetailsResponse;
     postRef: RefObject<HTMLDivElement | null>;
+    popDepth: number;
 }
 
 const emojis = [
@@ -44,7 +45,7 @@ const emojis = [
 
 type InputAction = 'send' | 'edit';
 
-export function MainPostCard({details, postRef}: MainPostCardProps) {
+export function MainPostCard({details, postRef, popDepth}: MainPostCardProps) {
     const app = useAppContext();
 
     const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -57,10 +58,11 @@ export function MainPostCard({details, postRef}: MainPostCardProps) {
 
     const self = users.useSelf(app);
 
-    const deleteMutation = useDeleteMutation({details});
+    const deleteMutation = useDeleteMutation({details, popDepth});
 
     const createMutation = useCreateMutation({
         details,
+        popDepth,
         onSuccess: () => setText(''),
     });
 
@@ -402,15 +404,19 @@ function isMobile(): boolean {
 
 interface UseDeleteMutationProps {
     details: CommunityDetailsResponse;
+    popDepth: number;
 }
 
-function useDeleteMutation({details}: UseDeleteMutationProps) {
+function useDeleteMutation({details, popDepth}: UseDeleteMutationProps) {
     const app = useAppContext();
     const navigate = useNavigate();
     const t = useTranslations('replies');
 
     async function navigateReplies(descriptor: CommunityPostDescriptor) {
-        await navigate(`/community/${descriptor.id}/replies`);
+        await navigate(`/community/${descriptor.id}/replies`, {
+            state: {popDepth} as unknown,
+            replace: true,
+        });
     }
 
     return useMutation({
@@ -453,16 +459,24 @@ function useDeleteMutation({details}: UseDeleteMutationProps) {
 
 interface UseCreateMutationProps {
     details: CommunityDetailsResponse;
+    popDepth: number;
     onSuccess: () => void;
 }
 
-function useCreateMutation({details, onSuccess}: UseCreateMutationProps) {
+function useCreateMutation({
+    details,
+    popDepth,
+    onSuccess,
+}: UseCreateMutationProps) {
     const app = useAppContext();
     const navigate = useNavigate();
     const t = useTranslations('replies');
 
     async function navigateReplies(descriptor: CommunityPostDescriptor) {
-        await navigate(`/community/${descriptor.id}/replies`);
+        await navigate(`/community/${descriptor.id}/replies`, {
+            state: {popDepth} as unknown,
+            replace: true,
+        });
     }
 
     return useMutation({
@@ -507,12 +521,12 @@ function useCreateMutation({details, onSuccess}: UseCreateMutationProps) {
     });
 }
 
-interface UseCreateMutationProps {
+interface UseEditMutationProps {
     details: CommunityDetailsResponse;
     onSuccess: () => void;
 }
 
-function useEditMutation({details, onSuccess}: UseCreateMutationProps) {
+function useEditMutation({details, onSuccess}: UseEditMutationProps) {
     const app = useAppContext();
     const t = useTranslations('replies');
 

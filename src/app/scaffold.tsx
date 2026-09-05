@@ -1,10 +1,24 @@
 import {useLocation, useNavigationType, NavigationType} from 'react-router';
-import {ReactNode, RefObject, useRef, useEffect} from 'react';
+import {ReactNode, RefObject, useRef, useLayoutEffect, useEffect} from 'react';
 import {cn} from '@/lib/utils';
 import {TopBar} from '@/app/top-bar';
 import {MenuRail, MenuBar} from '@/app/menu';
 import {useSession} from '@/components/session-provider';
 import {useBlockingQR} from '@/app/blocking-qr/page';
+import {createContext, useContext} from 'react';
+import {TopBarContext, useTopBarContext} from '@/app/top-bar';
+
+const ScaffoldContextKey = createContext<ScaffoldContext | null>(null);
+
+export interface ScaffoldContext {
+    topBar: TopBarContext;
+}
+
+export function useScaffoldContext(): ScaffoldContext {
+    const value = useContext(ScaffoldContextKey);
+    if (!value) throw new Error('ScaffoldContext must be used inside Scaffold');
+    return value;
+}
 
 export interface ScaffoldProps {
     children: ReactNode;
@@ -15,11 +29,17 @@ export function Scaffold({children}: ScaffoldProps): ReactNode {
     const blockingQR = useBlockingQR();
     const showMenu = session.isAuthed && !blockingQR.shouldBlock;
 
+    const topBar = useTopBarContext();
+
+    const context = {
+        topBar,
+    };
+
     const scrollRef = useRef<HTMLDivElement>(null);
 
     return (
         <div className="flex flex-col h-dvh w-dvw bg-background">
-            <TopBar />
+            <TopBar {...topBar} />
             <div className="flex-1 h-full flex min-h-0">
                 {showMenu && (
                     <>
@@ -43,7 +63,9 @@ export function Scaffold({children}: ScaffoldProps): ReactNode {
                 <div className="flex flex-col flex-1 min-w-0">
                     <div ref={scrollRef} className="overflow-y-auto flex-1">
                         <ScrollRestoration scrollRef={scrollRef} />
-                        {children}
+                        <ScaffoldContextKey.Provider value={context}>
+                            {children}
+                        </ScaffoldContextKey.Provider>
                     </div>
                     {showMenu && (
                         <>
@@ -74,7 +96,7 @@ function ScrollRestoration({scrollRef}: ScrollRestorationProps) {
     const location = useLocation();
     const navigationType = useNavigationType();
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         const scroll = scrollRef.current;
         if (!scroll) return;
         if (

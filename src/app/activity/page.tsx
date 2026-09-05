@@ -263,7 +263,11 @@ function ReplyActivityCard({details, onClick}: ReplyActivityCardProps) {
         b: text => <strong>{text}</strong>,
     });
     async function navigatePost() {
-        await navigate(`/community/${details.post.id}/replies`);
+        await navigate(`/community/${details.post.id}/replies`, {
+            state: {
+                popDepth: 1,
+            },
+        });
         onClick();
     }
     return (

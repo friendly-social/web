@@ -149,6 +149,7 @@ export function CommunityPage() {
                         postId={post.id}
                         minimizeToolbar={false}
                         minimizeText={true}
+                        popDepth={1}
                     />
                 ),
             };
