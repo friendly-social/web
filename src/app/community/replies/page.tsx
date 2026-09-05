@@ -42,6 +42,16 @@ export function RepliesPage() {
         }
     }
 
+    useEffect(() => {
+        const listener = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                navigateUp();
+            }
+        };
+        window.addEventListener('keydown', listener);
+        return () => window.removeEventListener('keydown', listener);
+    }, [navigateUp]);
+
     const {topBar} = useScaffoldContext();
 
     useLayoutEffect(() => {
