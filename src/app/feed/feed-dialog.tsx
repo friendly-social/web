@@ -123,7 +123,7 @@ export function FeedDialog({
                     )}
                 />
 
-                <div className="absolute bottom-4 left-4 right-4 z-10 flex flex-wrap gap-2">
+                <div className="absolute bottom-4 left-4 right-4 flex flex-wrap gap-2">
                     {selectedCard.details.interests.map(interest => (
                         <Badge
                             key={interest}
