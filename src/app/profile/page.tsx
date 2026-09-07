@@ -181,8 +181,8 @@ export function ProfilePage() {
     }
 
     return (
-        <div className="mx-auto md:p-8 md:pt-4 max-w-5xl">
-            <div className="md:bg-card md:rounded-xl md:border md:border-border min-h-[calc(100vh-64px)] md:min-h-0 overflow-hidden transition-colors">
+        <div className="mx-auto h-full md:p-8 md:pt-4 max-w-5xl">
+            <div className="md:bg-card md:rounded-xl md:border md:border-border min-h-full md:min-h-0 overflow-hidden transition-colors">
                 {content}
             </div>
         </div>

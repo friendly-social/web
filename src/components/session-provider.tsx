@@ -28,9 +28,14 @@ export function SessionProvider({children}: {children: React.ReactNode}) {
     const [status, setStatus] = useState<SessionStatus>('loading');
 
     const refresh = useCallback(() => {
-        const ok = authService.get(app);
+        // TODO(demo): временно — ?demo=1 в dev-режиме показывает приложение
+        // с меню, даже без авторизации на бэкенде
+        const demo =
+            import.meta.env.DEV &&
+            new URLSearchParams(window.location.search).has('demo');
+        const ok = demo || authService.get(app);
         setStatus(ok ? 'authed' : 'guest');
-    }, [backend]);
+    }, [app, backend]);
 
     const setAuthed = useCallback(() => setStatus('authed'), []);
 

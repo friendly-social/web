@@ -179,9 +179,15 @@ export function BlockingQRProvider({children}: BlockingQRProviderProps) {
     // new network right away. You can do it, we encourage you to do that if
     // you want, but it's not a task for an average user.
     //
-    const [shouldBlock, setShouldBlock] = useState(
-        () => localStorage.getItem('blocking-qr-completed') !== 'true',
-    );
+    const [shouldBlock, setShouldBlock] = useState(() => {
+        // TODO(demo): ?demo=1 в dev-режиме пропускает blocking-qr экран
+        const demo =
+            import.meta.env.DEV &&
+            new URLSearchParams(window.location.search).has('demo');
+        return (
+            !demo && localStorage.getItem('blocking-qr-completed') !== 'true'
+        );
+    });
 
     const dismissBlockingQR = () => {
         localStorage.setItem('blocking-qr-completed', 'true');

@@ -40,12 +40,13 @@ export function Scaffold({children}: ScaffoldProps): ReactNode {
     return (
         <div className="flex flex-col h-dvh w-dvw bg-background">
             <TopBar {...topBar} />
-            <div className="flex-1 h-full flex min-h-0">
+            <div className="flex-1 flex min-h-0">
                 {showMenu && (
                     <>
                         <div
                             className={cn(
                                 'h-full',
+                                'shrink-0',
                                 'bg-card',
                                 'hidden md:block',
                             )}
@@ -61,7 +62,10 @@ export function Scaffold({children}: ScaffoldProps): ReactNode {
                     </>
                 )}
                 <div className="flex flex-col flex-1 min-w-0">
-                    <div ref={scrollRef} className="overflow-y-auto flex-1">
+                    <div
+                        ref={scrollRef}
+                        className="overflow-y-auto flex-1 min-h-0"
+                    >
                         <ScrollRestoration scrollRef={scrollRef} />
                         <ScaffoldContextKey.Provider value={context}>
                             {children}

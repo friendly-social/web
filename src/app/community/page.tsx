@@ -391,7 +391,7 @@ function useListVirtualizer({items, parentRef}: ListVirtualizerProps) {
             return null;
         }
         return JSON.parse(
-            sessionStorage.getItem('activity.scroll') ?? 'null',
+            sessionStorage.getItem('community.scroll') ?? 'null',
         ) as ScrollState;
     }, [navigationType]);
 
@@ -406,7 +406,7 @@ function useListVirtualizer({items, parentRef}: ListVirtualizerProps) {
         onChange: virtualizer => {
             if (virtualizer.isScrolling) return;
             sessionStorage.setItem(
-                'activity.scroll',
+                'community.scroll',
                 JSON.stringify({
                     initialOffset: virtualizer.scrollOffset,
                     initialMeasurementsCache: virtualizer.measurementsCache,
