@@ -27,16 +27,14 @@ export function ActivityPage() {
 
     const activityQuery = useInfiniteQuery(activity.listOptions(app));
 
-    let content;
-
     if (activityQuery.isPending) {
-        content = (
+        return (
             <div className="flex h-[50vh] w-full items-center justify-center">
                 <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
             </div>
         );
     } else if (activityQuery.isError) {
-        content = (
+        return (
             <div className="flex flex-col h-[50vh] gap-4 w-full items-center justify-center">
                 <AlertCircle className="h-10 w-10 animate-pulse text-foreground/80" />
                 <p className="text-center">
@@ -56,7 +54,7 @@ export function ActivityPage() {
         const activity = pages.flatMap(p => p.data);
 
         if (activity.length === 0) {
-            content = (
+            return (
                 <div className="flex flex-col h-full gap-2 w-full items-center justify-center px-6 text-center">
                     <Inbox className="w-12 h-12 text-muted-foreground" />
                     <p className="text-base font-semibold text-foreground">
@@ -68,7 +66,7 @@ export function ActivityPage() {
                 </div>
             );
         } else {
-            content = (
+            return (
                 <ActivityList
                     onFetch={() => void activityQuery.fetchNextPage()}
                     hasNext={activityQuery.hasNextPage}
@@ -77,12 +75,6 @@ export function ActivityPage() {
             );
         }
     }
-
-    return (
-        <div className="h-full items-center w-full max-w-2xl mx-auto gap-4">
-            {content}
-        </div>
-    );
 }
 
 type TimeGroup = 'today' | 'yesterday' | 'older';
@@ -373,7 +365,7 @@ function List({items}: ListProps) {
     return (
         <div
             ref={parentRef}
-            className="w-full h-full overflow-y-auto scrollbar-none px-4"
+            className={'w-full h-full overflow-y-auto scrollbar-none px-4'}
         >
             <div
                 className="my-4"
@@ -386,13 +378,14 @@ function List({items}: ListProps) {
                 {virtualizer.getVirtualItems().map(item => (
                     <div
                         key={item.key}
+                        className="max-w-2xl"
                         ref={virtualizer.measureElement}
                         data-index={item.index}
                         style={{
                             position: 'absolute',
                             top: 0,
-                            left: 0,
-                            transform: `translateY(${item.start}px)`,
+                            left: '50%',
+                            transform: `translate(-50%, ${item.start}px)`,
                             width: '100%',
                         }}
                     >

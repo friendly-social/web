@@ -170,7 +170,7 @@ export function CommunityPage() {
 
     if (postsQuery.isPending) {
         content = (
-            <>
+            <div className="h-full w-full max-w-2xl">
                 <CreatePostCard
                     className="my-4"
                     text={newPostText}
@@ -181,11 +181,11 @@ export function CommunityPage() {
                 <div className="flex h-full w-full items-center justify-center">
                     <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
                 </div>
-            </>
+            </div>
         );
     } else if (postsQuery.isError) {
         content = (
-            <>
+            <div className="h-full w-full max-w-2xl">
                 <CreatePostCard
                     className="my-4"
                     text={newPostText}
@@ -206,7 +206,7 @@ export function CommunityPage() {
                         {t('retry')}
                     </Button>
                 </div>
-            </>
+            </div>
         );
     } else {
         if (posts.length === 0) {
@@ -242,7 +242,7 @@ export function CommunityPage() {
     }
 
     return (
-        <div className="flex flex-col items-center w-full h-full max-w-2xl mx-auto gap-4 px-4">
+        <div className="flex flex-col items-center w-full h-full px-4">
             {content}
         </div>
     );
@@ -439,12 +439,13 @@ function List({virtualizer, parentRef, items}: ListProps) {
                     <div
                         key={item.key}
                         ref={virtualizer.measureElement}
+                        className="max-w-2xl"
                         data-index={item.index}
                         style={{
                             position: 'absolute',
                             top: 0,
-                            left: 0,
-                            transform: `translateY(${item.start}px)`,
+                            left: '50%',
+                            transform: `translate(-50%, ${item.start}px)`,
                             width: '100%',
                         }}
                     >
