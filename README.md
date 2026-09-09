@@ -9,6 +9,11 @@
 
 An official frontend for Friendly.
 
+#### Idea and mission statement:
+[Info and other knowledge](https://github.com/friendly-social/knowledge/blob/main/IDEA.md)
+
+#### Contribution information:
+Please read if you are interested in contributing!
 [CONTRIBUTION](docs/CONTRIBUTION.md)
 
 ## Support table
@@ -32,3 +37,7 @@ cd web
 pnpm install
 pnpm dev
 ```
+
+## Current progress:
+
+<img src="public/currentwebpage.png" alt="homepage" width="600">
