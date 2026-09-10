@@ -1,0 +1,18 @@
+{
+  "name": "friendly-electron-app",
+  "version": "1.0.0",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist:current": "electron-builder --config electron-builder.yml",
+    "dist:all": "electron-builder --config electron-builder.yml -mwl"
+  },
+  "devDependencies": {
+    "electron": "^37.2.0",
+    "electron-builder": "^26.0.12"
+  },
+  "dependencies": {
+    "serve-handler": "^6.1.6"
+  }
+}
