@@ -182,6 +182,14 @@
         "create_post": "Опубликовать",
         "clear-draft": "Удалить",
         "post_create_error": "Не удалось создать пост",
+        "add-image": "Добавить изображение",
+        "replace-image": "Заменить изображение",
+        "remove-image": "Удалить изображение",
+        "image-alt-label": "Описание изображения",
+        "image-alt-placeholder": "Опишите изображение для доступности",
+        "image-unsupported-type": "Выберите изображение JPEG, PNG или WebP",
+        "image-too-large": "Выберите изображение размером менее 10 МБ",
+        "image-upload-error": "Не удалось загрузить изображение",
         "share": "Поделиться",
         "retry": "Повторить",
         "unknown_error": "Что-то пошло не так",
@@ -216,7 +224,8 @@
         "go-back": "Назад",
         "show-less": "Скрыть",
         "show-more": "Показать ещё",
-        "edited": "(изм.)"
+        "edited": "(изм.)",
+        "image": "Изображение в посте"
     },
     "replies": {
         "reply-placeholder": "Ваш ответ...",

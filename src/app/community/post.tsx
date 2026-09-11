@@ -14,6 +14,7 @@ import {useFriendlyStorage} from '@/components/friendly-storage-provider';
 import {communityPosts} from '@/services/community-posts-service';
 import {CommunityPostId} from '@/network/friendly-client';
 import {cn} from '@/lib/utils';
+import {PostImage} from '@/app/community/post-image';
 
 export interface CommunityPostCardProps {
     className?: string;
@@ -127,6 +128,7 @@ function CommunityPostCardPlain({
                         )}
                         text={post.text}
                     />
+                    <PostImage image={post.image} />
                 </div>
             </div>
             {!minimizeToolbar && (

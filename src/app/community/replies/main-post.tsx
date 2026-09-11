@@ -20,6 +20,7 @@ import {MarkdownArea} from '@/components/ui/markdown-area';
 import {useNavigate} from 'react-router';
 import {useFriendlyStorage} from '@/components/friendly-storage-provider';
 import {RefObject, useRef, useState, useMemo} from 'react';
+import {PostImage} from '@/app/community/post-image';
 
 interface MainPostCardProps {
     first: boolean;
@@ -387,6 +388,7 @@ function MainPostCardPlain({
                     </div>
                     <div className="text-foreground break-words">
                         <MarkdownArea text={post.text} />
+                        <PostImage image={post.image} />
                     </div>
                 </div>
             </div>

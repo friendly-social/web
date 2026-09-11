@@ -5,8 +5,45 @@ interface ResizeStaticParams {
     file: File;
     crop: AdjusterCrop;
     maxSizeBytes: number;
+    maxDimension?: number;
+    background?: string | null;
     maxIterations?: number;
     scalePrecisionFactor?: number;
+}
+
+export const postImageAcceptedTypes = [
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+] as const;
+
+export const postImageMaxInputSizeBytes = 10 * 1024 * 1024;
+
+export type PostImageValidationError = 'unsupported-type' | 'too-large';
+
+export function validatePostImage(file: File): PostImageValidationError | null {
+    if (!(postImageAcceptedTypes as readonly string[]).includes(file.type)) {
+        return 'unsupported-type';
+    }
+    if (file.size > postImageMaxInputSizeBytes) {
+        return 'too-large';
+    }
+    return null;
+}
+
+export async function preparePostImage(file: File): Promise<File> {
+    const validationError = validatePostImage(file);
+    if (validationError) {
+        throw new Error(validationError);
+    }
+
+    return resizeStatic({
+        file,
+        crop: {x: 0, y: 0, width: 100, height: 100},
+        maxSizeBytes: 1_500_000,
+        maxDimension: 2048,
+        background: null,
+    });
 }
 
 export async function resizeImage(
@@ -32,19 +69,20 @@ async function resizeStatic({
     file,
     crop,
     maxSizeBytes,
+    maxDimension,
+    background = 'black',
     maxIterations = 8,
     scalePrecisionFactor = 0.01,
 }: ResizeStaticParams): Promise<File> {
     const src = URL.createObjectURL(file);
-
-    const image: HTMLImageElement = await new Promise((resolve, reject) => {
-        const result = new Image();
-        result.onload = () => resolve(result);
-        result.onerror = reject;
-        result.src = src;
-    });
-
     try {
+        const image: HTMLImageElement = await new Promise((resolve, reject) => {
+            const result = new Image();
+            result.onload = () => resolve(result);
+            result.onerror = reject;
+            result.src = src;
+        });
+
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
 
@@ -60,16 +98,24 @@ async function resizeStatic({
             return file;
         }
 
+        const cropWidth = (originalWidth * crop.width) / 100;
+        const cropHeight = (originalHeight * crop.height) / 100;
+        const largestDimension = Math.max(cropWidth, cropHeight);
+        const initialScale = maxDimension
+            ? Math.min(1, maxDimension / largestDimension)
+            : 1;
+
         let low = 0;
-        let high = 1;
+        let high = initialScale;
         let bestBlob = await render(
             canvas,
             image,
-            1,
+            initialScale,
             crop,
             originalWidth,
             originalHeight,
             format,
+            background,
         );
 
         if (bestBlob.size > maxSizeBytes) {
@@ -85,6 +131,7 @@ async function resizeStatic({
                         originalWidth,
                         originalHeight,
                         format,
+                        background,
                     );
                 } catch {
                     // Worst case: no compression applied
@@ -121,6 +168,7 @@ async function render(
     originalWidth: number,
     originalHeight: number,
     format: string,
+    background: string | null,
 ): Promise<Blob> {
     const context = canvas.getContext('2d');
     if (!context) throw Error('Canvas context is null or undefined!');
@@ -136,9 +184,10 @@ async function render(
     canvas.width = dw;
     canvas.height = dh;
 
-    // Fill black to prevent transparent
-    context.fillStyle = 'black';
-    context.fillRect(0, 0, dw, dh);
+    if (background) {
+        context.fillStyle = background;
+        context.fillRect(0, 0, dw, dh);
+    }
 
     context.drawImage(image, sx, sy, sw, sh, 0, 0, dw, dh);
     await letUIThreadBreathe();
