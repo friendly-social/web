@@ -31,6 +31,11 @@ import {toast} from 'sonner';
 import {newPost} from '@/services/new-post-service';
 import {StyledAvatar} from '@/components/styled-avatar';
 import {createFileLink} from '@/lib/utils';
+import {preparePostImage} from '@/network/image';
+import {
+    PostImageDraft,
+    PostImagePicker,
+} from '@/app/community/post-image-picker';
 import {CommunityPostCard} from './post';
 
 export function CommunityPage() {
@@ -40,6 +45,9 @@ export function CommunityPage() {
     const app = useAppContext();
 
     const [newPostText, setNewPostText] = newPost.useText();
+    const [newPostImage, setNewPostImage] = useState<PostImageDraft | null>(
+        null,
+    );
 
     const postsQuery = useInfiniteQuery({
         queryKey: ['communityPosts'],
@@ -79,12 +87,37 @@ export function CommunityPage() {
     }, [postsQuery.data]);
 
     const createPostMutation = useMutation({
-        mutationFn: async (text: string) => {
-            const result = await backend.communityPost({text});
+        mutationFn: async ({
+            text,
+            image,
+        }: {
+            text: string;
+            image: PostImageDraft | null;
+        }) => {
+            let uploadedImage;
+            if (image) {
+                try {
+                    const preparedImage = await preparePostImage(image.file);
+                    const uploadResult =
+                        await backend.uploadFile(preparedImage);
+                    uploadedImage = {
+                        file: forceUnwrap(uploadResult),
+                        altText: image.altText.trim() || null,
+                    };
+                } catch {
+                    throw new Error(t('image-upload-error'));
+                }
+            }
+
+            const result = await backend.communityPost({
+                text,
+                image: uploadedImage,
+            });
             const details = {
                 type: 'plain' as const,
                 ...forceUnwrap(result),
                 text,
+                image: uploadedImage,
                 owner: (await users.ensureSelf(app)).user,
                 instant: new Date().toISOString(),
                 replyPreviews: [],
@@ -107,6 +140,7 @@ export function CommunityPage() {
         },
         onSuccess: () => {
             setNewPostText('');
+            setNewPostImage(null);
             virtualizer.scrollToOffset(0);
         },
         onError: error => {
@@ -116,8 +150,16 @@ export function CommunityPage() {
 
     const handleCreatePost = useCallback(() => {
         if (!newPostText.trim()) return;
-        createPostMutation.mutate(newPostText);
-    }, [newPostText, createPostMutation]);
+        createPostMutation.mutate({
+            text: newPostText,
+            image: newPostImage,
+        });
+    }, [newPostText, newPostImage, createPostMutation]);
+
+    const clearDraft = useCallback(() => {
+        setNewPostText('');
+        setNewPostImage(null);
+    }, [setNewPostText]);
 
     const posts = useMemo(() => {
         const pages = postsQuery.data?.pages ?? [];
@@ -130,7 +172,10 @@ export function CommunityPage() {
             Component: (
                 <CreatePostCard
                     text={newPostText}
+                    image={newPostImage}
                     onTextChange={setNewPostText}
+                    onImageChange={setNewPostImage}
+                    onClear={clearDraft}
                     onSubmit={handleCreatePost}
                     isSubmitting={createPostMutation.isPending}
                 />
@@ -176,7 +221,10 @@ export function CommunityPage() {
                 <CreatePostCard
                     className="my-4"
                     text={newPostText}
+                    image={newPostImage}
                     onTextChange={setNewPostText}
+                    onImageChange={setNewPostImage}
+                    onClear={clearDraft}
                     onSubmit={handleCreatePost}
                     isSubmitting={createPostMutation.isPending}
                 />
@@ -191,7 +239,10 @@ export function CommunityPage() {
                 <CreatePostCard
                     className="my-4"
                     text={newPostText}
+                    image={newPostImage}
                     onTextChange={setNewPostText}
+                    onImageChange={setNewPostImage}
+                    onClear={clearDraft}
                     onSubmit={handleCreatePost}
                     isSubmitting={createPostMutation.isPending}
                 />
@@ -217,7 +268,10 @@ export function CommunityPage() {
                     <CreatePostCard
                         className="my-4"
                         text={newPostText}
+                        image={newPostImage}
                         onTextChange={setNewPostText}
+                        onImageChange={setNewPostImage}
+                        onClear={clearDraft}
                         onSubmit={handleCreatePost}
                         isSubmitting={createPostMutation.isPending}
                     />
@@ -252,16 +306,22 @@ export function CommunityPage() {
 
 interface CreatePostCardProps {
     text: string;
+    image: PostImageDraft | null;
     className?: string;
     onTextChange: (text: string) => void;
+    onImageChange: (image: PostImageDraft | null) => void;
+    onClear: () => void;
     onSubmit: () => void;
     isSubmitting: boolean;
 }
 
 function CreatePostCard({
     text,
+    image,
     className,
     onTextChange,
+    onImageChange,
+    onClear,
     onSubmit,
     isSubmitting,
 }: CreatePostCardProps) {
@@ -309,6 +369,11 @@ function CreatePostCard({
                         onChange={e => onTextChange(e.target.value)}
                         placeholder={t('placeholder')}
                     />
+                    <PostImagePicker
+                        value={image}
+                        disabled={isSubmitting}
+                        onChange={onImageChange}
+                    />
                     <div className="w-full flex items-center justify-end gap-1">
                         {showTextLength ? (
                             <div
@@ -320,11 +385,8 @@ function CreatePostCard({
                                 {text.length} / 4096
                             </div>
                         ) : undefined}
-                        {text.length > 0 && (
-                            <Button
-                                onClick={() => onTextChange('')}
-                                variant="ghost"
-                            >
+                        {(text.length > 0 || image) && (
+                            <Button onClick={onClear} variant="ghost">
                                 <div className="flex items-center gap-1.5">
                                     <Trash />
                                     {t('clear-draft')}
