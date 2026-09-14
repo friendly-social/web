@@ -20,7 +20,7 @@ import {MarkdownArea} from '@/components/ui/markdown-area';
 import {useNavigate} from 'react-router';
 import {useFriendlyStorage} from '@/components/friendly-storage-provider';
 import {RefObject, useRef, useState, useMemo} from 'react';
-import {PostImage} from '@/app/community/post-image';
+import {MarkdownImageUpload} from '@/components/ui/markdown-image-upload';
 
 interface MainPostCardProps {
     first: boolean;
@@ -60,6 +60,7 @@ export function MainPostCard({
     const [text, setText] = newPost.useReplyText();
     const [editText, setEditText] = useState('');
     const [action, setAction] = useState<InputAction>('send');
+    const [isImageUploading, setIsImageUploading] = useState(false);
 
     const displayText = action === 'send' ? text : editText;
     function setDisplayText(value: string) {
@@ -88,7 +89,9 @@ export function MainPostCard({
         onSuccess: stopEditing,
     });
 
-    const isSubmitting = createMutation.isPending || editMutation.isPending;
+    const isMutationPending =
+        createMutation.isPending || editMutation.isPending;
+    const isSubmitting = isMutationPending || isImageUploading;
     const forbidSubmit = isSubmitting || !displayText.trim() || textTooLong;
 
     function startEditing() {
@@ -202,6 +205,13 @@ export function MainPostCard({
                         placeholder={t('reply-placeholder')}
                     />
                     <div className="w-full flex">
+                        <MarkdownImageUpload
+                            textareaRef={inputRef}
+                            text={displayText}
+                            disabled={isMutationPending}
+                            onTextChange={setDisplayText}
+                            onUploadingChange={setIsImageUploading}
+                        />
                         {textTooLong ? (
                             <div className="text-destructive text-xs mb-2">
                                 {t('too-long')}
@@ -225,6 +235,7 @@ export function MainPostCard({
                         className="mt-1 w-8 h-8"
                         onClick={stopEditing}
                         variant="ghost"
+                        disabled={isSubmitting}
                     >
                         <X />
                     </Button>
@@ -388,7 +399,6 @@ function MainPostCardPlain({
                     </div>
                     <div className="text-foreground break-words">
                         <MarkdownArea text={post.text} />
-                        <PostImage image={post.image} />
                     </div>
                 </div>
             </div>

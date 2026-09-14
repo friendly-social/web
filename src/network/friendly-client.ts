@@ -542,15 +542,9 @@ export type CommunityPostAccessHash = string & {
     readonly __brand: unique symbol;
 };
 
-export interface CommunityPostImage {
-    file: FileDescriptor;
-    altText: string | null;
-}
-
 export interface CommunityPostRequest {
     replyTo?: CommunityPostDescriptor;
     text: string;
-    image?: CommunityPostImage;
 }
 
 export interface CommunityListRequest {
@@ -632,7 +626,6 @@ export interface CommunityPostDetailsPlain {
     text: string;
     owner: UserDetails;
     edited: boolean;
-    image?: CommunityPostImage;
 }
 
 export interface CommunityPostDetailsDeleted {

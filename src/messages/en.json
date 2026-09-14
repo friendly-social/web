@@ -182,14 +182,6 @@
         "create_post": "Post",
         "clear-draft": "Clear",
         "post_create_error": "Failed to create post",
-        "add-image": "Add image",
-        "replace-image": "Replace image",
-        "remove-image": "Remove image",
-        "image-alt-label": "Image description",
-        "image-alt-placeholder": "Describe the image for accessibility",
-        "image-unsupported-type": "Choose a JPEG, PNG, or WebP image",
-        "image-too-large": "Choose an image smaller than 10 MB",
-        "image-upload-error": "Failed to upload image",
         "retry": "Retry",
         "unknown_error": "Something went wrong",
         "empty_title": "No posts yet",
@@ -220,8 +212,7 @@
         "reply": "Reply",
         "show-less": "Show less",
         "show-more": "Show more",
-        "edited": "(edited)",
-        "image": "Post image"
+        "edited": "(edited)"
     },
     "replies": {
         "reply-placeholder": "Type your reply...",
@@ -263,6 +254,10 @@
         "blockquote": "Blockquote",
         "code": "Code",
         "link": "Link",
+        "image": "Image",
+        "image-unsupported-type": "Choose a JPEG, PNG, or WebP image",
+        "image-too-large": "Choose an image smaller than 10 MB",
+        "image-upload-error": "Failed to upload image",
         "raw": "Raw",
         "preview": "Preview"
     },

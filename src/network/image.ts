@@ -11,28 +11,32 @@ interface ResizeStaticParams {
     scalePrecisionFactor?: number;
 }
 
-export const postImageAcceptedTypes = [
+export const markdownImageAcceptedTypes = [
     'image/jpeg',
     'image/png',
     'image/webp',
 ] as const;
 
-export const postImageMaxInputSizeBytes = 10 * 1024 * 1024;
+export const markdownImageMaxInputSizeBytes = 10 * 1024 * 1024;
 
-export type PostImageValidationError = 'unsupported-type' | 'too-large';
+export type MarkdownImageValidationError = 'unsupported-type' | 'too-large';
 
-export function validatePostImage(file: File): PostImageValidationError | null {
-    if (!(postImageAcceptedTypes as readonly string[]).includes(file.type)) {
+export function validateMarkdownImage(
+    file: File,
+): MarkdownImageValidationError | null {
+    if (
+        !(markdownImageAcceptedTypes as readonly string[]).includes(file.type)
+    ) {
         return 'unsupported-type';
     }
-    if (file.size > postImageMaxInputSizeBytes) {
+    if (file.size > markdownImageMaxInputSizeBytes) {
         return 'too-large';
     }
     return null;
 }
 
-export async function preparePostImage(file: File): Promise<File> {
-    const validationError = validatePostImage(file);
+export async function prepareMarkdownImage(file: File): Promise<File> {
+    const validationError = validateMarkdownImage(file);
     if (validationError) {
         throw new Error(validationError);
     }
