@@ -47,27 +47,14 @@ export function Adjuster({
     const open = useMemo(() => payload.type === 'open', [payload]);
 
     return (
-        <StyledDialogWrapper
-            open={open}
-            onOpenChange={setOpen}
-            contentClassName="-translate-y-1/2 p-5"
-        >
-            <>
-                <div
-                    className="
-                        rounded-xl bg-popover
-                        shadow-xl
-                        "
-                >
-                    {payload.type === 'open' && (
-                        <AdjusterContent
-                            payload={payload}
-                            setOpen={setOpen}
-                            onAdjusted={onAdjusted}
-                        />
-                    )}
-                </div>
-            </>
+        <StyledDialogWrapper open={open} onOpenChange={setOpen}>
+            {payload.type === 'open' && (
+                <AdjusterContent
+                    payload={payload}
+                    setOpen={setOpen}
+                    onAdjusted={onAdjusted}
+                />
+            )}
         </StyledDialogWrapper>
     );
 }

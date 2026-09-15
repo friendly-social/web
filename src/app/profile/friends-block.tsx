@@ -4,7 +4,7 @@ import {useVirtualizer, VirtualItem} from '@tanstack/react-virtual';
 import {AllFriendsList} from './all-friends-list';
 import {Link} from 'react-router';
 import {useTranslations} from 'use-intl';
-import {useState, ReactElement, useRef, useMemo} from 'react';
+import {useEffect, useState, ReactElement, useRef, useMemo} from 'react';
 import {UserDetails} from '@/types/user-details';
 
 export function FriendsBlock({friends}: {friends: UserDetails[]}) {
@@ -70,7 +70,7 @@ function List({items}: ListProps) {
             return null;
         }
         return JSON.parse(
-            sessionStorage.getItem('activity.scroll') ?? 'null',
+            sessionStorage.getItem('profile.scroll') ?? 'null',
         ) as ScrollState;
     }, [navigationType]);
 
@@ -80,13 +80,13 @@ function List({items}: ListProps) {
         getItemKey: index => items[index].key,
         getScrollElement: () => parentRef.current,
         estimateSize: () => 100,
-        overscan: 10,
+        overscan: useOverscanAnimation(10),
         initialOffset: saved?.initialOffset,
         initialMeasurementsCache: saved?.initialMeasurementsCache,
         onChange: virtualizer => {
             if (virtualizer.isScrolling) return;
             sessionStorage.setItem(
-                'activity.scroll',
+                'profile.scroll',
                 JSON.stringify({
                     initialOffset: virtualizer.scrollOffset,
                     initialMeasurementsCache: virtualizer.measurementsCache,
@@ -128,4 +128,16 @@ function List({items}: ListProps) {
             </div>
         </div>
     );
+}
+
+function useOverscanAnimation(target: number): number {
+    const [overscan, setOverscan] = useState(0);
+    useEffect(() => {
+        if (overscan >= target) return;
+        const callback = setTimeout(() => {
+            setOverscan(value => value + 1);
+        }, 100);
+        return () => clearTimeout(callback);
+    }, [overscan]);
+    return overscan;
 }

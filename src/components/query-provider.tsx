@@ -1,5 +1,5 @@
 import {QueryClient} from '@tanstack/react-query';
-import {useQueryClient} from '@tanstack/react-query';
+import {useQueryClient, useIsRestoring} from '@tanstack/react-query';
 import {useAppContext} from '@/app.context';
 import {
     PersistQueryClientProvider,
@@ -15,26 +15,27 @@ import {ReactNode} from 'react';
  * @see https://github.com/TanStack/query/discussions/3198#discussion-3801221
  */
 export function createIDBPersister(idbValidKey: IDBValidKey = 'reactQuery') {
-    const throttle = 1000;
+    const throttle = 5000;
 
     let lastSavedMillis = 0;
+    let lastKnownClient: PersistedClient;
     let timeout: number | undefined;
 
     function persistClient(client: PersistedClient) {
+        lastKnownClient = client;
         if (timeout !== undefined) {
-            clearTimeout(timeout);
+            return;
         }
-        const millis = Date.now();
-        if (millis - lastSavedMillis > throttle) {
-            void set(idbValidKey, client);
-            lastSavedMillis = millis;
-        } else {
-            const haveToWait = throttle - (millis - lastSavedMillis);
-            timeout = window.setTimeout(
-                () => persistClient(client),
-                haveToWait,
-            );
+        const elapsed = Date.now() - lastSavedMillis;
+        if (elapsed >= throttle) {
+            lastSavedMillis = Date.now();
+            void set(idbValidKey, lastKnownClient);
+            return;
         }
+        timeout = window.setTimeout(() => {
+            timeout = undefined;
+            persistClient(lastKnownClient);
+        }, throttle - elapsed);
     }
 
     return {
@@ -75,14 +76,17 @@ export function QueryProvider({children}: {children: React.ReactNode}) {
             client={client}
             persistOptions={{
                 persister,
-                buster: '3',
+                buster: '4',
                 maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
             }}
         >
-            <PopulateQueryClient />
-            {children}
+            <PopulateQueryClient>{children}</PopulateQueryClient>
         </PersistQueryClientProvider>
     );
+}
+
+interface PopulateQueryClientProps {
+    children: ReactNode;
 }
 
 // WHY?
@@ -93,9 +97,11 @@ export function QueryProvider({children}: {children: React.ReactNode}) {
 // rejected later.
 //
 // This logic lives under QueryClientProvider.ts
-function PopulateQueryClient(): ReactNode {
+function PopulateQueryClient({children}: PopulateQueryClientProps): ReactNode {
     const client = useQueryClient();
     const app = useAppContext();
     app.queryClient = client;
-    return;
+    const isRestoring = useIsRestoring();
+    if (isRestoring) return;
+    return children;
 }

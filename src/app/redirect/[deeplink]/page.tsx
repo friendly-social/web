@@ -87,7 +87,7 @@ function FriendTokenExpired() {
         <StyledDialogWrapper
             open={true}
             preventDefault={true}
-            contentClassName="-translate-y-1/2 p-4"
+            popoverBackground={false}
         >
             <>
                 <div className="w-full flex justify-center mb-4">

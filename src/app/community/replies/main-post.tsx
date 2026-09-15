@@ -4,6 +4,7 @@ import {CommunityPostDescriptor} from '@/network/friendly-client';
 import {communityPosts} from '@/services/community-posts-service';
 import {forceUnwrap} from '@/network/result';
 import {CommunityDetailsResponse} from '@/network/friendly-client';
+import {newPost} from '@/services/new-post-service';
 import {useMutation} from '@tanstack/react-query';
 import {MainPostMenu} from '@/app/community/replies/main-post-menu';
 import {Send, Loader2, Pen, X} from 'lucide-react';
@@ -17,12 +18,14 @@ import {StyledAvatar} from '@/components/styled-avatar';
 import {createFileLink} from '@/lib/utils';
 import {useNavigate} from 'react-router';
 import {useFriendlyStorage} from '@/components/friendly-storage-provider';
-import {RefObject, useEffect, useRef, useState, useMemo} from 'react';
+import {RefObject, useRef, useState, useMemo} from 'react';
 import {PostText} from '@/app/community/post-text';
 
 interface MainPostCardProps {
+    first: boolean;
     details: CommunityDetailsResponse;
     postRef: RefObject<HTMLDivElement | null>;
+    popDepth: number;
 }
 
 const emojis = [
@@ -30,6 +33,7 @@ const emojis = [
     '🔥',
     '👍',
     '🤝',
+    '😁',
     '🎉',
     '🤯',
     '👀',
@@ -44,24 +48,39 @@ const emojis = [
 
 type InputAction = 'send' | 'edit';
 
-export function MainPostCard({details, postRef}: MainPostCardProps) {
+export function MainPostCard({
+    first,
+    details,
+    postRef,
+    popDepth,
+}: MainPostCardProps) {
     const app = useAppContext();
 
     const inputRef = useRef<HTMLTextAreaElement>(null);
-    const createTextBackup = useRef('');
-    const [text, setText] = useState('');
+    const [text, setText] = newPost.useReplyText();
+    const [editText, setEditText] = useState('');
     const [action, setAction] = useState<InputAction>('send');
 
-    const textTooLong = text.length > 4096;
-    const showTextLength = text.length > 4000;
+    const displayText = action === 'send' ? text : editText;
+    function setDisplayText(value: string) {
+        if (action === 'send') {
+            setText(value);
+        } else {
+            setEditText(value);
+        }
+    }
+
+    const textTooLong = displayText.length > 4096;
+    const showTextLength = displayText.length > 4000;
 
     const self = users.useSelf(app);
 
-    const deleteMutation = useDeleteMutation({details});
+    const deleteMutation = useDeleteMutation({details, popDepth: popDepth - 1});
 
     const createMutation = useCreateMutation({
         details,
-        onSuccess: () => setText(''),
+        popDepth,
+        onSuccess: () => setDisplayText(''),
     });
 
     const editMutation = useEditMutation({
@@ -70,7 +89,7 @@ export function MainPostCard({details, postRef}: MainPostCardProps) {
     });
 
     const isSubmitting = createMutation.isPending || editMutation.isPending;
-    const forbidSubmit = isSubmitting || !text.trim() || textTooLong;
+    const forbidSubmit = isSubmitting || !displayText.trim() || textTooLong;
 
     function startEditing() {
         if (isSubmitting) return;
@@ -79,17 +98,16 @@ export function MainPostCard({details, postRef}: MainPostCardProps) {
             block: 'start',
             inline: 'nearest',
         });
-        createTextBackup.current = text;
         setAction('edit');
         if (details.post.type !== 'plain') {
             throw new Error('Can only edit plain posts');
         }
-        setText(details.post.text);
+        setEditText(details.post.text);
     }
 
     function stopEditing() {
+        setEditText('');
         setAction('send');
-        setText(createTextBackup.current);
     }
 
     function handleSubmit(text: string) {
@@ -122,14 +140,6 @@ export function MainPostCard({details, postRef}: MainPostCardProps) {
         }
     }
 
-    useEffect(() => {
-        const reply = inputRef.current;
-        if (reply) {
-            reply.style.height = 'auto';
-            reply.style.height = `${reply.scrollHeight}px`;
-        }
-    }, [text]);
-
     const t = useTranslations('replies');
 
     const selfAvatar = useMemo(
@@ -142,12 +152,13 @@ export function MainPostCard({details, postRef}: MainPostCardProps) {
 
     let card;
     if (deleteMutation.isPending) {
-        card = <MainPostCardLoading />;
+        card = <MainPostCardLoading first={first} />;
     } else
         switch (details.post.type) {
             case 'plain':
                 card = (
                     <MainPostCardPlain
+                        first={first}
                         post={details.post}
                         action={action}
                         onDelete={onDelete}
@@ -157,32 +168,42 @@ export function MainPostCard({details, postRef}: MainPostCardProps) {
                 );
                 break;
             case 'deleted':
-                card = <MainPostCardDeleted />;
+                card = (
+                    <MainPostCardDeleted
+                        first={first}
+                        instant={details.post.instant}
+                    />
+                );
                 break;
         }
 
     return (
         <div className="scroll-m-40" ref={postRef}>
             {card}
-            <div className="h-2" />
-            <div className="flex bg-card rounded-xl border border-border flex-row gap-2 px-2 py-1">
+            <div
+                className={cn(
+                    'flex bg-card flex-row gap-2 px-2 py-1',
+                    'rounded-bl-xl rounded-br-xl',
+                    'border border-border',
+                )}
+            >
                 <StyledAvatar
                     avatarClassName="mt-1 w-8 h-8"
                     src={selfAvatar}
                     nickname={self.data?.user?.nickname ?? ''}
                 />
-                <div className="w-full flex flex-col">
+                <div className="flex-1 min-w-0 flex flex-col">
                     <textarea
                         ref={inputRef}
                         className={cn(
-                            'w-full content-center',
+                            'min-h-10 w-full content-center',
                             'text-sm outline-none resize-none',
-                            'scroll-m-60',
+                            'scroll-m-60 field-sizing-content',
                         )}
                         id="reply"
-                        value={text}
+                        value={displayText}
                         onKeyDown={onKeyDown}
-                        onChange={e => setText(e.target.value)}
+                        onChange={e => setDisplayText(e.target.value)}
                         placeholder={t('reply-placeholder')}
                     />
                     <div className="w-full flex">
@@ -199,21 +220,23 @@ export function MainPostCard({details, postRef}: MainPostCardProps) {
                                     textTooLong ? 'text-destructive' : '',
                                 )}
                             >
-                                {text.length} / 4096
+                                {displayText.length} / 4096
                             </div>
                         ) : undefined}
                     </div>
                 </div>
+                {action === 'edit' ? (
+                    <Button
+                        className="mt-1 w-8 h-8"
+                        onClick={stopEditing}
+                        variant="ghost"
+                    >
+                        <X />
+                    </Button>
+                ) : undefined}
                 <Button
                     className="mt-1 w-8 h-8"
-                    onClick={stopEditing}
-                    variant="ghost"
-                >
-                    {action === 'edit' ? <X /> : undefined}
-                </Button>
-                <Button
-                    className="mt-1 w-8 h-8"
-                    onClick={() => handleSubmit(text)}
+                    onClick={() => handleSubmit(displayText)}
                     disabled={forbidSubmit}
                 >
                     {isSubmitting ? (
@@ -239,7 +262,16 @@ export function MainPostCard({details, postRef}: MainPostCardProps) {
                         key={index}
                         emoji={emoji}
                         disabled={isSubmitting}
-                        onClick={() => createMutation.mutate({text: emoji})}
+                        onClick={() => {
+                            if (text.trim().length === 0) {
+                                createMutation.mutate({
+                                    text: emoji,
+                                    redirect: true,
+                                });
+                            } else {
+                                setText(text => `${text}${emoji}`);
+                            }
+                        }}
                     />
                 ))}
             </div>
@@ -273,15 +305,26 @@ function Emoji({emoji, onClick, disabled}: EmojiProps) {
     );
 }
 
-function MainPostCardLoading() {
+interface MainPostCardLoading {
+    first: boolean;
+}
+
+function MainPostCardLoading({first}: MainPostCardLoading) {
     return (
-        <div className="bg-card rounded-xl border border-border p-4 cursor-pointer">
+        <div
+            className={cn(
+                'bg-card p-4 cursor-pointer',
+                'border-l border-r border-t border-border',
+                first ? 'rounded-tl-xl rounded-tr-xl' : '',
+            )}
+        >
             <Loader2 className="m-auto animate-spin text-muted-foreground" />
         </div>
     );
 }
 
 export interface MainPostCardPlainProps {
+    first: boolean;
     post: CommunityPostDetailsPlain;
     action: InputAction;
     onDelete: () => void;
@@ -290,6 +333,7 @@ export interface MainPostCardPlainProps {
 }
 
 function MainPostCardPlain({
+    first,
     post,
     action,
     onDelete,
@@ -307,17 +351,21 @@ function MainPostCardPlain({
 
     async function navigateProfile(event: React.MouseEvent) {
         event.stopPropagation();
-        await storage.userAccessHashes.save({
-            id: post.owner.id,
-            accessHash: post.owner.accessHash,
-        });
+        await storage.userAccessHashes.save([
+            {
+                id: post.owner.id,
+                accessHash: post.owner.accessHash,
+            },
+        ]);
         await navigate(`/user/${post.owner.id}`);
     }
 
     return (
         <div
             className={cn(
-                'bg-card rounded-xl border border-border p-4',
+                first ? 'rounded-tl-xl rounded-tr-xl' : '',
+                'border-l border-r border-t border-border',
+                'bg-card p-4',
                 action === 'edit'
                     ? 'pointer-events-none opacity-50 select-none'
                     : '',
@@ -338,7 +386,10 @@ function MainPostCardPlain({
                         >
                             {post.owner.nickname}
                         </p>
-                        <span className="flex items-center gap-1 text-xs text-muted-foreground whitespace-nowrap">
+                        <span
+                            title={postTime.toLocaleString()}
+                            className="flex items-center gap-1 text-xs text-muted-foreground whitespace-nowrap"
+                        >
                             <Clock className="h-3 w-3" />
                             {formatTimeAgo(t, postTime)}
                             {post.edited ? ' ' + t('edited') : undefined}
@@ -350,22 +401,45 @@ function MainPostCardPlain({
                             showDelete={isAuthor}
                         />
                     </div>
-                    <div className="text-foreground break-words">
-                        <PostText text={post.text} entities={post.entities} />
-                    </div>
+                    <PostText
+                        className="text-foreground break-words"
+                        text={post.text}
+                        entities={post.entities}
+                    />
                 </div>
             </div>
         </div>
     );
 }
 
-function MainPostCardDeleted() {
+interface MainPostCardDeletedProps {
+    first: boolean;
+    instant: string;
+}
+
+function MainPostCardDeleted({first, instant}: MainPostCardDeletedProps) {
     const t = useTranslations('post');
+    const postTime = new Date(instant);
+
     return (
-        <div className="bg-card rounded-xl border border-border p-4 cursor-pointer">
+        <div
+            className={cn(
+                first ? 'rounded-tl-xl rounded-tr-xl' : '',
+                'border-l border-r border-t border-border',
+                'bg-card',
+                'p-4 cursor-pointer flex items-center justify-between',
+            )}
+        >
             <p className="italic text-foreground truncate cursor-pointer">
                 {t('deleted')}
             </p>
+            <span
+                title={postTime.toLocaleString()}
+                className="flex items-center gap-1 text-xs text-muted-foreground whitespace-nowrap"
+            >
+                <Clock className="h-3 w-3" />
+                {formatTimeAgo(t, postTime)}
+            </span>
         </div>
     );
 }
@@ -402,15 +476,19 @@ function isMobile(): boolean {
 
 interface UseDeleteMutationProps {
     details: CommunityDetailsResponse;
+    popDepth: number;
 }
 
-function useDeleteMutation({details}: UseDeleteMutationProps) {
+function useDeleteMutation({details, popDepth}: UseDeleteMutationProps) {
     const app = useAppContext();
     const navigate = useNavigate();
     const t = useTranslations('replies');
 
     async function navigateReplies(descriptor: CommunityPostDescriptor) {
-        await navigate(`/community/${descriptor.id}/replies`);
+        await navigate(`/community/${descriptor.id}/replies`, {
+            state: {popDepth} as unknown,
+            replace: true,
+        });
     }
 
     return useMutation({
@@ -453,16 +531,23 @@ function useDeleteMutation({details}: UseDeleteMutationProps) {
 
 interface UseCreateMutationProps {
     details: CommunityDetailsResponse;
+    popDepth: number;
     onSuccess: () => void;
 }
 
-function useCreateMutation({details, onSuccess}: UseCreateMutationProps) {
+function useCreateMutation({
+    details,
+    popDepth,
+    onSuccess,
+}: UseCreateMutationProps) {
     const app = useAppContext();
     const navigate = useNavigate();
     const t = useTranslations('replies');
 
     async function navigateReplies(descriptor: CommunityPostDescriptor) {
-        await navigate(`/community/${descriptor.id}/replies`);
+        await navigate(`/community/${descriptor.id}/replies`, {
+            state: {popDepth} as unknown,
+        });
     }
 
     return useMutation({
@@ -496,7 +581,7 @@ function useCreateMutation({details, onSuccess}: UseCreateMutationProps) {
                 await navigateReplies(response.post);
                 onSuccess();
             } else {
-                await app.queryClient.prefetchQuery({
+                await app.queryClient.invalidateQueries({
                     queryKey: ['communityReplies', details.post.id],
                 });
             }
@@ -507,12 +592,12 @@ function useCreateMutation({details, onSuccess}: UseCreateMutationProps) {
     });
 }
 
-interface UseCreateMutationProps {
+interface UseEditMutationProps {
     details: CommunityDetailsResponse;
     onSuccess: () => void;
 }
 
-function useEditMutation({details, onSuccess}: UseCreateMutationProps) {
+function useEditMutation({details, onSuccess}: UseEditMutationProps) {
     const app = useAppContext();
     const t = useTranslations('replies');
 

@@ -35,7 +35,6 @@ export function CodeDialog(props: CodeDialogProps): ReactNode {
             open={open}
             onOpenChange={setOpen}
             preventDefault={true}
-            contentClassName="-translate-y-1/2 p-5"
         >
             <CodeDialogContent {...props} />
         </StyledDialogWrapper>
@@ -90,6 +89,7 @@ function CodeDialogContent({email}: CodeDialogProps): ReactNode {
             } else {
                 toast.error(t('error-connection'));
             }
+            setLoading(false);
             return;
         }
         authService.save(app, result.data);
@@ -104,12 +104,7 @@ function CodeDialogContent({email}: CodeDialogProps): ReactNode {
     }
 
     return (
-        <div
-            className="
-        rounded-xl bg-popover
-        shadow-xl
-        "
-        >
+        <div>
             <div className="relative flex items-center mt-1 mx-1">
                 <Dialog.Title className="w-full text-base font-semibold text-center pt-2">
                     {t('title')}

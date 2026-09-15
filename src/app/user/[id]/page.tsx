@@ -255,7 +255,10 @@ export default function UserPage() {
                 {userQuery.data.commonFriends!.length > 0 && (
                     <>
                         <Separator />
-                        <FriendsBlock friends={userQuery.data.commonFriends!} />
+                        <FriendsBlock
+                            friends={userQuery.data.commonFriends!}
+                            id={userId}
+                        />
                     </>
                 )}
             </div>

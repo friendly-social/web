@@ -16,10 +16,11 @@ import {cn} from '@/lib/utils';
 import {PostText} from '@/app/community/post-text';
 
 export interface CommunityPostCardProps {
+    className?: string;
     postId: CommunityPostId;
     minimizeText?: boolean;
     minimizeToolbar?: boolean;
-    isReply?: boolean;
+    popDepth: number;
 }
 
 export function CommunityPostCard(props: CommunityPostCardProps) {
@@ -32,26 +33,38 @@ export function CommunityPostCard(props: CommunityPostCardProps) {
         case 'plain':
             return (
                 <CommunityPostCardPlain
+                    className={props.className}
                     post={post}
                     minimizeText={props.minimizeText}
                     minimizeToolbar={props.minimizeToolbar}
+                    popDepth={props.popDepth}
                 />
             );
         case 'deleted':
-            return <CommunityPostCardDeleted post={post} />;
+            return (
+                <CommunityPostCardDeleted
+                    className={props.className}
+                    post={post}
+                    popDepth={props.popDepth}
+                />
+            );
     }
 }
 
 export interface CommunityPostCardPlainProps {
+    className?: string;
     post: CommunityPostDetailsPlain;
     minimizeText?: boolean;
     minimizeToolbar?: boolean;
+    popDepth: number;
 }
 
 function CommunityPostCardPlain({
+    className,
     post,
     minimizeText,
     minimizeToolbar,
+    popDepth,
 }: CommunityPostCardPlainProps) {
     const t = useTranslations('post');
     const navigate = useNavigate();
@@ -63,21 +76,27 @@ function CommunityPostCardPlain({
     const postTime = new Date(post.instant);
 
     async function navigateReplies() {
-        await navigate(`/community/${post.id}/replies`);
+        await navigate(`/community/${post.id}/replies`, {
+            state: {
+                popDepth,
+            },
+        });
     }
 
     async function navigateProfile(event: React.MouseEvent) {
         event.stopPropagation();
-        await storage.userAccessHashes.save({
-            id: post.owner.id,
-            accessHash: post.owner.accessHash,
-        });
+        await storage.userAccessHashes.save([
+            {
+                id: post.owner.id,
+                accessHash: post.owner.accessHash,
+            },
+        ]);
         await navigate(`/user/${post.owner.id}`);
     }
 
     return (
         <div
-            className="bg-card rounded-xl border border-border p-4 cursor-pointer"
+            className={cn('p-4 cursor-pointer', className)}
             onClick={() => void navigateReplies()}
         >
             <div className="flex gap-3">
@@ -95,7 +114,10 @@ function CommunityPostCardPlain({
                         >
                             {post.owner.nickname}
                         </p>
-                        <span className="flex items-center gap-1 text-xs text-muted-foreground whitespace-nowrap">
+                        <span
+                            title={postTime.toLocaleString()}
+                            className="flex items-center gap-1 text-xs text-muted-foreground whitespace-nowrap"
+                        >
                             <Clock className="h-3 w-3" />
                             {formatTimeAgo(t, postTime)}
                             {post.edited ? ' ' + t('edited') : undefined}
@@ -104,7 +126,7 @@ function CommunityPostCardPlain({
                     <PostText
                         className={cn(
                             'text-foreground transition-all duration-300 ease-in-out',
-                            minimizeText && 'line-clamp-10',
+                            minimizeText && 'line-clamp-10 max-h-[50vh]',
                         )}
                         text={post.text}
                         entities={post.entities}
@@ -145,27 +167,43 @@ function CommunityPostCardPlain({
 }
 
 interface CommunityPostCardDeletedProps {
+    className?: string;
     post: CommunityPostDetailsDeleted;
+    popDepth: number;
 }
 
-function CommunityPostCardDeleted({post}: CommunityPostCardDeletedProps) {
+function CommunityPostCardDeleted({
+    className,
+    post,
+    popDepth,
+}: CommunityPostCardDeletedProps) {
     const t = useTranslations('post');
     const navigate = useNavigate();
     const postTime = new Date(post.instant);
 
     async function navigateReplies() {
-        await navigate(`/community/${post.id}/replies`);
+        await navigate(`/community/${post.id}/replies`, {
+            state: {
+                popDepth,
+            },
+        });
     }
 
     return (
         <div
-            className="bg-card rounded-xl border border-border p-4 cursor-pointer flex items-center justify-between"
+            className={cn(
+                'p-4 cursor-pointer flex items-center justify-between',
+                className,
+            )}
             onClick={() => void navigateReplies()}
         >
             <p className="italic text-foreground truncate cursor-pointer">
                 {t('deleted')}
             </p>
-            <span className="flex items-center gap-1 text-xs text-muted-foreground whitespace-nowrap">
+            <span
+                title={postTime.toLocaleString()}
+                className="flex items-center gap-1 text-xs text-muted-foreground whitespace-nowrap"
+            >
                 <Clock className="h-3 w-3" />
                 {formatTimeAgo(t, postTime)}
             </span>

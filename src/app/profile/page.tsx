@@ -1,4 +1,5 @@
 import {useBlockingQR} from '@/app/blocking-qr/page';
+import {useLocation} from 'react-router';
 import {forceUnwrap} from '@/network/result';
 import {users} from '@/services/users-service';
 import {useAppContext} from '@/app.context';
@@ -23,6 +24,7 @@ import {StyledAvatar} from '@/components/styled-avatar';
 function ProfileHeader({logOut}: {logOut: () => void}) {
     const t = useTranslations('profile');
     const app = useAppContext();
+    const location = useLocation().state as {edit: boolean} | undefined;
     const userDetails = users.self(app).data!.user;
 
     const avatarUrl = useMemo(
@@ -30,7 +32,7 @@ function ProfileHeader({logOut}: {logOut: () => void}) {
         [userDetails],
     );
 
-    const [openEdit, setOpenEdit] = useState(false);
+    const [openEdit, setOpenEdit] = useState(location?.edit ?? false);
     const onEditClick = useCallback(() => setOpenEdit(true), []);
     const [openLogout, setOpenLogout] = useState(false);
     const [openQR, setOpenQR] = useState(false);
@@ -155,7 +157,7 @@ export function ProfilePage() {
 
     let content;
 
-    if (userQuery.cache === 'empty') {
+    if (userQuery.cache === 'empty' || networkQuery.isPending) {
         content = (
             <div className="flex h-[50vh] w-full items-center justify-center">
                 <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />

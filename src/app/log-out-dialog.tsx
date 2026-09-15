@@ -21,11 +21,7 @@ export function LogoutDialog({
 }: LogoutDialogProps) {
     const t = useTranslations('log_out_dialog');
     return (
-        <StyledDialogWrapper
-            open={open}
-            onOpenChange={onOpenChange}
-            contentClassName="-translate-y-1/2 w-10/11 sm:max-w-sm max-h-none rounded-2xl bg-popover shadow-lg"
-        >
+        <StyledDialogWrapper open={open} onOpenChange={onOpenChange}>
             <div>
                 <div className="flex justify-end pt-2 pr-2">
                     <Dialog.Close asChild>

@@ -49,7 +49,7 @@ export class UserAccessHashesService {
         });
     }
 
-    async save(pair: UserPair): Promise<void> {
+    async save(pairs: UserPair[]): Promise<void> {
         if (typeof window === 'undefined') {
             return Promise.reject(
                 new Error('IndexedDB is only available in the browser.'),
@@ -60,13 +60,19 @@ export class UserAccessHashesService {
         return new Promise((resolve, reject) => {
             const transaction = db.transaction(STORE_NAME, 'readwrite');
             const store = transaction.objectStore(STORE_NAME);
-            const request = store.put(pair);
 
-            request.onsuccess = () => resolve();
-            request.onerror = () =>
+            for (const pair of pairs) {
+                store.put(pair);
+            }
+
+            transaction.oncomplete = () => resolve();
+            transaction.onerror = () =>
                 reject(
-                    request.error ?? new Error('Failed to save a user pair.'),
+                    transaction.error ??
+                        new Error('Failed to save a user pair.'),
                 );
+            transaction.onabort = () =>
+                reject(new Error('Transaction aborted'));
         });
     }
 

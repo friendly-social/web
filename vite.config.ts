@@ -60,6 +60,9 @@ function appVersionPlugin(): Plugin {
 }
 
 export default defineConfig({
+    build: {
+        sourcemap: true,
+    },
     plugins: [
         react(),
         appVersionPlugin(),
@@ -79,6 +82,8 @@ export default defineConfig({
                 // description_localized: {
                 //     'ru': 'Говорят, все люди в мире разделены всего шестью рукопожатиями. Но вместо того чтобы пытаться охватить весь мир, почему бы не уделить внимание расширению уже существующего круга знакомств? Friendly – это приватная социальная сеть, построенная на реальных связях.',
                 // },
+                theme_color: '#007aff',
+                background_color: '#222222',
                 icons: [
                     {
                         src: 'pwa-icon.svg',

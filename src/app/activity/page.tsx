@@ -1,18 +1,17 @@
 import {useMutation} from '@tanstack/react-query';
 import {useNavigationType, NavigationType} from 'react-router';
 import {useVirtualizer, VirtualItem} from '@tanstack/react-virtual';
-import {activity} from '@/services/activity';
+import {activity} from '@/services/activity-service';
 import {cn} from '@/lib/utils';
 import {useAppContext} from '@/app.context';
 import {communityPosts} from '@/services/community-posts-service';
 import {useNavigate} from 'react-router';
-import {useEffect, ReactElement, useRef, useMemo} from 'react';
+import {useState, useEffect, ReactElement, useRef, useMemo} from 'react';
 import {MarkdownSpan} from '@/components/ui/markdown-span';
 import {StyledAvatar} from '@/components/styled-avatar';
 import {createFileLink} from '@/lib/utils';
 import {forceUnwrap} from '@/network/result';
 import {Button} from '@/components/ui/button';
-import {useInfiniteQuery} from '@tanstack/react-query';
 import {Loader2, AlertCircle, Inbox, Clock} from 'lucide-react';
 import {useTranslations} from 'use-intl';
 import {
@@ -24,20 +23,17 @@ import {
 export function ActivityPage() {
     const t = useTranslations('activity');
     const app = useAppContext();
-
-    const activityQuery = useInfiniteQuery(activity.listOptions(app));
-
-    let content;
+    const activityQuery = activity.useCachedQuery(app);
 
     if (activityQuery.isPending) {
-        content = (
-            <div className="flex h-[50vh] w-full items-center justify-center">
+        return (
+            <div className="flex h-full w-full items-center justify-center">
                 <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
             </div>
         );
     } else if (activityQuery.isError) {
-        content = (
-            <div className="flex flex-col h-[50vh] gap-4 w-full items-center justify-center">
+        return (
+            <div className="flex flex-col h-full gap-4 w-full items-center justify-center">
                 <AlertCircle className="h-10 w-10 animate-pulse text-foreground/80" />
                 <p className="text-center">
                     {activityQuery.error?.message ?? t('unknown-error')}
@@ -56,7 +52,7 @@ export function ActivityPage() {
         const activity = pages.flatMap(p => p.data);
 
         if (activity.length === 0) {
-            content = (
+            return (
                 <div className="flex flex-col h-full gap-2 w-full items-center justify-center px-6 text-center">
                     <Inbox className="w-12 h-12 text-muted-foreground" />
                     <p className="text-base font-semibold text-foreground">
@@ -68,7 +64,7 @@ export function ActivityPage() {
                 </div>
             );
         } else {
-            content = (
+            return (
                 <ActivityList
                     onFetch={() => void activityQuery.fetchNextPage()}
                     hasNext={activityQuery.hasNextPage}
@@ -77,12 +73,6 @@ export function ActivityPage() {
             );
         }
     }
-
-    return (
-        <div className="h-full items-center w-full max-w-2xl mx-auto gap-4">
-            {content}
-        </div>
-    );
 }
 
 type TimeGroup = 'today' | 'yesterday' | 'older';
@@ -263,7 +253,11 @@ function ReplyActivityCard({details, onClick}: ReplyActivityCardProps) {
         b: text => <strong>{text}</strong>,
     });
     async function navigatePost() {
-        await navigate(`/community/${details.post.id}/replies`);
+        await navigate(`/community/${details.post.id}/replies`, {
+            state: {
+                popDepth: 1,
+            },
+        });
         onClick();
     }
     return (
@@ -351,7 +345,7 @@ function List({items}: ListProps) {
         getItemKey: index => items[index].key,
         getScrollElement: () => parentRef.current,
         estimateSize: () => 1000,
-        overscan: 30,
+        overscan: useOverscanAnimation(30),
         initialOffset: saved?.initialOffset,
         initialMeasurementsCache: saved?.initialMeasurementsCache,
         onChange: virtualizer => {
@@ -365,6 +359,12 @@ function List({items}: ListProps) {
             );
         },
     });
+
+    virtualizer.shouldAdjustScrollPositionOnItemSizeChange = (
+        item,
+        _delta,
+        instance,
+    ) => item.start < (instance.scrollOffset ?? 0);
 
     return (
         <div
@@ -382,13 +382,14 @@ function List({items}: ListProps) {
                 {virtualizer.getVirtualItems().map(item => (
                     <div
                         key={item.key}
+                        className="max-w-2xl"
                         ref={virtualizer.measureElement}
                         data-index={item.index}
                         style={{
                             position: 'absolute',
                             top: 0,
-                            left: 0,
-                            transform: `translateY(${item.start}px)`,
+                            left: '50%',
+                            transform: `translate(-50%, ${item.start}px)`,
                             width: '100%',
                         }}
                     >
@@ -399,4 +400,16 @@ function List({items}: ListProps) {
             </div>
         </div>
     );
+}
+
+function useOverscanAnimation(target: number): number {
+    const [overscan, setOverscan] = useState(0);
+    useEffect(() => {
+        if (overscan >= target) return;
+        const callback = window.setTimeout(() => {
+            setOverscan(value => value + 1);
+        }, 100);
+        return () => window.clearTimeout(callback);
+    }, [overscan]);
+    return overscan;
 }

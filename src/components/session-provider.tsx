@@ -10,7 +10,7 @@ import {authService} from '@/services/auth-service';
 import {useAppContext} from '@/app.context';
 import {useBackend} from '@/backend.context';
 
-type SessionStatus = 'loading' | 'authed' | 'guest';
+export type SessionStatus = 'loading' | 'authed' | 'guest';
 
 interface SessionContextValue {
     status: SessionStatus;

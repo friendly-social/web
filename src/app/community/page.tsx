@@ -3,7 +3,8 @@ import {
     VirtualItem,
     Virtualizer,
 } from '@tanstack/react-virtual';
-import {NavigationType, useNavigationType} from 'react-router';
+import {VisitTip} from '@/app/tips/visit-tip';
+import {useNavigationType, NavigationType} from 'react-router';
 import {useBackend} from '@/backend.context';
 import {users} from '@/services/users-service';
 import {useAppContext} from '@/app.context';
@@ -11,12 +12,7 @@ import {communityPosts} from '@/services/community-posts-service';
 import {forceUnwrap} from '@/network/result';
 import {Button} from '@/components/ui/button';
 import {cn, createFileLink} from '@/lib/utils';
-import {
-    useInfiniteQuery,
-    useMutation,
-    useQuery,
-    useQueryClient,
-} from '@tanstack/react-query';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {AlertCircle, Loader2, Newspaper, SquarePen, Trash} from 'lucide-react';
 import {useTranslations} from 'use-intl';
 import React, {
@@ -32,9 +28,7 @@ import {toast} from 'sonner';
 import {newPost} from '@/services/new-post-service';
 import {StyledAvatar} from '@/components/styled-avatar';
 import {CommunityPostCard} from './post';
-import {
-    FriendsListContextMenu,
-} from '@/components/ui/contextMenu/friends-list-contextmenu';
+import {FriendsListContextMenu} from '@/components/ui/contextMenu/friends-list-contextmenu';
 import {UserDetails} from '@/types/user-details';
 import {CommunityPostEntity} from '@/network/friendly-client';
 
@@ -46,24 +40,7 @@ export function CommunityPage() {
 
     const [newPostText, setNewPostText] = newPost.useText();
 
-    const postsQuery = useInfiniteQuery({
-        queryKey: ['communityPosts'],
-        queryFn: async ({pageParam}) => {
-            const result = forceUnwrap(
-                await backend.communityList({cursorId: pageParam}),
-            );
-            await communityPosts.setPosts(
-                app,
-                result.data.map(post => ({
-                    type: 'plain',
-                    ...post,
-                })),
-            );
-            return result;
-        },
-        initialPageParam: null as string | null,
-        getNextPageParam: lastPage => lastPage.nextId,
-    });
+    const postsQuery = communityPosts.useCachedQuery(app);
 
     useEffect(() => {
         if (!postsQuery.data) return;
@@ -84,9 +61,12 @@ export function CommunityPage() {
     }, [postsQuery.data]);
 
     const createPostMutation = useMutation({
-        mutationFn: async ({text, entities}: {
-            text: string,
-            entities: Map<number, MagicMention>
+        mutationFn: async ({
+            text,
+            entities,
+        }: {
+            text: string;
+            entities: Map<number, MagicMention>;
         }) => {
             // Later should be replaced with type-based parser
             const entitiesList = Array.from(entities, ([position, entity]) => ({
@@ -94,8 +74,11 @@ export function CommunityPage() {
                 position: position,
                 length: entity.plainText.length,
                 target: `${entity.friend.id}:${entity.friend.accessHash}`,
-            }))
-            const result = await backend.communityPost({ text, entities: entitiesList });
+            }));
+            const result = await backend.communityPost({
+                text,
+                entities: entitiesList,
+            });
             const details = {
                 type: 'plain' as const,
                 ...forceUnwrap(result),
@@ -130,12 +113,16 @@ export function CommunityPage() {
         },
     });
 
-    const handleCreatePost = useCallback((finalText: string, entities: Map<number, MagicMention>) => {
-        if (!finalText.trim()) return;
-        createPostMutation.mutate({
-            text: finalText, entities
-        });
-    }, [createPostMutation]);
+    const handleCreatePost = useCallback(
+        (finalText: string, entities: Map<number, MagicMention>) => {
+            if (!finalText.trim()) return;
+            createPostMutation.mutate({
+                text: finalText,
+                entities,
+            });
+        },
+        [createPostMutation],
+    );
 
     const posts = useMemo(() => {
         const pages = postsQuery.data?.pages ?? [];
@@ -165,9 +152,11 @@ export function CommunityPage() {
                 key: post.id.toString(),
                 Component: (
                     <CommunityPostCard
+                        className="bg-card rounded-xl border border-border"
                         postId={post.id}
                         minimizeToolbar={false}
                         minimizeText={true}
+                        popDepth={1}
                     />
                 ),
             };
@@ -188,7 +177,7 @@ export function CommunityPage() {
 
     if (postsQuery.isPending) {
         content = (
-            <>
+            <div className="h-full w-full flex flex-col max-w-2xl">
                 <CreatePostCard
                     className="my-4"
                     text={newPostText}
@@ -196,14 +185,14 @@ export function CommunityPage() {
                     onSubmit={handleCreatePost}
                     isSubmitting={createPostMutation.isPending}
                 />
-                <div className="flex h-full w-full items-center justify-center">
+                <div className="flex flex-1 w-full items-center justify-center">
                     <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
                 </div>
-            </>
+            </div>
         );
     } else if (postsQuery.isError) {
         content = (
-            <>
+            <div className="h-full w-full flex flex-col max-w-2xl">
                 <CreatePostCard
                     className="my-4"
                     text={newPostText}
@@ -211,7 +200,7 @@ export function CommunityPage() {
                     onSubmit={handleCreatePost}
                     isSubmitting={createPostMutation.isPending}
                 />
-                <div className="flex flex-col h-[50vh] gap-4 w-full items-center justify-center">
+                <div className="flex flex-col flex-1 gap-4 w-full items-center justify-center">
                     <AlertCircle className="h-10 w-10 animate-pulse text-foreground/80" />
                     <p className="text-center">
                         {postsQuery.error?.message ?? t('unknown_error')}
@@ -224,12 +213,12 @@ export function CommunityPage() {
                         {t('retry')}
                     </Button>
                 </div>
-            </>
+            </div>
         );
     } else {
         if (posts.length === 0) {
             content = (
-                <>
+                <div className="h-full w-full flex flex-col max-w-2xl">
                     <CreatePostCard
                         className="my-4"
                         text={newPostText}
@@ -237,7 +226,7 @@ export function CommunityPage() {
                         onSubmit={handleCreatePost}
                         isSubmitting={createPostMutation.isPending}
                     />
-                    <div className="flex flex-col h-[50vh] gap-4 w-full items-center justify-center px-6 text-center">
+                    <div className="flex flex-col flex-1 gap-4 w-full items-center justify-center px-6 text-center">
                         <Newspaper className="w-12 h-12 text-muted-foreground" />
                         <p className="text-base font-semibold text-foreground">
                             {t('empty_title')}
@@ -246,7 +235,7 @@ export function CommunityPage() {
                             {t('empty_desc')}
                         </p>
                     </div>
-                </>
+                </div>
             );
         } else {
             content = (
@@ -260,9 +249,11 @@ export function CommunityPage() {
     }
 
     return (
-        <div className="flex flex-col items-center w-full h-full max-w-2xl mx-auto gap-4 px-4">
-            {content}
-        </div>
+        <VisitTip>
+            <div className="flex flex-col items-center w-full h-full px-4">
+                {content}
+            </div>
+        </VisitTip>
     );
 }
 
@@ -335,37 +326,42 @@ function CreatePostCard({
     const [friendsMenuCoords, setFriendsMenuCoords] = useState({x: 0, y: 0});
     const [friendsMenuFilterText, setFriendsMenuFilterText] = useState('');
 
-    const handleTextChange = useCallback((changeEvent: ChangeEvent<HTMLTextAreaElement>) => {
-        const textarea = changeEvent.target;
-        const value = textarea.value;
-        onTextChange(value);
+    const handleTextChange = useCallback(
+        (changeEvent: ChangeEvent<HTMLTextAreaElement>) => {
+            const textarea = changeEvent.target;
+            const value = textarea.value;
+            onTextChange(value);
 
-        const caret = textarea.selectionStart ?? value.length;
-        if (friendsMenuOpen) {
-            if (currentMagicIndex.current > caret) {
-                setFriendsMenuOpen(false);
+            const caret = textarea.selectionStart ?? value.length;
+            if (friendsMenuOpen) {
+                if (currentMagicIndex.current > caret) {
+                    setFriendsMenuOpen(false);
+                    return;
+                }
+                setFriendsMenuFilterText(
+                    value.slice(currentMagicIndex.current, caret),
+                );
                 return;
             }
-            setFriendsMenuFilterText(value.slice(currentMagicIndex.current, caret));
-            return;
-        }
 
-        const isBoundary = (char: string | undefined) =>
-            char === undefined || char === ' ';
+            const isBoundary = (char: string | undefined) =>
+                char === undefined || char === ' ';
 
-        if (
-            value[caret - 1] === '@' &&
-            isBoundary(value[caret - 2]) &&
-            isBoundary(value[caret]) &&
-            magicFragments.current.size <= 10
-        ) {
-            const rect = textarea.getBoundingClientRect();
-            setFriendsMenuCoords({x: rect.left, y: rect.bottom + 4});
-            setFriendsMenuOpen(true);
-            currentMagicIndex.current = caret;
-            setFriendsMenuFilterText('');
-        }
-    }, [onTextChange, friendsMenuOpen]);
+            if (
+                value[caret - 1] === '@' &&
+                isBoundary(value[caret - 2]) &&
+                isBoundary(value[caret]) &&
+                magicFragments.current.size <= 10
+            ) {
+                const rect = textarea.getBoundingClientRect();
+                setFriendsMenuCoords({x: rect.left, y: rect.bottom + 4});
+                setFriendsMenuOpen(true);
+                currentMagicIndex.current = caret;
+                setFriendsMenuFilterText('');
+            }
+        },
+        [onTextChange, friendsMenuOpen],
+    );
     //#endregion
 
     useEffect(() => {
@@ -399,7 +395,7 @@ function CreatePostCard({
                         ref={postRef}
                         className={cn(
                             'w-full mt-2',
-                            'outline-none resize-none',
+                            'outline-none resize-none field-sizing-content',
                         )}
                         value={text}
                         onChange={handleTextChange}
@@ -409,7 +405,7 @@ function CreatePostCard({
                         {showTextLength ? (
                             <div
                                 className={cn(
-                                    'text-xs mb-2',
+                                    'text-xs',
                                     textTooLong ? 'text-destructive' : '',
                                 )}
                             >
@@ -428,7 +424,10 @@ function CreatePostCard({
                             </Button>
                         )}
                         <Button
-                            onClick={() => forbidSend || onSubmit(text, magicFragments.current)}
+                            onClick={() =>
+                                forbidSend ||
+                                onSubmit(text, magicFragments.current)
+                            }
                             disabled={forbidSend}
                         >
                             {isSubmitting ? (
@@ -488,22 +487,22 @@ function useListVirtualizer({items, parentRef}: ListVirtualizerProps) {
             return null;
         }
         return JSON.parse(
-            sessionStorage.getItem('activity.scroll') ?? 'null',
+            sessionStorage.getItem('community.scroll') ?? 'null',
         ) as ScrollState;
     }, [navigationType]);
 
-    return useVirtualizer({
+    const virtualizer = useVirtualizer({
         count: items.length,
         getItemKey: index => items[index].key,
         getScrollElement: () => parentRef.current,
         estimateSize: () => 1000,
-        overscan: 10,
+        overscan: useOverscanAnimation(10),
         initialOffset: saved?.initialOffset,
         initialMeasurementsCache: saved?.initialMeasurementsCache,
         onChange: virtualizer => {
             if (virtualizer.isScrolling) return;
             sessionStorage.setItem(
-                'activity.scroll',
+                'community.scroll',
                 JSON.stringify({
                     initialOffset: virtualizer.scrollOffset,
                     initialMeasurementsCache: virtualizer.measurementsCache,
@@ -511,6 +510,26 @@ function useListVirtualizer({items, parentRef}: ListVirtualizerProps) {
             );
         },
     });
+
+    virtualizer.shouldAdjustScrollPositionOnItemSizeChange = (
+        item,
+        _delta,
+        instance,
+    ) => item.start < (instance.scrollOffset ?? 0);
+
+    return virtualizer;
+}
+
+function useOverscanAnimation(target: number): number {
+    const [overscan, setOverscan] = useState(0);
+    useEffect(() => {
+        if (overscan >= target) return;
+        const callback = window.setTimeout(() => {
+            setOverscan(value => value + 1);
+        }, 100);
+        return () => window.clearTimeout(callback);
+    }, [overscan]);
+    return overscan;
 }
 
 interface ListProps {
@@ -537,12 +556,13 @@ function List({virtualizer, parentRef, items}: ListProps) {
                     <div
                         key={item.key}
                         ref={virtualizer.measureElement}
+                        className="max-w-2xl"
                         data-index={item.index}
                         style={{
                             position: 'absolute',
                             top: 0,
-                            left: 0,
-                            transform: `translateY(${item.start}px)`,
+                            left: '50%',
+                            transform: `translate(-50%, ${item.start}px)`,
                             width: '100%',
                         }}
                     >

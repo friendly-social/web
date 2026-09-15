@@ -32,19 +32,24 @@ export function FeedDialog({
     const [showAllFriends, setShowAllFriends] = useState(false);
 
     async function routeToUser(friend: UserDetails) {
-        await storage.userAccessHashes.save({
-            id: friend.id,
-            accessHash: friend.accessHash,
-        });
+        await storage.userAccessHashes.save([
+            {
+                id: friend.id,
+                accessHash: friend.accessHash,
+            },
+        ]);
         await navigate(`/user/${friend.id}`);
     }
 
     return (
         <div
             key={selectedCard.details.id}
-            className="flex flex-col min-h-full animate-fade-in"
+            className={cn(
+                'w-full h-full sm:h-fit',
+                'flex flex-col animate-fade-in',
+            )}
         >
-            <div className="relative w-full aspect-square shrink-0 overflow-hidden">
+            <div className="relative w-full aspect-square overflow-hidden">
                 <div className="absolute top-4 left-4 right-4 z-10 flex justify-between items-center gap-2">
                     <div className="flex justify-between flex-1">
                         <AvatarGroup className="space-x-2 ms-4">
@@ -114,21 +119,26 @@ export function FeedDialog({
                             : undefined
                     }
                     nickname={selectedCard.details.nickname}
-                    avatarImageClassName="object-cover w-full h-full sm:rounded-tl-xl sm:rounded-tr-xl"
+                    avatarImageClassName="object-cover w-full h-full sm:rounded-tl-2xl sm:rounded-tr-2xl"
                     fallbackClassName={cn(
                         'text-6xl font-semibold',
                         'w-full h-full flex items-center justify-center',
-                        'rounded-none sm:rounded-tl-xl sm:rounded-tr-xl',
+                        'rounded-none sm:rounded-tl-2xl sm:rounded-tr-2xl',
                         'bg-muted',
                     )}
                 />
 
-                <div className="absolute bottom-4 left-4 right-4 z-10 flex flex-wrap gap-2">
+                <div
+                    className={cn(
+                        'absolute bottom-4 left-0 right-0 px-2',
+                        'overflow-x-auto scrollbar-none flex gap-2',
+                    )}
+                >
                     {selectedCard.details.interests.map(interest => (
                         <Badge
                             key={interest}
                             variant="secondary"
-                            className="px-2 py-1"
+                            className="px-2 py-1 shadow-sm"
                         >
                             {interest}
                         </Badge>
@@ -136,7 +146,7 @@ export function FeedDialog({
                 </div>
             </div>
 
-            <div className="flex flex-col flex-1 shrink p-6 pb-12 relative">
+            <div className="flex flex-col flex-1 shrink p-6 relative">
                 <p className="text-2xl font-semibold text-foreground mb-2">
                     {selectedCard.details.nickname}
                 </p>
@@ -150,7 +160,7 @@ export function FeedDialog({
                 </div>
             </div>
 
-            <div className="p-6 pt-0 relative">
+            <div className="p-6 pt-0 relative sm:hidden">
                 <div className="flex gap-4">
                     <Button
                         variant="outline"

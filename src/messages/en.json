@@ -74,17 +74,24 @@
             "error-connection": "Can't get to our servers :(",
             "accept_success": "Connection request sent.",
             "request_success": "Friend request accepted.",
-            "skip_success": "Card removed from your queue.",
-            "email_binding": {
-                "description": "Seems like you enjoy our app. If you want to access your account later, bind an email.",
-                "confirm": "Yes",
-                "decline": "No"
-            }
+            "skip_success": "Card removed from your queue."
         },
         "dropdown": {
             "remove_friend": "Remove friend"
         },
         "unknown_error": "An unknown error occurred."
+    },
+    "email-tip": {
+        "title": "Don't loose your account!",
+        "description": "Seems like you enjoy our app. If you don't want to loose access to your account, bind an email",
+        "confirm": "Yes",
+        "decline": "No"
+    },
+    "notifications-tip": {
+        "title": "Don't miss on updates!",
+        "description": "If you want to see new messages and events, turn on notifications. We only send important notifications such as replies and friend requests. No recommendations or ADs",
+        "confirm": "Yes",
+        "decline": "No"
     },
     "edit_profile_dialog": {
         "title": "Edit Profile",

@@ -1,8 +1,11 @@
-import {useEffect, useState} from 'react';
+import {useLayoutEffect, useEffect, useState} from 'react';
+import {SessionStatus} from '@/components/session-provider';
 import {useNavigate, useLocation} from 'react-router';
 import {Outlet} from 'react-router';
 import {useSession} from '@/components/session-provider';
 import {useBlockingQR} from '@/app/blocking-qr/page';
+import {users} from '@/services/users-service';
+import {useAppContext} from '@/app.context';
 import {Loader2} from 'lucide-react';
 
 export function AppPage() {
@@ -12,11 +15,13 @@ export function AppPage() {
     const navigate = useNavigate();
     const session = useSession();
     const location = useLocation();
+    const app = useAppContext();
 
     useEffect(() => {
         if (location.pathname === '/') {
             void navigate('/community');
         }
+        void users.prefetchSelf(app);
     }, []);
 
     useEffect(() => {
@@ -44,25 +49,43 @@ export function AuthorizedGuard() {
     const navigate = useNavigate();
     const session = useSession();
     const blockingQR = useBlockingQR();
-    useEffect(() => {
+    const [initialStatus, setInitialStatus] = useState<SessionStatus>();
+
+    useLayoutEffect(() => {
         if (session.status === 'loading') return;
+        if (initialStatus !== undefined) return;
+        setInitialStatus(session.status);
         if (session.status === 'guest') {
             void navigate('/sign-up');
         } else if (blockingQR.shouldBlock) {
             void navigate('/blocking-qr');
         }
-    }, [session.status, navigate]);
-    return <Outlet />;
+    }, [navigate, session.status, initialStatus, blockingQR.shouldBlock]);
+
+    if (initialStatus === 'authed') {
+        return <Outlet />;
+    }
+
+    return null;
 }
 
 export function UnauthorizedGuard() {
     const navigate = useNavigate();
     const session = useSession();
-    useEffect(() => {
+    const [initialStatus, setInitialStatus] = useState<SessionStatus>();
+
+    useLayoutEffect(() => {
         if (session.status === 'loading') return;
+        if (initialStatus !== undefined) return;
+        setInitialStatus(session.status);
         if (session.status === 'authed') {
-            return void navigate('/');
+            void navigate('/');
         }
-    }, [session.status, navigate]);
-    return <Outlet />;
+    }, [session.status, navigate, initialStatus]);
+
+    if (initialStatus === 'guest') {
+        return <Outlet />;
+    }
+
+    return null;
 }

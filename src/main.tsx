@@ -52,6 +52,10 @@ const router = createBrowserRouter([
                 Component: DevPage,
             },
             {
+                path: 'redirect/:deeplink',
+                Component: DeeplinkPage,
+            },
+            {
                 element: <UnauthorizedGuard />,
                 children: [
                     {
@@ -88,10 +92,6 @@ const router = createBrowserRouter([
                         Component: UserPage,
                     },
                     {
-                        path: 'redirect/:deeplink',
-                        Component: DeeplinkPage,
-                    },
-                    {
                         path: 'community',
                         Component: CommunityPage,
                     },
@@ -117,11 +117,23 @@ const router = createBrowserRouter([
     },
 ]);
 
+window.addEventListener(
+    'vite:preloadError',
+    event =>
+        void (async () => {
+            event.preventDefault();
+            const registration =
+                await navigator.serviceWorker.getRegistration();
+            await registration?.update();
+            window.location.reload();
+        })(),
+);
+
 const start = performance.now();
 
 await authService.initialize(app);
 initializeBackendService(app);
-Notifications.main(app);
+void Notifications.main();
 
 console.log(`Initialization finished in ${performance.now() - start}`);
 

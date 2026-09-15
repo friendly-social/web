@@ -175,16 +175,16 @@ export class BackendService {
         return this.client.communityList(request);
     }
 
-    async communityDetails(
+    async communityDetails2(
         request: CommunityDetailsRequest,
     ): Promise<Result<CommunityDetailsResponse, NetworkError>> {
-        return this.client.communityDetails(request);
+        return this.client.communityDetails2(request);
     }
 
-    async communityReplies(
+    async communityReplies2(
         request: CommunityRepliesRequest,
     ): Promise<Result<CommunityRepliesResponse, NetworkError>> {
-        return this.client.communityReplies(request);
+        return this.client.communityReplies2(request);
     }
 
     communityDelete(

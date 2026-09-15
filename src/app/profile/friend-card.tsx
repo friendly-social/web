@@ -18,10 +18,12 @@ export function FriendCard({friend}: {friend: UserDetails}) {
     );
 
     const openFriendPage = async () => {
-        await storage.userAccessHashes.save({
-            id: friend.id,
-            accessHash: friend.accessHash,
-        });
+        await storage.userAccessHashes.save([
+            {
+                id: friend.id,
+                accessHash: friend.accessHash,
+            },
+        ]);
         await navigate(`/user/${friend.id}`);
     };
 

@@ -63,10 +63,10 @@ export interface FriendlyClient {
     communityList(
         request: CommunityListRequest,
     ): Promise<Result<CommunityListResponse, NetworkError>>;
-    communityDetails(
+    communityDetails2(
         request: CommunityDetailsRequest,
     ): Promise<Result<CommunityDetailsResponse, NetworkError>>;
-    communityReplies(
+    communityReplies2(
         request: CommunityRepliesRequest,
     ): Promise<Result<CommunityRepliesResponse, NetworkError>>;
     communityDelete(
@@ -362,7 +362,7 @@ export class FriendlyClientImpl implements FriendlyClient {
         );
     }
 
-    communityDetails({
+    communityDetails2({
         id,
         accessHash,
     }: CommunityDetailsRequest): Promise<
@@ -370,12 +370,14 @@ export class FriendlyClientImpl implements FriendlyClient {
     > {
         return this.safeRequest(
             this.client
-                .get<CommunityDetailsResponse>(`/community/${id}/${accessHash}`)
+                .get<CommunityDetailsResponse>(
+                    `/community/2/${id}/${accessHash}`,
+                )
                 .then(r => r.data),
         );
     }
 
-    communityReplies({
+    communityReplies2({
         id,
         accessHash,
         cursorId,
@@ -386,8 +388,8 @@ export class FriendlyClientImpl implements FriendlyClient {
             this.client
                 .get<CommunityRepliesResponse>(
                     cursorId
-                        ? `/community/${id}/${accessHash}/replies/${cursorId}`
-                        : `/community/${id}/${accessHash}/replies/`,
+                        ? `/community/${id}/${accessHash}/replies2/${cursorId}`
+                        : `/community/${id}/${accessHash}/replies2/`,
                 )
                 .then(r => r.data),
         );
@@ -575,7 +577,7 @@ export interface CommunityDetailsRequest {
 export interface CommunityDetailsResponse {
     post: CommunityPostDetails;
     replies: {
-        data: CommunityPostDetails[];
+        data: CommunityPostReply[];
         nextId: string | null;
     };
     upstream: CommunityPostDetails[];
@@ -588,7 +590,7 @@ export interface CommunityRepliesRequest {
 }
 
 export interface CommunityRepliesResponse {
-    data: CommunityPostDetails[];
+    data: CommunityPostReply[];
     nextId: string | null;
 }
 
@@ -645,6 +647,18 @@ export interface CommunityPostDetailsDeleted {
     accessHash: CommunityPostAccessHash;
     instant: string;
     replyPreviews: UserDetails[];
+}
+
+export type CommunityPostReply =
+    | ({type: 'single'} & CommunityPostReplySingle)
+    | ({type: 'thread'} & CommunityPostReplyThread);
+
+export interface CommunityPostReplySingle {
+    post: CommunityPostDetails;
+}
+
+export interface CommunityPostReplyThread {
+    thread: CommunityPostDetails[];
 }
 
 export type ActivityId = number & {readonly __brand: unique symbol};

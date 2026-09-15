@@ -33,11 +33,7 @@ interface EditProfileProps {
 export function EditProfileDialog(props: EditProfileProps): ReactNode {
     const {open, setOpen} = props;
     return (
-        <StyledDialogWrapper
-            open={open}
-            onOpenChange={setOpen}
-            contentClassName="-translate-y-1/2 p-5"
-        >
+        <StyledDialogWrapper open={open} onOpenChange={setOpen}>
             <EditProfileDialogContent {...props} />
         </StyledDialogWrapper>
     );
@@ -138,127 +134,116 @@ function EditProfileDialogContent({setOpen}: EditProfileProps): ReactNode {
                 open={emailOpen}
                 setOpen={setEmailOpen}
             />
-            <div
-                className="
-            rounded-xl bg-popover
-            shadow-xl
-            "
-            >
-                <div className="relative flex items-center mt-1 mx-1">
-                    <Dialog.Title className="w-full text-base font-semibold text-center pt-2">
-                        {t('title')}
-                    </Dialog.Title>
+            <div className="relative flex items-center mt-1 mx-1">
+                <Dialog.Title className="w-full text-base font-semibold text-center pt-2">
+                    {t('title')}
+                </Dialog.Title>
 
-                    <Dialog.Close className="absolute right-0 top-0" asChild>
-                        <Button variant="ghost" className="cursor-pointer">
-                            <X />
-                        </Button>
-                    </Dialog.Close>
-                </div>
-                <div className="p-4 space-y-4">
-                    <MutableAvatarContent
-                        nickname={nickname}
-                        loading={avatarLoading}
-                        setLoading={setAvatarLoading}
-                        avatar={avatar}
-                        setAvatar={setAvatar}
-                    />
-                    <FieldGroup className="gap-4">
-                        <Field>
-                            <FieldLabel htmlFor="nickname">
-                                {t('nickname')}
-                            </FieldLabel>
-                            <InputGroup>
-                                <InputGroupInput
-                                    id="nickname"
-                                    type="text"
-                                    placeholder={t('nickname-placeholder')}
-                                    value={nickname}
-                                    onChange={e => setNickname(e.target.value)}
-                                />
-                                <InputGroupAddon>
-                                    <User />
-                                </InputGroupAddon>
-                            </InputGroup>
-                            <FieldError>{nicknameError}</FieldError>
-                        </Field>
-                        <EmailInput
-                            savedEmail={savedEmail}
-                            email={email}
-                            setEmail={setEmail}
-                            emailError={emailError}
-                            setEmailError={setEmailError}
-                            setEmailOpen={() => setEmailOpen(true)}
-                        />
-                        <Field>
-                            <FieldLabel htmlFor="description">
-                                {t('description')}
-                            </FieldLabel>
-                            <Textarea
-                                id="description"
-                                value={description}
-                                placeholder={t('description-placeholder')}
-                                onChange={e => setDescription(e.target.value)}
+                <Dialog.Close className="absolute right-0 top-0" asChild>
+                    <Button variant="ghost" className="cursor-pointer">
+                        <X />
+                    </Button>
+                </Dialog.Close>
+            </div>
+            <div className="p-4 space-y-4">
+                <MutableAvatarContent
+                    nickname={nickname}
+                    loading={avatarLoading}
+                    setLoading={setAvatarLoading}
+                    avatar={avatar}
+                    setAvatar={setAvatar}
+                />
+                <FieldGroup className="gap-4">
+                    <Field>
+                        <FieldLabel htmlFor="nickname">
+                            {t('nickname')}
+                        </FieldLabel>
+                        <InputGroup>
+                            <InputGroupInput
+                                id="nickname"
+                                type="text"
+                                placeholder={t('nickname-placeholder')}
+                                value={nickname}
+                                onChange={e => setNickname(e.target.value)}
                             />
-                            <FieldError>{descriptionError}</FieldError>
-                        </Field>
-                        <Field>
-                            <FieldLabel htmlFor="socialLink">
-                                {t('social-link')}
-                            </FieldLabel>
-                            <InputGroup>
-                                <InputGroupInput
-                                    id="socialLink"
-                                    type="text"
-                                    value={socialLink}
-                                    placeholder="https://example.org"
-                                    onChange={e =>
-                                        setSocialLink(e.target.value)
-                                    }
-                                />
-                                <InputGroupAddon>
-                                    <Link />
-                                </InputGroupAddon>
-                            </InputGroup>
-                            <FieldError>{socialLinkError}</FieldError>
-                        </Field>
-                        <Field>
-                            <FieldLabel htmlFor="interests">
-                                {t('interests')}
-                            </FieldLabel>
-                            <InputGroup>
-                                <InputGroupInput
-                                    id="interests"
-                                    type="text"
-                                    value={interests}
-                                    placeholder={t('interests-placeholder')}
-                                    onChange={e => setInterests(e.target.value)}
-                                />
-                                <InputGroupAddon>
-                                    <Heart />
-                                </InputGroupAddon>
-                            </InputGroup>
-                            <FieldError>{interestsError}</FieldError>
-                        </Field>
-                    </FieldGroup>
-                    <div className="ml-auto flex flex-col gap-2">
-                        <Button
-                            className="cursor-pointer"
-                            variant="default"
-                            onClick={() => void onSave()}
-                            disabled={loading || avatarLoading}
-                        >
-                            {!loading && (
-                                <>
-                                    <Save className="w-4 h-4" />
-                                    <p className="hidden sm:block">
-                                        {t('save')}
-                                    </p>
-                                </>
-                            )}
-                            {loading && <Spinner />}
-                        </Button>
-                    </div>
+                            <InputGroupAddon>
+                                <User />
+                            </InputGroupAddon>
+                        </InputGroup>
+                        <FieldError>{nicknameError}</FieldError>
+                    </Field>
+                    <EmailInput
+                        savedEmail={savedEmail}
+                        email={email}
+                        setEmail={setEmail}
+                        emailError={emailError}
+                        setEmailError={setEmailError}
+                        setEmailOpen={() => setEmailOpen(true)}
+                    />
+                    <Field>
+                        <FieldLabel htmlFor="description">
+                            {t('description')}
+                        </FieldLabel>
+                        <Textarea
+                            id="description"
+                            value={description}
+                            placeholder={t('description-placeholder')}
+                            onChange={e => setDescription(e.target.value)}
+                        />
+                        <FieldError>{descriptionError}</FieldError>
+                    </Field>
+                    <Field>
+                        <FieldLabel htmlFor="socialLink">
+                            {t('social-link')}
+                        </FieldLabel>
+                        <InputGroup>
+                            <InputGroupInput
+                                id="socialLink"
+                                type="text"
+                                value={socialLink}
+                                placeholder="https://example.org"
+                                onChange={e => setSocialLink(e.target.value)}
+                            />
+                            <InputGroupAddon>
+                                <Link />
+                            </InputGroupAddon>
+                        </InputGroup>
+                        <FieldError>{socialLinkError}</FieldError>
+                    </Field>
+                    <Field>
+                        <FieldLabel htmlFor="interests">
+                            {t('interests')}
+                        </FieldLabel>
+                        <InputGroup>
+                            <InputGroupInput
+                                id="interests"
+                                type="text"
+                                value={interests}
+                                placeholder={t('interests-placeholder')}
+                                onChange={e => setInterests(e.target.value)}
+                            />
+                            <InputGroupAddon>
+                                <Heart />
+                            </InputGroupAddon>
+                        </InputGroup>
+                        <FieldError>{interestsError}</FieldError>
+                    </Field>
+                </FieldGroup>
+                <div className="ml-auto flex flex-col gap-2">
+                    <Button
+                        className="cursor-pointer"
+                        variant="default"
+                        onClick={() => void onSave()}
+                        disabled={loading || avatarLoading}
+                    >
+                        {!loading && (
+                            <>
+                                <Save className="w-4 h-4" />
+                                <p className="hidden sm:block">{t('save')}</p>
+                            </>
+                        )}
+                        {loading && <Spinner />}
+                    </Button>
                 </div>
             </div>
         </>
@@ -383,17 +368,8 @@ function EmailInput({
                 </InputGroupAddon>
             </InputGroup>
             <FieldError>{emailError}</FieldError>
-            <StyledDialogWrapper
-                open={openUnlink}
-                onOpenChange={setOpenUnlink}
-                contentClassName="-translate-y-1/2 p-5"
-            >
-                <div
-                    className="
-                        rounded-xl bg-popover
-                        shadow-xl
-                        "
-                >
+            <StyledDialogWrapper open={openUnlink} onOpenChange={setOpenUnlink}>
+                <div>
                     <div className="relative flex items-center mt-1 mx-1">
                         <Dialog.Title className="w-full text-base font-semibold text-center pt-2">
                             {t('email-unlink-sure')}

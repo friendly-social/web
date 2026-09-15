@@ -26,11 +26,7 @@ export interface EmailDialogProps {
 export function EmailDialog(props: EmailDialogProps): ReactNode {
     const {open, setOpen} = props;
     return (
-        <StyledDialogWrapper
-            open={open}
-            onOpenChange={setOpen}
-            contentClassName="-translate-y-1/2 p-5"
-        >
+        <StyledDialogWrapper open={open} onOpenChange={setOpen}>
             <EmailDialogContent {...props} />
         </StyledDialogWrapper>
     );
@@ -62,6 +58,7 @@ function EmailDialogContent({setOpen, email}: EmailDialogProps): ReactNode {
                 } else {
                     toast.error(t('error-connection'));
                 }
+                setLoading(false);
                 return;
             }
             const self = users.self(app).data!;
@@ -79,12 +76,7 @@ function EmailDialogContent({setOpen, email}: EmailDialogProps): ReactNode {
     }
 
     return (
-        <div
-            className="
-        rounded-xl bg-popover
-        shadow-xl
-        "
-        >
+        <div>
             <div className="relative flex items-center mt-1 mx-1">
                 <Dialog.Title className="w-full text-base font-semibold text-center pt-2">
                     {t('title')}

@@ -59,7 +59,7 @@ async function handleMessage(payload) {
             data = {
                 url: 'https://web.getfriend.ly/feed',
             };
-            if (details.from.isMutual) {
+            if (details.isMutual) {
                 switch (language) {
                     case 'en':
                         title = `${details.from.nickname} is your friend now`;
