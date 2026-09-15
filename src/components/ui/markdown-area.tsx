@@ -53,6 +53,16 @@ function MarkdownAreaComponent(
                             {children}
                         </a>
                     ),
+                    img: ({src, alt}) => (
+                        <img
+                            className="max-h-[70vh] w-full rounded-lg border border-border bg-muted/20 object-contain"
+                            src={src}
+                            alt={alt ?? ''}
+                            loading="lazy"
+                            decoding="async"
+                            referrerPolicy="no-referrer"
+                        />
+                    ),
                     blockquote: ({children}) => <blockquote className="text-sm">{children}</blockquote>,
                     ol: ({children}) => <ol className="list-decimal list-inside">
                         {children}
