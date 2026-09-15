@@ -8,17 +8,12 @@ import {
 } from '@/network/friendly-client';
 import {StyledAvatar} from '@/components/styled-avatar';
 import {createFileLink} from '@/lib/utils';
-import {MarkdownArea} from '@/components/ui/markdown-area';
 import {useNavigate} from 'react-router';
 import {useFriendlyStorage} from '@/components/friendly-storage-provider';
 import {communityPosts} from '@/services/community-posts-service';
 import {CommunityPostId} from '@/network/friendly-client';
 import {cn} from '@/lib/utils';
-import {useMemo} from 'react';
-import {useQuery} from '@tanstack/react-query';
-import {useBackend} from '@/backend.context';
-import {forceUnwrap} from '@/network/result';
-import {resolveMentions} from '@/app/community/resolve-mentions';
+import {PostText} from '@/app/community/post-text';
 
 export interface CommunityPostCardProps {
     postId: CommunityPostId;
@@ -40,7 +35,6 @@ export function CommunityPostCard(props: CommunityPostCardProps) {
                     post={post}
                     minimizeText={props.minimizeText}
                     minimizeToolbar={props.minimizeToolbar}
-                    isReply={props.isReply}
                 />
             );
         case 'deleted':
@@ -52,30 +46,16 @@ export interface CommunityPostCardPlainProps {
     post: CommunityPostDetailsPlain;
     minimizeText?: boolean;
     minimizeToolbar?: boolean;
-    isReply?: boolean;
 }
 
 function CommunityPostCardPlain({
     post,
     minimizeText,
     minimizeToolbar,
-    isReply,
 }: CommunityPostCardPlainProps) {
     const t = useTranslations('post');
     const navigate = useNavigate();
     const storage = useFriendlyStorage();
-    const backend = useBackend();
-
-    const networkQuery = useQuery({
-        queryKey: ['networkDetails'],
-        queryFn: async () => forceUnwrap(await backend.getNetworkDetails()),
-    });
-    const friends = networkQuery.data?.friends ?? [];
-
-    const resolvedText = useMemo(
-        () => (isReply ? post.text : resolveMentions(post.text, friends)),
-        [post.text, friends, isReply],
-    );
 
     const avatarUrl = post.owner.avatar
         ? createFileLink(post.owner.avatar)
@@ -121,12 +101,13 @@ function CommunityPostCardPlain({
                             {post.edited ? ' ' + t('edited') : undefined}
                         </span>
                     </div>
-                    <MarkdownArea
+                    <PostText
                         className={cn(
                             'text-foreground transition-all duration-300 ease-in-out',
                             minimizeText && 'line-clamp-10',
                         )}
-                        text={resolvedText}
+                        text={post.text}
+                        entities={post.entities}
                     />
                 </div>
             </div>

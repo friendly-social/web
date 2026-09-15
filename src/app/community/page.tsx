@@ -36,6 +36,7 @@ import {
     FriendsListContextMenu,
 } from '@/components/ui/contextMenu/friends-list-contextmenu';
 import {UserDetails} from '@/types/user-details';
+import {CommunityPostEntity} from '@/network/friendly-client';
 
 export function CommunityPage() {
     const t = useTranslations('community');
@@ -83,12 +84,23 @@ export function CommunityPage() {
     }, [postsQuery.data]);
 
     const createPostMutation = useMutation({
-        mutationFn: async (text: string) => {
-            const result = await backend.communityPost({text});
+        mutationFn: async ({text, entities}: {
+            text: string,
+            entities: Map<number, MagicMention>
+        }) => {
+            // Later should be replaced with type-based parser
+            const entitiesList = Array.from(entities, ([position, entity]) => ({
+                type: entity.type,
+                position: position,
+                length: entity.plainText.length,
+                target: `${entity.friend.id}:${entity.friend.accessHash}`,
+            }))
+            const result = await backend.communityPost({ text, entities: entitiesList });
             const details = {
                 type: 'plain' as const,
                 ...forceUnwrap(result),
                 text,
+                entities: entitiesList,
                 owner: (await users.ensureSelf(app)).user,
                 instant: new Date().toISOString(),
                 replyPreviews: [],
@@ -118,9 +130,11 @@ export function CommunityPage() {
         },
     });
 
-    const handleCreatePost = useCallback((finalText: string) => {
+    const handleCreatePost = useCallback((finalText: string, entities: Map<number, MagicMention>) => {
         if (!finalText.trim()) return;
-        createPostMutation.mutate(finalText);
+        createPostMutation.mutate({
+            text: finalText, entities
+        });
     }, [createPostMutation]);
 
     const posts = useMemo(() => {
@@ -256,13 +270,13 @@ interface CreatePostCardProps {
     text: string;
     className?: string;
     onTextChange: (text: string) => void;
-    onSubmit: (text: string) => void;
+    onSubmit: (text: string, entities: Map<number, MagicMention>) => void;
     isSubmitting: boolean;
 }
 
-interface MagicFragment {
+interface MagicMention extends CommunityPostEntity {
     plainText: string;
-    value: string;
+    friend: UserDetails;
 }
 
 function CreatePostCard({
@@ -298,40 +312,23 @@ function CreatePostCard({
     );
 
     //#region smartEdit
-    const magicFragments = useRef<Map<number, MagicFragment>>(new Map());
+    const magicFragments = useRef<Map<number, MagicMention>>(new Map());
     const currentMagicIndex = useRef(0);
     const pendingCaret = useRef<number | null>(null);
+    // Put the mention in entities block
     const handleSelect = (friend: UserDetails) => {
         setFriendsMenuOpen(false);
         magicFragments.current.set(currentMagicIndex.current - 1, {
+            type: 'mention',
             plainText: '@' + friend.nickname,
-            value: `§§${friend.id}|${friend.nickname}§§`
+            friend,
         });
 
         const start = currentMagicIndex.current - 1;
         const end = currentMagicIndex.current + friendsMenuFilterText.length;
-        const mention = '@' + friend.nickname + ' ';
+        const mention = '@' + friend.nickname;
         pendingCaret.current = start + mention.length;
         onTextChange(text.slice(0, start) + mention + text.slice(end));
-    };
-
-    const handleResolveMentions = () => {
-        let updatedText = text;
-
-        const keys = [...magicFragments.current.keys()].sort((a, b) => b - a);
-        for (const key of keys) {
-            const fragment = magicFragments.current.get(key)!;
-            const end = key + fragment.plainText.length;
-            if (updatedText.slice(key, end) === fragment.plainText) {
-                updatedText =
-                    updatedText.slice(0, key) +
-                    fragment.value +
-                    updatedText.slice(end);
-            }
-        }
-
-        onTextChange(updatedText);
-        onSubmit(updatedText);
     };
 
     const [friendsMenuOpen, setFriendsMenuOpen] = useState(false);
@@ -359,7 +356,8 @@ function CreatePostCard({
         if (
             value[caret - 1] === '@' &&
             isBoundary(value[caret - 2]) &&
-            isBoundary(value[caret])
+            isBoundary(value[caret]) &&
+            magicFragments.current.size <= 10
         ) {
             const rect = textarea.getBoundingClientRect();
             setFriendsMenuCoords({x: rect.left, y: rect.bottom + 4});
@@ -430,7 +428,7 @@ function CreatePostCard({
                             </Button>
                         )}
                         <Button
-                            onClick={() => forbidSend || handleResolveMentions()}
+                            onClick={() => forbidSend || onSubmit(text, magicFragments.current)}
                             disabled={forbidSend}
                         >
                             {isSubmitting ? (

@@ -15,13 +15,10 @@ import {useTranslations} from 'use-intl';
 import {CommunityPostDetailsPlain} from '@/network/friendly-client';
 import {StyledAvatar} from '@/components/styled-avatar';
 import {createFileLink} from '@/lib/utils';
-import {MarkdownArea} from '@/components/ui/markdown-area';
 import {useNavigate} from 'react-router';
 import {useFriendlyStorage} from '@/components/friendly-storage-provider';
 import {RefObject, useEffect, useRef, useState, useMemo} from 'react';
-import {useQuery} from '@tanstack/react-query';
-import {useBackend} from '@/backend.context';
-import {resolveMentions} from '@/app/community/resolve-mentions';
+import {PostText} from '@/app/community/post-text';
 
 interface MainPostCardProps {
     details: CommunityDetailsResponse;
@@ -302,18 +299,6 @@ function MainPostCardPlain({
     const t = useTranslations('post');
     const navigate = useNavigate();
     const storage = useFriendlyStorage();
-    const backend = useBackend();
-
-    const networkQuery = useQuery({
-        queryKey: ['networkDetails'],
-        queryFn: async () => forceUnwrap(await backend.getNetworkDetails()),
-    });
-    const friends = networkQuery.data?.friends ?? [];
-
-    const resolvedText = useMemo(
-        () => resolveMentions(post.text, friends),
-        [post.text, friends],
-    );
 
     const avatarUrl = post.owner.avatar
         ? createFileLink(post.owner.avatar)
@@ -366,7 +351,7 @@ function MainPostCardPlain({
                         />
                     </div>
                     <div className="text-foreground break-words">
-                        <MarkdownArea text={resolvedText} />
+                        <PostText text={post.text} entities={post.entities} />
                     </div>
                 </div>
             </div>
