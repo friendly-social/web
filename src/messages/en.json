@@ -261,6 +261,10 @@
         "blockquote": "Blockquote",
         "code": "Code",
         "link": "Link",
+        "image": "Image",
+        "image-unsupported-type": "Choose a JPEG, PNG, or WebP image",
+        "image-too-large": "Choose an image smaller than 10 MB",
+        "image-upload-error": "Failed to upload image",
         "raw": "Raw",
         "preview": "Preview"
     },
