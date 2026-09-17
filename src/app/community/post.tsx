@@ -8,12 +8,12 @@ import {
 } from '@/network/friendly-client';
 import {StyledAvatar} from '@/components/styled-avatar';
 import {createFileLink} from '@/lib/utils';
-import {MarkdownArea} from '@/components/ui/markdown-area';
 import {useNavigate} from 'react-router';
 import {useFriendlyStorage} from '@/components/friendly-storage-provider';
 import {communityPosts} from '@/services/community-posts-service';
 import {CommunityPostId} from '@/network/friendly-client';
 import {cn} from '@/lib/utils';
+import {PostText} from '@/app/community/post-text';
 
 export interface CommunityPostCardProps {
     className?: string;
@@ -123,12 +123,13 @@ function CommunityPostCardPlain({
                             {post.edited ? ' ' + t('edited') : undefined}
                         </span>
                     </div>
-                    <MarkdownArea
+                    <PostText
                         className={cn(
                             'text-foreground transition-all duration-300 ease-in-out',
                             minimizeText && 'line-clamp-10 max-h-[50vh]',
                         )}
                         text={post.text}
+                        entities={post.entities}
                     />
                 </div>
             </div>
