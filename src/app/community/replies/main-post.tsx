@@ -16,10 +16,10 @@ import {useTranslations} from 'use-intl';
 import {CommunityPostDetailsPlain} from '@/network/friendly-client';
 import {StyledAvatar} from '@/components/styled-avatar';
 import {createFileLink} from '@/lib/utils';
-import {MarkdownArea} from '@/components/ui/markdown-area';
 import {useNavigate} from 'react-router';
 import {useFriendlyStorage} from '@/components/friendly-storage-provider';
 import {RefObject, useRef, useState, useMemo} from 'react';
+import {PostText} from '@/app/community/post-text';
 
 interface MainPostCardProps {
     first: boolean;
@@ -401,9 +401,10 @@ function MainPostCardPlain({
                             showDelete={isAuthor}
                         />
                     </div>
-                    <MarkdownArea
+                    <PostText
                         className="text-foreground break-words"
                         text={post.text}
+                        entities={post.entities}
                     />
                 </div>
             </div>

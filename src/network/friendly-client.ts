@@ -542,9 +542,22 @@ export type CommunityPostAccessHash = string & {
     readonly __brand: unique symbol;
 };
 
+export interface CommunityPostEntity {
+    // There will be more types... maybe
+    type: 'mention';
+}
+
+export interface CommunityPostMention extends CommunityPostEntity {
+    // Format: "<userId>:<userAccessHash>"
+    target: string;
+    position: number;
+    length: number;
+}
+
 export interface CommunityPostRequest {
     replyTo?: CommunityPostDescriptor;
     text: string;
+    entities?: CommunityPostMention[];
 }
 
 export interface CommunityListRequest {
@@ -624,6 +637,7 @@ export interface CommunityPostDetailsPlain {
     instant: string;
     replyPreviews: UserDetails[];
     text: string;
+    entities?: CommunityPostEntity[];
     owner: UserDetails;
     edited: boolean;
 }

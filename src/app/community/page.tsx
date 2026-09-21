@@ -11,23 +11,26 @@ import {useAppContext} from '@/app.context';
 import {communityPosts} from '@/services/community-posts-service';
 import {forceUnwrap} from '@/network/result';
 import {Button} from '@/components/ui/button';
-import {cn} from '@/lib/utils';
+import {cn, createFileLink} from '@/lib/utils';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
-import {Loader2, AlertCircle, SquarePen, Newspaper, Trash} from 'lucide-react';
+import {AlertCircle, Loader2, Newspaper, SquarePen, Trash} from 'lucide-react';
 import {useTranslations} from 'use-intl';
 import React, {
+    ChangeEvent,
     ReactElement,
     useCallback,
+    useEffect,
     useMemo,
     useRef,
-    useEffect,
     useState,
 } from 'react';
 import {toast} from 'sonner';
 import {newPost} from '@/services/new-post-service';
 import {StyledAvatar} from '@/components/styled-avatar';
-import {createFileLink} from '@/lib/utils';
 import {CommunityPostCard} from './post';
+import {FriendsListContextMenu} from '@/components/ui/contextMenu/friends-list-contextmenu';
+import {UserDetails} from '@/types/user-details';
+import {CommunityPostEntity} from '@/network/friendly-client';
 
 export function CommunityPage() {
     const t = useTranslations('community');
@@ -58,12 +61,29 @@ export function CommunityPage() {
     }, [postsQuery.data]);
 
     const createPostMutation = useMutation({
-        mutationFn: async (text: string) => {
-            const result = await backend.communityPost({text});
+        mutationFn: async ({
+            text,
+            entities,
+        }: {
+            text: string;
+            entities: Map<number, MagicMention>;
+        }) => {
+            // Later should be replaced with type-based parser
+            const entitiesList = Array.from(entities, ([position, entity]) => ({
+                type: entity.type,
+                position: position,
+                length: entity.plainText.length,
+                target: `${entity.friend.id}:${entity.friend.accessHash}`,
+            }));
+            const result = await backend.communityPost({
+                text,
+                entities: entitiesList,
+            });
             const details = {
                 type: 'plain' as const,
                 ...forceUnwrap(result),
                 text,
+                entities: entitiesList,
                 owner: (await users.ensureSelf(app)).user,
                 instant: new Date().toISOString(),
                 replyPreviews: [],
@@ -93,10 +113,16 @@ export function CommunityPage() {
         },
     });
 
-    const handleCreatePost = useCallback(() => {
-        if (!newPostText.trim()) return;
-        createPostMutation.mutate(newPostText);
-    }, [newPostText, createPostMutation]);
+    const handleCreatePost = useCallback(
+        (finalText: string, entities: Map<number, MagicMention>) => {
+            if (!finalText.trim()) return;
+            createPostMutation.mutate({
+                text: finalText,
+                entities,
+            });
+        },
+        [createPostMutation],
+    );
 
     const posts = useMemo(() => {
         const pages = postsQuery.data?.pages ?? [];
@@ -235,8 +261,13 @@ interface CreatePostCardProps {
     text: string;
     className?: string;
     onTextChange: (text: string) => void;
-    onSubmit: () => void;
+    onSubmit: (text: string, entities: Map<number, MagicMention>) => void;
     isSubmitting: boolean;
+}
+
+interface MagicMention extends CommunityPostEntity {
+    plainText: string;
+    friend: UserDetails;
 }
 
 function CreatePostCard({
@@ -253,6 +284,11 @@ function CreatePostCard({
         queryKey: ['userDetails'],
         queryFn: async () => forceUnwrap(await backend.getUserDetails2()),
     });
+    const networkQuery = useQuery({
+        queryKey: ['networkDetails'],
+        queryFn: async () => forceUnwrap(await backend.getNetworkDetails()),
+    });
+    const friends = networkQuery.data?.friends ?? [];
 
     const textTooLong = text.length > 4096;
     const showTextLength = text.length > 4000;
@@ -265,6 +301,81 @@ function CreatePostCard({
                 : '',
         [userQuery],
     );
+
+    //#region smartEdit
+    const magicFragments = useRef<Map<number, MagicMention>>(new Map());
+    const currentMagicIndex = useRef(0);
+    const pendingCaret = useRef<number | null>(null);
+    // Put the mention in entities block
+    const handleSelect = (friend: UserDetails) => {
+        setFriendsMenuOpen(false);
+        magicFragments.current.set(currentMagicIndex.current - 1, {
+            type: 'mention',
+            plainText: '@' + friend.nickname,
+            friend,
+        });
+
+        const start = currentMagicIndex.current - 1;
+        const end = currentMagicIndex.current + friendsMenuFilterText.length;
+        const mention = '@' + friend.nickname;
+        pendingCaret.current = start + mention.length;
+        onTextChange(text.slice(0, start) + mention + text.slice(end));
+    };
+
+    const [friendsMenuOpen, setFriendsMenuOpen] = useState(false);
+    const [friendsMenuCoords, setFriendsMenuCoords] = useState({x: 0, y: 0});
+    const [friendsMenuFilterText, setFriendsMenuFilterText] = useState('');
+
+    const handleTextChange = useCallback(
+        (changeEvent: ChangeEvent<HTMLTextAreaElement>) => {
+            const textarea = changeEvent.target;
+            const value = textarea.value;
+            onTextChange(value);
+
+            const caret = textarea.selectionStart ?? value.length;
+            if (friendsMenuOpen) {
+                if (currentMagicIndex.current > caret) {
+                    setFriendsMenuOpen(false);
+                    return;
+                }
+                setFriendsMenuFilterText(
+                    value.slice(currentMagicIndex.current, caret),
+                );
+                return;
+            }
+
+            const isBoundary = (char: string | undefined) =>
+                char === undefined || char === ' ';
+
+            if (
+                value[caret - 1] === '@' &&
+                isBoundary(value[caret - 2]) &&
+                isBoundary(value[caret]) &&
+                magicFragments.current.size <= 10
+            ) {
+                const rect = textarea.getBoundingClientRect();
+                setFriendsMenuCoords({x: rect.left, y: rect.bottom + 4});
+                setFriendsMenuOpen(true);
+                currentMagicIndex.current = caret;
+                setFriendsMenuFilterText('');
+            }
+        },
+        [onTextChange, friendsMenuOpen],
+    );
+    //#endregion
+
+    useEffect(() => {
+        const post = postRef.current;
+        if (post) {
+            post.style.height = 'auto';
+            post.style.height = `${post.scrollHeight}px`;
+        }
+        if (pendingCaret.current !== null && post) {
+            post.focus();
+            post.setSelectionRange(pendingCaret.current, pendingCaret.current);
+            pendingCaret.current = null;
+        }
+    }, [text]);
 
     return (
         <div
@@ -287,7 +398,7 @@ function CreatePostCard({
                             'outline-none resize-none field-sizing-content',
                         )}
                         value={text}
-                        onChange={e => onTextChange(e.target.value)}
+                        onChange={handleTextChange}
                         placeholder={t('placeholder')}
                     />
                     <div className="w-full flex items-center justify-end gap-1">
@@ -313,7 +424,10 @@ function CreatePostCard({
                             </Button>
                         )}
                         <Button
-                            onClick={() => forbidSend || onSubmit()}
+                            onClick={() =>
+                                forbidSend ||
+                                onSubmit(text, magicFragments.current)
+                            }
                             disabled={forbidSend}
                         >
                             {isSubmitting ? (
@@ -328,6 +442,14 @@ function CreatePostCard({
                     </div>
                 </div>
             </div>
+            <FriendsListContextMenu
+                open={friendsMenuOpen}
+                onOpenChange={setFriendsMenuOpen}
+                coords={friendsMenuCoords}
+                allFriendsList={friends}
+                searchText={friendsMenuFilterText}
+                handleSelect={handleSelect}
+            />
         </div>
     );
 }
