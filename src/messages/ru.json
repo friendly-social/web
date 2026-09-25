@@ -265,6 +265,10 @@
         "blockquote": "Цитата",
         "code": "Код",
         "link": "Ссылка",
+        "image": "Изображение",
+        "image-unsupported-type": "Выберите изображение JPEG, PNG или WebP",
+        "image-too-large": "Выберите изображение размером менее 10 МБ",
+        "image-upload-error": "Не удалось загрузить изображение",
         "raw": "Исход.",
         "preview": "Показ."
     },

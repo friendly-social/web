@@ -27,6 +27,7 @@ import {toast} from 'sonner';
 import {newPost} from '@/services/new-post-service';
 import {StyledAvatar} from '@/components/styled-avatar';
 import {createFileLink} from '@/lib/utils';
+import {MarkdownImageUpload} from '@/components/ui/markdown-image-upload';
 import {CommunityPostCard} from './post';
 
 export function CommunityPage() {
@@ -248,6 +249,7 @@ function CreatePostCard({
 }: CreatePostCardProps) {
     const t = useTranslations('community');
     const postRef = useRef<HTMLTextAreaElement>(null);
+    const [isImageUploading, setIsImageUploading] = useState(false);
     const backend = useBackend();
     const userQuery = useQuery({
         queryKey: ['userDetails'],
@@ -256,7 +258,8 @@ function CreatePostCard({
 
     const textTooLong = text.length > 4096;
     const showTextLength = text.length > 4000;
-    const forbidSend = isSubmitting || !text.trim() || textTooLong;
+    const forbidSend =
+        isSubmitting || isImageUploading || !text.trim() || textTooLong;
 
     const avatarUrl = useMemo(
         () =>
@@ -290,7 +293,15 @@ function CreatePostCard({
                         onChange={e => onTextChange(e.target.value)}
                         placeholder={t('placeholder')}
                     />
-                    <div className="w-full flex items-center justify-end gap-1">
+                    <div className="w-full flex items-center gap-1">
+                        <MarkdownImageUpload
+                            textareaRef={postRef}
+                            text={text}
+                            disabled={isSubmitting}
+                            onTextChange={onTextChange}
+                            onUploadingChange={setIsImageUploading}
+                        />
+                        <div className="flex-1" />
                         {showTextLength ? (
                             <div
                                 className={cn(
@@ -305,6 +316,7 @@ function CreatePostCard({
                             <Button
                                 onClick={() => onTextChange('')}
                                 variant="ghost"
+                                disabled={isSubmitting || isImageUploading}
                             >
                                 <div className="flex items-center gap-1.5">
                                     <Trash />
