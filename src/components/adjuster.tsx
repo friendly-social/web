@@ -77,7 +77,6 @@ function AdjusterContent({
     useEffect(() => {
         const url = URL.createObjectURL(payload.data);
         setSrc(url);
-
         return () => URL.revokeObjectURL(url);
     }, [payload.data]);
 

@@ -3,6 +3,7 @@ import {
     VirtualItem,
     Virtualizer,
 } from '@tanstack/react-virtual';
+import {resizeImage} from '@/network/image';
 import {VisitTip} from '@/app/tips/visit-tip';
 import {useNavigationType, NavigationType} from 'react-router';
 import {useBackend} from '@/backend.context';
@@ -278,7 +279,15 @@ function CreatePostCard({
 
     const attachImageMutation = useMutation({
         mutationFn: async (file: File) => {
-            const descriptor = forceUnwrap(await backend.uploadFile(file));
+            const compressed = await resizeImage(file, {
+                x: 0,
+                y: 0,
+                width: 100,
+                height: 100,
+            });
+            const descriptor = forceUnwrap(
+                await backend.uploadFile(compressed),
+            );
             onTextChange(current => {
                 let result = current;
                 if (!current.endsWith('\n')) {
