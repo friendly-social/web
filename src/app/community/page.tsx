@@ -13,7 +13,14 @@ import {forceUnwrap} from '@/network/result';
 import {Button} from '@/components/ui/button';
 import {cn} from '@/lib/utils';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
-import {Loader2, AlertCircle, SquarePen, Newspaper, Trash} from 'lucide-react';
+import {
+    Loader2,
+    AlertCircle,
+    SquarePen,
+    Newspaper,
+    Trash,
+    Paperclip,
+} from 'lucide-react';
 import {useTranslations} from 'use-intl';
 import React, {
     ReactElement,
@@ -22,6 +29,8 @@ import React, {
     useRef,
     useEffect,
     useState,
+    Dispatch,
+    SetStateAction,
 } from 'react';
 import {toast} from 'sonner';
 import {newPost} from '@/services/new-post-service';
@@ -256,7 +265,6 @@ function CreatePostCard({
 
     const textTooLong = text.length > 4096;
     const showTextLength = text.length > 4000;
-    const forbidSend = isSubmitting || !text.trim() || textTooLong;
 
     const avatarUrl = useMemo(
         () =>
@@ -265,6 +273,41 @@ function CreatePostCard({
                 : '',
         [userQuery],
     );
+
+    const avatarInputRef = useRef<HTMLInputElement | null>(null);
+
+    const attachImageMutation = useMutation({
+        mutationFn: async (file: File) => {
+            const descriptor = forceUnwrap(await backend.uploadFile(file));
+            onTextChange(current => {
+                let result = current;
+                if (!current.endsWith('\n')) {
+                    result += '\n';
+                }
+                const url = createFileLink(descriptor);
+                result += `![](${url})\n`;
+                return result;
+            });
+        },
+    });
+
+    const forbidSend =
+        isSubmitting ||
+        !text.trim() ||
+        textTooLong ||
+        attachImageMutation.isPending;
+
+    function attachImage() {
+        avatarInputRef.current?.click();
+    }
+
+    function onImageSelected(file: File) {
+        if (avatarInputRef.current) {
+            avatarInputRef.current.value = '';
+        }
+
+        attachImageMutation.mutate(file);
+    }
 
     return (
         <div
@@ -290,7 +333,7 @@ function CreatePostCard({
                         onChange={e => onTextChange(e.target.value)}
                         placeholder={t('placeholder')}
                     />
-                    <div className="w-full flex items-center justify-end gap-1">
+                    <div className="mt-1 w-full flex items-center">
                         {showTextLength ? (
                             <div
                                 className={cn(
@@ -301,30 +344,54 @@ function CreatePostCard({
                                 {text.length} / 4096
                             </div>
                         ) : undefined}
+                        <div className="flex-1" />
                         {text.length > 0 && (
                             <Button
                                 onClick={() => onTextChange('')}
                                 variant="ghost"
                             >
-                                <div className="flex items-center gap-1.5">
-                                    <Trash />
-                                    {t('clear-draft')}
-                                </div>
+                                <Trash />
                             </Button>
                         )}
                         <Button
-                            onClick={() => forbidSend || onSubmit()}
-                            disabled={forbidSend}
+                            onClick={attachImage}
+                            variant="ghost"
+                            className="me-2"
                         >
-                            {isSubmitting ? (
+                            {attachImageMutation.isPending ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
-                                <div className="flex items-center gap-1.5">
-                                    <SquarePen />
-                                    {t('create_post')}
-                                </div>
+                                <Paperclip />
                             )}
+                            <input
+                                className="hidden"
+                                ref={avatarInputRef}
+                                type="file"
+                                accept="image/*"
+                                placeholder="Avatar"
+                                onChange={e => {
+                                    const files = e.target.files;
+                                    if (files) {
+                                        void onImageSelected(files[0]);
+                                    }
+                                }}
+                            />
                         </Button>
+                        <div className="flex flex-col">
+                            <Button
+                                onClick={() => forbidSend || onSubmit()}
+                                disabled={forbidSend}
+                            >
+                                {isSubmitting ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                    <div className="flex items-center gap-1.5">
+                                        <SquarePen />
+                                        {t('create_post')}
+                                    </div>
+                                )}
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>
