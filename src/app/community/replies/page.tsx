@@ -59,6 +59,7 @@ export function RepliesPage() {
 
     useLayoutEffect(() => {
         topBar.setCloseButton({
+            showDesktop: false,
             onClick: navigateUp,
         });
         return () => {

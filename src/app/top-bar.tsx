@@ -6,6 +6,7 @@ import {cn} from '@/lib/utils';
 import {useState} from 'react';
 
 export interface CloseButtonProps {
+    showDesktop?: boolean;
     onClick: () => void;
 }
 
@@ -49,7 +50,12 @@ export function TopBar({closeButton}: TopBarContext): ReactNode {
                 <div className="flex-1" />
                 {closeButton && (
                     <Button
-                        className="h-10 w-10 ghost cursor-pointer block md:hidden"
+                        className={cn(
+                            'h-10 w-10 ghost cursor-pointer block',
+                            closeButton?.showDesktop === false
+                                ? 'md:hidden'
+                                : '',
+                        )}
                         variant="ghost"
                         onClick={closeButton.onClick}
                     >

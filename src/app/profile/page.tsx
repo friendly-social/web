@@ -1,3 +1,7 @@
+import {
+    ImagePreviewer,
+    ImagePreviewerPayload,
+} from '@/components/image-previewer';
 import {useBlockingQR} from '@/app/blocking-qr/page';
 import {useLocation} from 'react-router';
 import {forceUnwrap} from '@/network/result';
@@ -37,6 +41,10 @@ function ProfileHeader({logOut}: {logOut: () => void}) {
     const [openLogout, setOpenLogout] = useState(false);
     const [openQR, setOpenQR] = useState(false);
 
+    const [imagePreviewer, setImagePreviewer] = useState<ImagePreviewerPayload>(
+        {type: 'close'},
+    );
+
     return (
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 w-full">
             {userDetails && (
@@ -57,6 +65,13 @@ function ProfileHeader({logOut}: {logOut: () => void}) {
             <div className="flex flex-row sm:flex-col items-center sm:items-start gap-4">
                 <StyledAvatar
                     avatarClassName="w-20 h-20 sm:w-24 sm:h-24 ring-2 ring-background shadow-sm"
+                    onImageClick={e => {
+                        e.stopPropagation();
+                        setImagePreviewer({
+                            type: 'open',
+                            src: e.currentTarget.src,
+                        });
+                    }}
                     src={avatarUrl}
                     nickname={userDetails?.nickname}
                 />
@@ -100,6 +115,10 @@ function ProfileHeader({logOut}: {logOut: () => void}) {
                     <p className="hidden sm:block">{t('log_out')}</p>
                 </Button>
             </div>
+            <ImagePreviewer
+                payload={imagePreviewer}
+                setPayload={setImagePreviewer}
+            />
         </div>
     );
 }

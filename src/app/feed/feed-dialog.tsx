@@ -1,4 +1,8 @@
 import {Badge} from '@/components/ui/badge';
+import {
+    ImagePreviewer,
+    ImagePreviewerPayload,
+} from '@/components/image-previewer';
 import {MarkdownArea} from '@/components/ui/markdown-area';
 import {Button} from '@/components/ui/button';
 import {useFriendlyStorage} from '@/components/friendly-storage-provider';
@@ -30,6 +34,10 @@ export function FeedDialog({
     const storage = useFriendlyStorage();
     const navigate = useNavigate();
     const [showAllFriends, setShowAllFriends] = useState(false);
+
+    const [imagePreviewer, setImagePreviewer] = useState<ImagePreviewerPayload>(
+        {type: 'close'},
+    );
 
     async function routeToUser(friend: UserDetails) {
         await storage.userAccessHashes.save([
@@ -119,6 +127,13 @@ export function FeedDialog({
                             : undefined
                     }
                     nickname={selectedCard.details.nickname}
+                    onImageClick={e => {
+                        e.stopPropagation();
+                        setImagePreviewer({
+                            type: 'open',
+                            src: e.currentTarget.src,
+                        });
+                    }}
                     avatarImageClassName="object-cover w-full h-full sm:rounded-tl-2xl sm:rounded-tr-2xl"
                     fallbackClassName={cn(
                         'text-6xl font-semibold',
@@ -153,7 +168,16 @@ export function FeedDialog({
 
                 <div className="break-words text-sm leading-6 text-foreground">
                     {selectedCard.details.description ? (
-                        <MarkdownArea text={selectedCard.details.description} />
+                        <MarkdownArea
+                            text={selectedCard.details.description}
+                            onImageClick={e => {
+                                e.stopPropagation();
+                                setImagePreviewer({
+                                    type: 'open',
+                                    src: e.currentTarget.src,
+                                });
+                            }}
+                        />
                     ) : (
                         <p>{t('no_description')}</p>
                     )}
@@ -185,6 +209,10 @@ export function FeedDialog({
                     </Button>
                 </div>
             </div>
+            <ImagePreviewer
+                payload={imagePreviewer}
+                setPayload={setImagePreviewer}
+            />
         </div>
     );
 }

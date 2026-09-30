@@ -259,7 +259,12 @@ function ReplyActivityCard({details, beforeClick}: ReplyActivityCardProps) {
     function navigateReplies(event: React.MouseEvent) {
         openBlankShortcut(event, {
             url: `/community/${details.post.id}/replies`,
-            onNavigate: url => void navigate(url),
+            onNavigate: url =>
+                void navigate(url, {
+                    state: {
+                        popDepth: 1,
+                    } as unknown,
+                }),
         });
     }
 

@@ -1,4 +1,5 @@
 import {Avatar, AvatarFallback, AvatarImage} from '@/components/ui/avatar';
+import {cn} from '@/lib/utils';
 import {getAvatarFallbackForNickname} from '@/lib/utils';
 import React from 'react';
 
@@ -7,6 +8,7 @@ interface StyledAvatarProps {
     src: string | undefined;
     nickname: string | undefined;
     onClick?: (event: React.MouseEvent) => void;
+    onImageClick?: (event: React.MouseEvent<HTMLImageElement>) => void;
     avatarImageClassName?: string | undefined;
     fallbackClassName?: string;
     fallbackContent?: React.ReactNode;
@@ -17,6 +19,7 @@ export function StyledAvatar({
     src,
     nickname,
     onClick,
+    onImageClick,
     avatarImageClassName,
     fallbackClassName,
     fallbackContent,
@@ -24,8 +27,18 @@ export function StyledAvatar({
     const fallbackFromNickname = getAvatarFallbackForNickname(nickname);
 
     return (
-        <Avatar className={avatarClassName} onClick={onClick}>
-            <AvatarImage className={avatarImageClassName} src={src} />
+        <Avatar
+            className={cn(avatarClassName, onClick ? 'cursor-pointer' : '')}
+            onClick={onClick}
+        >
+            <AvatarImage
+                className={cn(
+                    avatarImageClassName,
+                    onImageClick ? 'cursor-pointer' : '',
+                )}
+                src={src}
+                onClick={onImageClick}
+            />
             <AvatarFallback className={fallbackClassName}>
                 {fallbackFromNickname ? (
                     <span>{fallbackFromNickname}</span>

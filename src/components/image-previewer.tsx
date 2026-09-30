@@ -1,7 +1,6 @@
 import * as Dialog from '@radix-ui/react-dialog';
-import {Button} from '@/components/ui/button';
-import { X} from 'lucide-react';
-import { useRef, useEffect} from 'react';
+import {TopBar, useTopBarContext} from '@/app/top-bar';
+import {useRef, useEffect, useLayoutEffect} from 'react';
 import panzoom from 'panzoom';
 import {cn} from '@/lib/utils';
 
@@ -47,13 +46,20 @@ interface ContentProps {
 
 function Content({payload}: ContentProps) {
     const imgRef = useRef<HTMLImageElement>(null);
+    const topBar = useTopBarContext();
+
+    useLayoutEffect(() => {
+        topBar.setCloseButton({
+            onClick: () => {
+                // clicking anywhere on top bar closes image
+            },
+        });
+    }, []);
 
     useEffect(() => {
         const img = imgRef.current;
         if (!img) return;
-        const instance = panzoom(img, {
-            bounds: true,
-        });
+        const instance = panzoom(img, {});
         return instance.dispose;
     }, []);
 
@@ -66,16 +72,13 @@ function Content({payload}: ContentProps) {
         );
         img.style.width = `${naturalWidth * scale}px`;
         img.style.height = `${naturalHeight * scale}px`;
+
         img.style.visibility = 'visible';
     }
 
     return (
         <div className="flex flex-col h-full w-full">
-            <div className="h-16 shrink-0 bg-card justify-end items-center flex px-4">
-                <Button variant="ghost" className="cursor-pointer">
-                    <X />
-                </Button>
-            </div>
+            <TopBar {...topBar} />
             <div className="w-full h-px bg-border" />
             <div
                 className={cn(
