@@ -145,7 +145,7 @@ export function FeedDialog({
 
                 <div
                     className={cn(
-                        'absolute bottom-4 left-0 right-0 px-2',
+                        'absolute bottom-0 left-0 right-0 px-2',
                         'overflow-x-auto scrollbar-none flex gap-2',
                     )}
                 >
@@ -153,7 +153,7 @@ export function FeedDialog({
                         <Badge
                             key={interest}
                             variant="secondary"
-                            className="px-2 py-1 shadow-sm"
+                            className="px-2 py-1 mb-4 shadow-sm"
                         >
                             {interest}
                         </Badge>
