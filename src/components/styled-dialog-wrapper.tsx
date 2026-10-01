@@ -7,7 +7,7 @@ interface StyledDialogWrapperProps {
     onOpenChange?: (open: boolean) => void;
     preventDefault?: boolean;
     popoverBackground?: boolean;
-    fullscreen?: boolean;
+    maxContent?: boolean;
     contentClassName?: string;
     children: ReactNode;
 }
@@ -17,14 +17,14 @@ export function StyledDialogWrapper({
     onOpenChange,
     preventDefault = false,
     popoverBackground = true,
-    fullscreen = false,
+    maxContent = false,
     contentClassName,
     children,
 }: StyledDialogWrapperProps) {
     return (
         <Dialog.Root open={open} onOpenChange={onOpenChange}>
             <Dialog.Portal>
-                <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-2" />
+                <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-xs z-2" />
                 <Dialog.Content
                     {...(preventDefault && {
                         onInteractOutside: e => e.preventDefault(),
@@ -34,12 +34,13 @@ export function StyledDialogWrapper({
                         'w-full max-h-dvh overflow-y-auto',
                         'sm:p-8 scrollbar-none box-border',
                         'sm:min-w-lg',
-                        fullscreen ? 'sm:w-auto' : 'sm:w-lg',
+                        maxContent ? 'w-max max-w-full' : 'sm:w-lg',
+                        'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
                     )}
                 >
                     <div
                         className={cn(
-                            'flex flex-col w-full sm:rounded-2xl',
+                            'flex flex-col w-full mx-auto sm:rounded-2xl',
                             popoverBackground ? 'bg-popover shadow-lg' : '',
                             contentClassName,
                         )}

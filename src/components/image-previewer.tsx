@@ -1,7 +1,7 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import {TopBar, useTopBarContext} from '@/app/top-bar';
-import {useRef, useEffect, useLayoutEffect} from 'react';
-import panzoom from 'panzoom';
+import {useRef, useEffect, useState, useLayoutEffect} from 'react';
+import createPanzoom, * as panzoom from 'panzoom';
 import {cn} from '@/lib/utils';
 
 export type ImagePreviewerPayload =
@@ -25,7 +25,7 @@ export function ImagePreviewer({payload, setPayload}: ImagePreviewerProps) {
             onOpenChange={() => setPayload({type: 'close'})}
         >
             <Dialog.Portal>
-                <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-2" />
+                <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-2 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:duration-100" />
                 <Dialog.Content
                     onClick={e => {
                         e.stopPropagation();
@@ -47,6 +47,7 @@ interface ContentProps {
 function Content({payload}: ContentProps) {
     const imgRef = useRef<HTMLImageElement>(null);
     const topBar = useTopBarContext();
+    const [panzoom, setPanzoom] = useState<panzoom.PanZoom | null>(null);
 
     useLayoutEffect(() => {
         topBar.setCloseButton({
@@ -57,14 +58,27 @@ function Content({payload}: ContentProps) {
     }, []);
 
     useEffect(() => {
+        function onResize() {
+            console.log('resize');
+            if (imgRef.current) {
+                onImageLoad(imgRef.current);
+            }
+        }
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
+    }, [onImageLoad]);
+
+    useEffect(() => {
         const img = imgRef.current;
         if (!img) return;
-        const instance = panzoom(img, {});
-        return instance.dispose;
+        const panzoom = createPanzoom(img, {
+            onTouch: () => false,
+        });
+        setPanzoom(panzoom);
+        return panzoom.dispose;
     }, []);
 
-    function onImageLoad(event: React.UIEvent<HTMLImageElement>) {
-        const img = event.currentTarget;
+    function onImageLoad(img: HTMLImageElement) {
         const {naturalWidth, naturalHeight, clientWidth, clientHeight} = img;
         const scale = Math.min(
             clientWidth / naturalWidth,
@@ -72,25 +86,42 @@ function Content({payload}: ContentProps) {
         );
         img.style.width = `${naturalWidth * scale}px`;
         img.style.height = `${naturalHeight * scale}px`;
-
         img.style.visibility = 'visible';
+        centerImage();
+        img.dataset.visible = 'true';
+    }
+
+    function centerImage() {
+        const img = imgRef.current;
+        if (!panzoom) throw new Error('panzoom was not initialized');
+        if (!img) throw new Error('img was not initialized');
+        const clientRect = img.getBoundingClientRect();
+        const cx = clientRect.left + clientRect.width / 2;
+        const cy = clientRect.top + clientRect.height / 2;
+        const container = img.parentElement!.getBoundingClientRect();
+        const dx = container.left + container.width / 2 - cx;
+        const dy = container.top + container.height / 2 - cy;
+        panzoom.moveTo(dx, dy);
     }
 
     return (
         <div className="flex flex-col h-full w-full">
             <TopBar {...topBar} />
-            <div className="w-full h-px bg-border" />
             <div
                 className={cn(
-                    'flex-1 p-10 flex focus:outline-none',
+                    'flex-1 w-full flex p-10 focus:outline-none',
                     'overflow-hidden',
                 )}
             >
                 <img
                     ref={imgRef}
-                    className="invisible"
+                    className={cn(
+                        'invisible',
+                        'transition-opacity duration-100 opacity-0',
+                        'data-[visible=true]:opacity-100',
+                    )}
                     src={payload.src}
-                    onLoad={onImageLoad}
+                    onLoad={e => onImageLoad(e.currentTarget)}
                     onClick={e => e.stopPropagation()}
                 />
             </div>

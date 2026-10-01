@@ -1,10 +1,11 @@
 import {useAppContext} from '@/app.context';
+import * as Dialog from '@radix-ui/react-dialog';
 import {useBackend} from '@/backend.context';
 import {Button} from '@/components/ui/button';
-import {BaseDialog} from '@/components/base-dialog';
+import {StyledDialogWrapper} from '@/components/styled-dialog-wrapper';
 import {createFriendInviteLink} from '@/lib/utils';
 import {useQuery} from '@tanstack/react-query';
-import {Copy, Loader2} from 'lucide-react';
+import {Copy, Loader2, X} from 'lucide-react';
 import QRCode from 'react-qr-code';
 import {toast} from 'sonner';
 import {useTranslations} from 'use-intl';
@@ -33,13 +34,20 @@ export function QrCodeDialog({open, setOpen}: QrCodeDialogProps) {
             : null;
 
     return (
-        <BaseDialog
-            isShow={open}
-            onOpenChange={setOpen}
-            title={t('qr.title')}
-            subtitle={t('qr.desc')}
-        >
-            <div className="flex flex-col items-center gap-4">
+        <StyledDialogWrapper open={open} onOpenChange={setOpen}>
+            <div className="relative flex items-center mt-1 mx-1">
+                <Dialog.Title className="w-full text-base font-semibold text-center pt-2">
+                    {t('qr.title')}
+                </Dialog.Title>
+
+                <Dialog.Close className="absolute right-0 top-0" asChild>
+                    <Button variant="ghost" className="cursor-pointer">
+                        <X />
+                    </Button>
+                </Dialog.Close>
+            </div>
+            <div className="flex flex-col items-center gap-4 px-4 pb-4">
+                <Dialog.Description>{t('qr.desc')}</Dialog.Description>
                 <div className="bg-white p-5 rounded-2xl border border-border w-full max-w-72">
                     {url ? (
                         <QRCode value={url} className="w-full aspect-square" />
@@ -64,6 +72,6 @@ export function QrCodeDialog({open, setOpen}: QrCodeDialogProps) {
                     </Button>
                 </div>
             </div>
-        </BaseDialog>
+        </StyledDialogWrapper>
     );
 }

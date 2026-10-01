@@ -1,3 +1,7 @@
+import {
+    ImagePreviewer,
+    ImagePreviewerPayload,
+} from '@/components/image-previewer';
 import {useBackend} from '@/backend.context';
 import {authService} from '@/services/auth-service';
 import {useAppContext} from '@/app.context';
@@ -103,6 +107,10 @@ function ProfileHeader({
         [userDetails],
     );
 
+    const [imagePreviewer, setImagePreviewer] = useState<ImagePreviewerPayload>(
+        {type: 'close'},
+    );
+
     return (
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 w-full">
             <div className="flex flex-row sm:flex-col items-center sm:items-start gap-4">
@@ -110,6 +118,13 @@ function ProfileHeader({
                     avatarClassName="w-20 h-20 sm:w-24 sm:h-24 ring-2 ring-background shadow-sm"
                     src={avatarUrl}
                     nickname={userDetails?.nickname}
+                    onImageClick={e => {
+                        e.stopPropagation();
+                        setImagePreviewer({
+                            type: 'open',
+                            src: e.currentTarget.src,
+                        });
+                    }}
                 />
             </div>
 
@@ -130,6 +145,11 @@ function ProfileHeader({
                 />
                 <ActionButton userDetails={userDetails} onRequest={onRequest} />
             </div>
+
+            <ImagePreviewer
+                payload={imagePreviewer}
+                setPayload={setImagePreviewer}
+            />
         </div>
     );
 }

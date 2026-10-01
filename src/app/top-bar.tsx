@@ -52,12 +52,13 @@ export function TopBar({closeButton}: TopBarContext): ReactNode {
                     <Button
                         className={cn(
                             'h-10 w-10 ghost cursor-pointer block',
-                            closeButton?.showDesktop === false
+                            closeButton.showDesktop === false
                                 ? 'md:hidden'
                                 : '',
                         )}
                         variant="ghost"
                         onClick={closeButton.onClick}
+                        tabIndex={-1}
                     >
                         <X />
                     </Button>

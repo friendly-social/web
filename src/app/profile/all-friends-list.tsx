@@ -68,37 +68,27 @@ export function AllFriendsList({friends, open, setOpen}: AllFriendsListProps) {
 
     return (
         <StyledDialogWrapper open={open} onOpenChange={setOpen}>
-            <div>
-                <div className="p-0">
-                    <div className="flex flex-col">
-                        <div className="relative flex items-center mt-1 mx-1">
-                            <Dialog.Title className="w-full text-base font-semibold text-center pt-2">
-                                {t('friends.see-all')}
-                            </Dialog.Title>
-                            <Dialog.Close
-                                className="absolute right-0 top-0"
-                                asChild
-                            >
-                                <Button
-                                    variant="ghost"
-                                    className="cursor-pointer"
-                                >
-                                    <X />
-                                </Button>
-                            </Dialog.Close>
-                        </div>
+            <div className="flex flex-col">
+                <div className="relative flex items-center mt-1 mx-1">
+                    <Dialog.Title className="w-full text-base font-semibold text-center pt-2">
+                        {t('friends.see-all')}
+                    </Dialog.Title>
+                    <Dialog.Close className="absolute right-0 top-0" asChild>
+                        <Button variant="ghost" className="cursor-pointer">
+                            <X />
+                        </Button>
+                    </Dialog.Close>
+                </div>
 
-                        <div className="flex flex-col p-2">
-                            {friends.map(friend => (
-                                <FriendListItem
-                                    id={friend.id.toString()}
-                                    key={friend.id}
-                                    friend={friend}
-                                    onClick={() => void openFriendPage(friend)}
-                                />
-                            ))}
-                        </div>
-                    </div>
+                <div className="flex flex-col p-2">
+                    {friends.map(friend => (
+                        <FriendListItem
+                            id={friend.id.toString()}
+                            key={friend.id}
+                            friend={friend}
+                            onClick={() => void openFriendPage(friend)}
+                        />
+                    ))}
                 </div>
             </div>
         </StyledDialogWrapper>

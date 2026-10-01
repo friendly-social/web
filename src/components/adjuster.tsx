@@ -48,7 +48,7 @@ export function Adjuster({
         <StyledDialogWrapper
             open={open}
             onOpenChange={() => setPayload({type: 'close'})}
-            fullscreen
+            maxContent
         >
             {payload.type === 'open' && (
                 <AdjusterContent
