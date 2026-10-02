@@ -196,6 +196,9 @@ importers:
       '@types/react-syntax-highlighter':
         specifier: ^15.5.13
         version: 15.5.13
+      '@y9san9/panzoom':
+        specifier: 9.4.4-fix1
+        version: 9.4.4-fix1
       axios:
         specifier: ^1.20.0
         version: 1.20.0(debug@4.4.3)
@@ -229,9 +232,6 @@ importers:
       omggif:
         specifier: ^1.0.10
         version: 1.0.10
-      panzoom:
-        specifier: ^9.4.4
-        version: 9.4.4
       postcss:
         specifier: ^8.5.28
         version: 8.5.28
@@ -2587,6 +2587,9 @@ packages:
     peerDependencies:
       vite: ^4.2.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
 
+  '@y9san9/panzoom@9.4.4-fix1':
+    resolution: {integrity: sha512-e87flfjpxWo/Z92uj6dkhaKDwhhOZR2uMTzo0Avjcg3+eNIgBM8yWk33Cv0p2r/iDprStiuqlboaVP92WBb/KQ==}
+
   acorn-jsx@5.3.2:
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
     peerDependencies:
@@ -3859,9 +3862,6 @@ packages:
 
   package-json-from-dist@1.0.1:
     resolution: {integrity: sha512-UEZIS3/by4OC8vL3P2dTXRETpebLI2NiI5vIrjaD/5UtrkFX/tNbwjTSRAGC/+7CAo2pIcBaRgWmcBBHcsaCIw==}
-
-  panzoom@9.4.4:
-    resolution: {integrity: sha512-r1KfkNZvsBw59IPq7Yy+GWZnZE1YCG/t7aG6caSkij/TBqdxTzmxNTm/lHf3h6qlVMFisIGIO+lgS2Ym23PIoA==}
 
   parent-module@1.0.1:
     resolution: {integrity: sha512-GQ2EWRpQV8/o+Aw8YqtfZZPfNRWZYkbidE9k5rpl/hC3vtHHBfGm2Ifi6qWV+coDGkrUKZAxE3Lot5kcsRlh+g==}
@@ -7093,6 +7093,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@y9san9/panzoom@9.4.4-fix1':
+    dependencies:
+      amator: 1.1.0
+      ngraph.events: 1.4.0
+      wheel: 1.0.0
+
   acorn-jsx@5.3.2(acorn@8.18.0):
     dependencies:
       acorn: 8.18.0
@@ -8695,12 +8701,6 @@ snapshots:
       p-limit: 3.1.0
 
   package-json-from-dist@1.0.1: {}
-
-  panzoom@9.4.4:
-    dependencies:
-      amator: 1.1.0
-      ngraph.events: 1.4.0
-      wheel: 1.0.0
 
   parent-module@1.0.1:
     dependencies:

@@ -8,3 +8,6 @@ allowBuilds:
     '@firebase/util': true
 
 minimumReleaseAge: 10080 # 60 * 24 * 7 for a week
+
+minimumReleaseAgeExclude:
+  - '@y9san9/panzoom@9.4.4-fix1'

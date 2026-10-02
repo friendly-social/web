@@ -37,7 +37,7 @@
         "mdast": "^3.0.0",
         "next-themes": "^0.4.6",
         "omggif": "^1.0.10",
-        "panzoom": "^9.4.4",
+        "@y9san9/panzoom": "9.4.4-fix1",
         "postcss": "^8.5.28",
         "prettier": "^3.9.8",
         "qr-code-styling": "^1.9.2",
