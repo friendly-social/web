@@ -1,7 +1,7 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import {TopBar, useTopBarContext} from '@/app/top-bar';
 import {useRef, useEffect, useState, useLayoutEffect} from 'react';
-import createPanzoom, * as panzoom from 'panzoom';
+import createPanzoom, * as panzoom from '@y9san9/panzoom';
 import {cn} from '@/lib/utils';
 
 export type ImagePreviewerPayload =
