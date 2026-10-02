@@ -1,4 +1,5 @@
 import {MainPostCard} from '@/app/community/replies/main-post';
+import {DismissableLayer} from '@radix-ui/react-dismissable-layer';
 import {RepliesState} from '@/app/community/replies/state';
 import {CommunityPostDetails} from '@/network/friendly-client';
 import {useLocation} from 'react-router';
@@ -44,16 +45,6 @@ export function RepliesPage() {
             void navigate('/community', {replace: true});
         }
     }
-
-    useEffect(() => {
-        const listener = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') {
-                navigateUp();
-            }
-        };
-        window.addEventListener('keydown', listener);
-        return () => window.removeEventListener('keydown', listener);
-    }, [navigateUp]);
 
     const {topBar} = useScaffoldContext();
 
@@ -102,7 +93,7 @@ export function RepliesPage() {
         );
     }
 
-    return (
+    content = (
         <div key={idInt} className="relative px-4 flex flex-col w-full h-full">
             {content}
             <div className="absolute flex justify-center top-0 left-0 right-0 pointer-events-none">
@@ -121,6 +112,12 @@ export function RepliesPage() {
                 </Button>
             </div>
         </div>
+    );
+
+    return (
+        <DismissableLayer onEscapeKeyDown={() => navigateUp()}>
+            {content}
+        </DismissableLayer>
     );
 }
 
