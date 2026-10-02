@@ -27,7 +27,7 @@
         "@types/mdast": "^4.0.4",
         "@types/omggif": "^1.0.5",
         "@types/react-syntax-highlighter": "^15.5.13",
-        "@y9san9/panzoom": "9.4.4-fix2",
+        "@y9san9/panzoom": "9.4.4-fix4",
         "axios": "^1.20.0",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",

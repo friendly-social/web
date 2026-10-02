@@ -3,7 +3,6 @@ import {TopBar, useTopBarContext} from '@/app/top-bar';
 import {useRef, useEffect, useState, useLayoutEffect} from 'react';
 import createPanzoom, * as panzoom from '@y9san9/panzoom';
 import {cn} from '@/lib/utils';
-import {useSearchParams} from 'react-router';
 
 export type ImagePreviewerPayload =
     | {
@@ -23,43 +22,9 @@ export interface ImagePreviewerProps {
  * Use image previewer with search params
  */
 export function useImagePreviewer(): ImagePreviewerProps {
-    const [searchParams, setSearchParams] = useSearchParams();
-    const [payload, setPayloadState] = useState<ImagePreviewerPayload>({
+    const [payload, setPayload] = useState<ImagePreviewerPayload>({
         type: 'close',
     });
-
-    useEffect(() => {
-        if (searchParams.get('imagePreview')) {
-            if (payload.type === 'close') {
-                setSearchParams(params => {
-                    params.delete('imagePreview');
-                    return params;
-                });
-            }
-        } else {
-            setPayloadState({type: 'close'});
-        }
-    }, [searchParams]);
-
-    function setPayload(value: ImagePreviewerPayload) {
-        switch (value.type) {
-            case 'close':
-                setSearchParams(params => {
-                    params.delete('imagePreview');
-                    return params;
-                });
-                break;
-            case 'open':
-                setSearchParams(params => {
-                    params.set('imagePreview', '1');
-                    return params;
-                });
-                setPayloadState(value);
-                break;
-            default:
-                value satisfies never;
-        }
-    }
 
     return {
         payload,
