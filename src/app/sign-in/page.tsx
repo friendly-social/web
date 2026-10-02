@@ -105,8 +105,7 @@ function SignInContent(): ReactNode {
                     onClick={() => void onSend()}
                     disabled={loading}
                 >
-                    {!loading && t('send-code')}
-                    {loading && <Spinner />}
+                    {loading ? <Spinner /> : <span>{t('send-code')}</span>}
                 </Button>
                 <div className="flex justify-center items-center gap-1">
                     <p className="text-sm">{t('dont-have-account')}</p>

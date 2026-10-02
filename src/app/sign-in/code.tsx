@@ -188,8 +188,7 @@ function CodeDialogContent({email}: CodeDialogProps): ReactNode {
                     className="w-30"
                     disabled={loading}
                 >
-                    {!loading && t('continue')}
-                    {loading && <Spinner />}
+                    {loading ? <Spinner /> : <span>{t('continue')}</span>}
                 </Button>
             </div>
         </div>

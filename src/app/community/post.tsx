@@ -118,7 +118,7 @@ function CommunityPostCardPlain({
             url: `/community/${post.id}/replies`,
             onNavigate: url =>
                 void navigate(url, {
-                    state: {popDepth, showKeyboard} as unknown,
+                    state: {popDepth, showKeyboard},
                 }),
         });
     }
@@ -149,8 +149,10 @@ function CommunityPostCardPlain({
                             className="flex items-center gap-1 text-xs text-muted-foreground whitespace-nowrap"
                         >
                             <Clock className="h-3 w-3" />
-                            {formatTimeAgo(t, postTime)}
-                            {post.edited ? ' ' + t('edited') : undefined}
+                            <span>
+                                {formatTimeAgo(t, postTime) +
+                                    (post.edited ? ' ' + t('edited') : '')}
+                            </span>
                         </span>
                     </div>
                     <MarkdownArea
@@ -228,7 +230,7 @@ function CommunityPostCardDeleted({
             url: `/community/${post.id}/replies`,
             onNavigate: url =>
                 void navigate(url, {
-                    state: {popDepth} as unknown,
+                    state: {popDepth},
                 }),
         });
     }
