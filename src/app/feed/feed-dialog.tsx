@@ -1,8 +1,5 @@
 import {Badge} from '@/components/ui/badge';
-import {
-    ImagePreviewer,
-    ImagePreviewerPayload,
-} from '@/components/image-previewer';
+import {ImagePreviewer, useImagePreviewer} from '@/components/image-previewer';
 import {MarkdownArea} from '@/components/ui/markdown-area';
 import {Button} from '@/components/ui/button';
 import {useFriendlyStorage} from '@/components/friendly-storage-provider';
@@ -35,9 +32,7 @@ export function FeedDialog({
     const navigate = useNavigate();
     const [showAllFriends, setShowAllFriends] = useState(false);
 
-    const [imagePreviewer, setImagePreviewer] = useState<ImagePreviewerPayload>(
-        {type: 'close'},
-    );
+    const imagePreviewer = useImagePreviewer();
 
     async function routeToUser(friend: UserDetails) {
         await storage.userAccessHashes.save([
@@ -129,7 +124,7 @@ export function FeedDialog({
                     nickname={selectedCard.details.nickname}
                     onImageClick={e => {
                         e.stopPropagation();
-                        setImagePreviewer({
+                        imagePreviewer.setPayload({
                             type: 'open',
                             src: e.currentTarget.src,
                         });
@@ -172,7 +167,7 @@ export function FeedDialog({
                             text={selectedCard.details.description}
                             onImageClick={e => {
                                 e.stopPropagation();
-                                setImagePreviewer({
+                                imagePreviewer.setPayload({
                                     type: 'open',
                                     src: e.currentTarget.src,
                                 });
@@ -209,10 +204,7 @@ export function FeedDialog({
                     </Button>
                 </div>
             </div>
-            <ImagePreviewer
-                payload={imagePreviewer}
-                setPayload={setImagePreviewer}
-            />
+            <ImagePreviewer {...imagePreviewer} />
         </div>
     );
 }
