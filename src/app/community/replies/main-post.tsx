@@ -5,6 +5,7 @@ import {
 } from '@/components/image-previewer';
 import {AdjusterPayload, Adjuster, AdjusterCrop} from '@/components/adjuster';
 import {isMobile} from '@/lib/is-mobile';
+import {hasTextSelection} from '@/lib/has-text-selection';
 import {resizeImage} from '@/network/image';
 import {toast} from 'sonner';
 import {FileDescriptor} from '@/types/file-descriptor';
@@ -460,7 +461,10 @@ function MainPostCardPlain({
                     <div className="flex items-center gap-2">
                         <p
                             className="font-semibold text-foreground truncate cursor-pointer"
-                            onClick={event => void navigateProfile(event)}
+                            onClick={event => {
+                                if (hasTextSelection()) return;
+                                void navigateProfile(event);
+                            }}
                         >
                             {post.owner.nickname}
                         </p>
@@ -562,7 +566,7 @@ function useDeleteMutation({details, popDepth}: UseDeleteMutationProps) {
 
     async function navigateReplies(descriptor: CommunityPostDescriptor) {
         await navigate(`/community/${descriptor.id}/replies`, {
-            state: {popDepth} as unknown,
+            state: {popDepth},
             replace: true,
         });
     }
@@ -643,7 +647,7 @@ function useCreateMutation({
         showKeyboard: boolean,
     ) {
         await navigate(`/community/${descriptor.id}/replies`, {
-            state: {popDepth, showKeyboard} as unknown,
+            state: {popDepth, showKeyboard},
         });
     }
 

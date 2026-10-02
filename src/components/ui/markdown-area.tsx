@@ -68,6 +68,8 @@ function MarkdownAreaComponent(
                             target="_blank"
                             rel="noopener noreferrer"
                             className={linkClass}
+                            onClick={event => event.stopPropagation()}
+                            onAuxClick={event => event.stopPropagation()}
                         >
                             {children}
                         </a>
