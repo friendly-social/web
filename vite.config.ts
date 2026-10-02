@@ -64,7 +64,11 @@ export default defineConfig({
         sourcemap: true,
     },
     plugins: [
-        react(),
+        react({
+            babel: {
+                plugins: ['babel-plugin-react-compiler'],
+            },
+        }),
         appVersionPlugin(),
         VitePWA({
             registerType: 'autoUpdate',

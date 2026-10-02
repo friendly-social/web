@@ -491,6 +491,9 @@ interface ListProps {
 }
 
 function List({virtualizer, parentRef, items}: ListProps) {
+    'use no memo';
+    // The virtualizer keeps its identity while its scroll measurements change.
+
     return (
         <div
             ref={parentRef}
