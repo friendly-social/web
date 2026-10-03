@@ -1,6 +1,7 @@
 import {useImagePreviewerController} from '@/components/image-previewer';
 import {Button} from '@/components/ui/button';
 import {openBlankShortcut} from '@/lib/open-blank-shortcut';
+import {hasTextSelection} from '@/lib/has-text-selection';
 import {AvatarGroup} from '@/components/ui/avatar';
 import {MessageCircle, Clock} from 'lucide-react';
 import {useTranslations} from 'use-intl';
@@ -118,7 +119,7 @@ function CommunityPostCardPlain({
             url: `/community/${post.id}/replies`,
             onNavigate: url =>
                 void navigate(url, {
-                    state: {popDepth, showKeyboard} as unknown,
+                    state: {popDepth, showKeyboard},
                 }),
         });
     }
@@ -126,7 +127,10 @@ function CommunityPostCardPlain({
     return (
         <div
             className={cn('p-4', className)}
-            onClick={e => navigateReplies(e, {showKeyboard: false})}
+            onClick={e => {
+                if (hasTextSelection()) return;
+                navigateReplies(e, {showKeyboard: false});
+            }}
             onAuxClick={e => navigateReplies(e, {showKeyboard: false})}
         >
             <div className="flex gap-3">
@@ -140,7 +144,10 @@ function CommunityPostCardPlain({
                     <div className="flex items-center gap-2">
                         <p
                             className="font-semibold text-foreground truncate cursor-pointer"
-                            onClick={event => void navigateProfile(event)}
+                            onClick={event => {
+                                if (hasTextSelection()) return;
+                                void navigateProfile(event);
+                            }}
                         >
                             {post.owner.nickname}
                         </p>
@@ -228,7 +235,7 @@ function CommunityPostCardDeleted({
             url: `/community/${post.id}/replies`,
             onNavigate: url =>
                 void navigate(url, {
-                    state: {popDepth} as unknown,
+                    state: {popDepth},
                 }),
         });
     }
@@ -239,7 +246,10 @@ function CommunityPostCardDeleted({
                 'p-4 cursor-pointer flex items-center justify-between',
                 className,
             )}
-            onClick={e => navigateReplies(e)}
+            onClick={e => {
+                if (hasTextSelection()) return;
+                navigateReplies(e);
+            }}
             onAuxClick={e => navigateReplies(e)}
         >
             <p className="italic text-foreground truncate cursor-pointer">

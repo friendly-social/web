@@ -1,5 +1,6 @@
 import {useMutation} from '@tanstack/react-query';
 import {openBlankShortcut} from '@/lib/open-blank-shortcut';
+import {hasTextSelection} from '@/lib/has-text-selection';
 import {useNavigationType, NavigationType} from 'react-router';
 import {useVirtualizer, VirtualItem} from '@tanstack/react-virtual';
 import {activity} from '@/services/activity-service';
@@ -263,7 +264,7 @@ function ReplyActivityCard({details, beforeClick}: ReplyActivityCardProps) {
                 void navigate(url, {
                     state: {
                         popDepth: 1,
-                    } as unknown,
+                    },
                 }),
         });
     }
@@ -272,6 +273,7 @@ function ReplyActivityCard({details, beforeClick}: ReplyActivityCardProps) {
         <div
             className="flex gap-2 items-center m-4"
             onClick={e => {
+                if (hasTextSelection()) return;
                 beforeClick();
                 void navigateReplies(e);
             }}
