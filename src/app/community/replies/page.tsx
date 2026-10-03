@@ -115,7 +115,10 @@ export function RepliesPage() {
     );
 
     return (
-        <DismissableLayer onEscapeKeyDown={() => navigateUp()}>
+        <DismissableLayer
+            className="h-full w-full"
+            onEscapeKeyDown={() => navigateUp()}
+        >
             {content}
         </DismissableLayer>
     );
