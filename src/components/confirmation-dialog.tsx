@@ -20,10 +20,10 @@ interface ConfirmationDialogProps {
     description: string;
     actionLabel: string;
     cancelLabel: string;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
     onAction?: () => void;
     onCancel?: () => void;
-    open?: boolean;
-    onOpenChange?: (open: boolean) => void;
 }
 
 export function ConfirmationDialog({

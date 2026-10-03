@@ -1,4 +1,5 @@
 import {useImagePreviewerController} from '@/components/image-previewer';
+import {useAppRouter} from '@/components/app-router-provider';
 import {useBackend} from '@/backend.context';
 import * as authService from '@/services/auth-service';
 import {useAppContext} from '@/app.context';
@@ -16,11 +17,11 @@ import {
     Ellipsis,
 } from 'lucide-react';
 import {useTranslations} from 'use-intl';
-import {useMemo, useState, useEffect} from 'react';
+import {useMemo, useEffect} from 'react';
 import {UserDetails} from '@/types/user-details';
 import {Badge} from '@/components/ui/badge';
 import {Separator} from '@/components/ui/separator';
-import {useNavigate, useParams} from 'react-router';
+import {useNavigate, useParams, useLocation} from 'react-router';
 import {useFriendlyStorage} from '@/components/friendly-storage-provider';
 import {ProfileDescription} from '@/components/profile-description';
 import {Button} from '@/components/ui/button';
@@ -34,6 +35,41 @@ import {
 import {ConfirmationDialog} from '@/components/confirmation-dialog';
 import {StyledAvatar} from '@/components/styled-avatar';
 
+type RemoveFriendDialogState = {removeFriendDialog?: true} | null;
+
+export interface RemoveFriendDialogController {
+    open: boolean;
+    setOpen: (open: boolean) => Promise<void>;
+}
+
+export function useRemoveFriendDialogController(): RemoveFriendDialogController {
+    const router = useAppRouter();
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    const open = !!(location.state as RemoveFriendDialogState)
+        ?.removeFriendDialog;
+
+    function setOpen(value: boolean) {
+        const location = router.location();
+        if (value) {
+            return navigate(location, {
+                state: {
+                    ...(location.state as object),
+                    removeFriendDialog: true,
+                },
+            }) as Promise<void>;
+        } else {
+            return navigate(-1) as Promise<void>;
+        }
+    }
+
+    return {
+        open,
+        setOpen,
+    };
+}
+
 interface ProfileDropdownProps {
     showDecline: boolean;
     onDecline: () => void;
@@ -43,8 +79,7 @@ function ProfileDropdown({onDecline, showDecline}: ProfileDropdownProps) {
     const tProfile = useTranslations('profile');
     const tRemoveFriendDialog = useTranslations('remove-friend-dialog');
 
-    const [isRemoveFriendDialogOpen, setIsRemoveFriendDialogOpen] =
-        useState(false);
+    const removeFriendDialog = useRemoveFriendDialogController();
 
     if (!showDecline) {
         return;
@@ -62,7 +97,9 @@ function ProfileDropdown({onDecline, showDecline}: ProfileDropdownProps) {
                     <DropdownMenuGroup>
                         <DropdownMenuItem
                             variant="destructive"
-                            onClick={() => setIsRemoveFriendDialogOpen(true)}
+                            onClick={() =>
+                                void removeFriendDialog.setOpen(true)
+                            }
                         >
                             <UserXIcon className="size-4" />
                             {tProfile('dropdown.remove_friend')}
@@ -79,10 +116,8 @@ function ProfileDropdown({onDecline, showDecline}: ProfileDropdownProps) {
                 actionLabel={tRemoveFriendDialog('action')}
                 cancelLabel={tRemoveFriendDialog('cancel')}
                 onAction={onDecline}
-                open={isRemoveFriendDialogOpen}
-                onOpenChange={isOpen => {
-                    if (!isOpen) setIsRemoveFriendDialogOpen(isOpen);
-                }}
+                open={removeFriendDialog.open}
+                onOpenChange={value => void removeFriendDialog.setOpen(value)}
             />
         </>
     );
