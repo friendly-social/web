@@ -1,4 +1,4 @@
-import {ImagePreviewer, useImagePreviewer} from '@/components/image-previewer';
+import {useImagePreviewerController} from '@/components/image-previewer';
 import {Button} from '@/components/ui/button';
 import {openBlankShortcut} from '@/lib/open-blank-shortcut';
 import {AvatarGroup} from '@/components/ui/avatar';
@@ -92,7 +92,7 @@ function CommunityPostCardPlain({
         return () => observer.disconnect();
     }, [post.text]);
 
-    const imagePreviewer = useImagePreviewer();
+    const imagePreviewer = useImagePreviewerController();
 
     async function navigateProfile(event: React.MouseEvent) {
         event.stopPropagation();
@@ -165,7 +165,7 @@ function CommunityPostCardPlain({
                         text={post.text}
                         onImageClick={e => {
                             e.stopPropagation();
-                            imagePreviewer.setPayload({
+                            void imagePreviewer.setPayload({
                                 type: 'open',
                                 src: e.currentTarget.src,
                             });
@@ -203,7 +203,6 @@ function CommunityPostCardPlain({
                     </Button>
                 </div>
             )}
-            <ImagePreviewer {...imagePreviewer} />
         </div>
     );
 }

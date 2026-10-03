@@ -1,4 +1,6 @@
 import {StyledDialogWrapper} from '@/components/styled-dialog-wrapper';
+import {useAppRouter} from '@/components/app-router-provider';
+import {useNavigate, useLocation} from 'react-router';
 import {useAppContext} from '@/app.context';
 import {cn} from '@/lib/utils';
 import {Button} from '@/components/ui/button';
@@ -53,28 +55,27 @@ export async function recordShow() {
     await idb.set(COUNTER, counter + 1);
 }
 
-export interface ContentProps {
-    show: boolean;
-    setShow: (value: boolean) => void;
-}
-
-export function Content({show, setShow}: ContentProps) {
+export function Content() {
     const app = useAppContext();
     const t = useTranslations('notifications-tip');
+    const {open, setOpen} = useController();
 
     function decline() {
-        setShow(false);
+        void setOpen(false);
     }
 
     function confirm() {
-        setShow(false);
+        void setOpen(false);
         void idb.set(DISABLE, true);
         void notifications.request(app);
     }
 
     return (
         <>
-            <StyledDialogWrapper open={show} onOpenChange={setShow}>
+            <StyledDialogWrapper
+                open={open}
+                onOpenChange={value => void setOpen(value)}
+            >
                 <div
                     className={cn(
                         'flex',
@@ -116,4 +117,38 @@ export function Content({show, setShow}: ContentProps) {
             </StyledDialogWrapper>
         </>
     );
+}
+
+type State = {notificationsTip?: true} | null;
+
+export interface Controller {
+    open: boolean;
+    setOpen: (open: boolean) => Promise<void>;
+}
+
+export function useController(): Controller {
+    const router = useAppRouter();
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    const open = !!(location.state as State)?.notificationsTip;
+
+    function setOpen(value: boolean) {
+        const location = router.location();
+        if (value) {
+            return navigate(location, {
+                state: {
+                    ...(location.state as object),
+                    notificationsTip: true,
+                },
+            }) as Promise<void>;
+        } else {
+            return navigate(-1) as Promise<void>;
+        }
+    }
+
+    return {
+        open,
+        setOpen,
+    };
 }

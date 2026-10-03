@@ -1,5 +1,6 @@
 import {StyledDialogWrapper} from '@/components/styled-dialog-wrapper';
-import {useNavigate} from 'react-router';
+import {useAppRouter} from '@/components/app-router-provider';
+import {useNavigate, useLocation} from 'react-router';
 import {cn} from '@/lib/utils';
 import {Button} from '@/components/ui/button';
 import {users} from '@/services/users-service';
@@ -49,29 +50,29 @@ export async function recordShow() {
     await idb.set(COUNTER, counter + 1);
 }
 
-export interface ContentProps {
-    show: boolean;
-    setShow: (value: boolean) => void;
-}
-
-export function Content({show, setShow}: ContentProps) {
+export function Content() {
     const t = useTranslations('email-tip');
     const navigate = useNavigate();
+    const {open, setOpen} = useController();
 
     function decline() {
-        setShow(false);
+        void setOpen(false);
     }
 
     function confirm() {
-        setShow(false);
-        void navigate('/profile', {
-            state: {edit: true},
-        });
+        void setOpen(false).then(() =>
+            navigate('/profile', {
+                state: {edit: true},
+            }),
+        );
     }
 
     return (
         <>
-            <StyledDialogWrapper open={show} onOpenChange={setShow}>
+            <StyledDialogWrapper
+                open={open}
+                onOpenChange={value => void setOpen(value)}
+            >
                 <div
                     className={cn(
                         'flex',
@@ -113,4 +114,38 @@ export function Content({show, setShow}: ContentProps) {
             </StyledDialogWrapper>
         </>
     );
+}
+
+type State = {emailTip?: true} | null;
+
+export interface Controller {
+    open: boolean;
+    setOpen: (open: boolean) => Promise<void>;
+}
+
+export function useController(): Controller {
+    const router = useAppRouter();
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    const open = !!(location.state as State)?.emailTip;
+
+    function setOpen(value: boolean) {
+        const location = router.location();
+        if (value) {
+            return navigate(location, {
+                state: {
+                    ...(location.state as object),
+                    emailTip: true,
+                },
+            }) as Promise<void>;
+        } else {
+            return navigate(-1) as Promise<void>;
+        }
+    }
+
+    return {
+        open,
+        setOpen,
+    };
 }

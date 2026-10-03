@@ -1,7 +1,8 @@
 import {StrictMode} from 'react';
+import {AppRouterProvider} from '@/components/app-router-provider';
 import {initializeBackendService} from '@/backend.context';
 import * as Notifications from '@/notifications';
-import {authService} from '@/services/auth-service';
+import * as authService from '@/services/auth-service';
 import {createRoot} from 'react-dom/client';
 import {BlockingQR} from '@/app/blocking-qr/page';
 import {AppPage, AuthorizedGuard, UnauthorizedGuard} from '@/app/page';
@@ -139,6 +140,8 @@ console.log(`Initialization finished in ${performance.now() - start}`);
 
 createRoot(document.getElementById('root')!).render(
     <StrictMode>
-        <RouterProvider router={router} useTransitions />
+        <AppRouterProvider value={router}>
+            <RouterProvider router={router} useTransitions />
+        </AppRouterProvider>
     </StrictMode>,
 );

@@ -1,5 +1,5 @@
 import {Button} from '@/components/ui/button';
-import {ImagePreviewer, useImagePreviewer} from '@/components/image-previewer';
+import {useImagePreviewerController} from '@/components/image-previewer';
 import {AdjusterPayload, Adjuster, AdjusterCrop} from '@/components/adjuster';
 import {isMobile} from '@/lib/is-mobile';
 import {resizeImage} from '@/network/image';
@@ -415,7 +415,7 @@ function MainPostCardPlain({
     const navigate = useNavigate();
     const storage = useFriendlyStorage();
 
-    const imagePreviewer = useImagePreviewer();
+    const imagePreviewer = useImagePreviewerController();
 
     const avatarUrl = post.owner.avatar
         ? createFileLink(post.owner.avatar)
@@ -479,7 +479,7 @@ function MainPostCardPlain({
                         text={post.text}
                         onImageClick={e => {
                             e.stopPropagation();
-                            imagePreviewer.setPayload({
+                            void imagePreviewer.setPayload({
                                 type: 'open',
                                 src: e.currentTarget.src,
                             });
@@ -487,7 +487,6 @@ function MainPostCardPlain({
                     />
                 </div>
             </div>
-            <ImagePreviewer {...imagePreviewer} />
         </div>
     );
 }

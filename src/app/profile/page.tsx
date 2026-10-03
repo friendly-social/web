@@ -1,10 +1,9 @@
-import {ImagePreviewer, useImagePreviewer} from '@/components/image-previewer';
+import {useImagePreviewerController} from '@/components/image-previewer';
 import {useBlockingQR} from '@/app/blocking-qr/page';
-import {useLocation} from 'react-router';
 import {forceUnwrap} from '@/network/result';
 import {users} from '@/services/users-service';
 import {useAppContext} from '@/app.context';
-import {useMemo, useState, useCallback} from 'react';
+import {useMemo, useCallback} from 'react';
 import {Badge} from '@/components/ui/badge';
 import {Separator} from '@/components/ui/separator';
 import {Activity, Loader2, LogOut, Pencil, QrCodeIcon} from 'lucide-react';
@@ -15,17 +14,17 @@ import {createFileLink} from '@/lib/utils';
 import {useQuery, useQueryClient} from '@tanstack/react-query';
 import {useSession} from '@/components/session-provider';
 import {useTranslations} from 'use-intl';
-import {EditProfileDialog} from '@/app/edit/dialog';
-import {LogoutDialog} from '@/app/log-out-dialog';
+import {EditProfileDialog, useEditDialogController} from '@/app/edit/dialog';
+import {LogoutDialog, useLogoutDialogController} from '@/app/log-out-dialog';
 import {ProfileDescription} from '@/components/profile-description';
 import {FriendsBlock} from '@/app/profile/friends-block';
-import {QrCodeDialog} from '@/app/qr-code-dialog';
+import {QrCodeDialog, useQrCodeDialogController} from '@/app/qr-code-dialog';
 import {StyledAvatar} from '@/components/styled-avatar';
 
+// todo: state support with edit: true
 function ProfileHeader({logOut}: {logOut: () => void}) {
     const t = useTranslations('profile');
     const app = useAppContext();
-    const location = useLocation().state as {edit: boolean} | undefined;
     const userDetails = users.self(app).data!.user;
 
     const avatarUrl = useMemo(
@@ -33,27 +32,24 @@ function ProfileHeader({logOut}: {logOut: () => void}) {
         [userDetails],
     );
 
-    const [openEdit, setOpenEdit] = useState(location?.edit ?? false);
-    const onEditClick = useCallback(() => setOpenEdit(true), []);
-    const [openLogout, setOpenLogout] = useState(false);
-    const [openQR, setOpenQR] = useState(false);
+    const onEditClick = useCallback(() => void edit.setOpen(true), []);
+    const logout = useLogoutDialogController();
+    const edit = useEditDialogController();
+    const qrCode = useQrCodeDialogController();
 
-    const imagePreviewer = useImagePreviewer();
+    const imagePreviewer = useImagePreviewerController();
 
     return (
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 w-full">
-            {userDetails && (
-                <EditProfileDialog open={openEdit} setOpen={setOpenEdit} />
-            )}
-            <QrCodeDialog open={openQR} setOpen={setOpenQR} />
+            {userDetails && <EditProfileDialog />}
+            <QrCodeDialog />
             <LogoutDialog
-                open={openLogout}
-                onOpenChange={setOpenLogout}
                 suggestBindEmail={!userDetails?.email}
                 onLogout={logOut}
                 onBindEmail={() => {
-                    setOpenLogout(false);
-                    setOpenEdit(true);
+                    void logout.setOpen(false).then(() => {
+                        void edit.setOpen(true);
+                    });
                 }}
             />
 
@@ -62,7 +58,7 @@ function ProfileHeader({logOut}: {logOut: () => void}) {
                     avatarClassName="w-20 h-20 sm:w-24 sm:h-24 ring-2 ring-background shadow-sm"
                     onImageClick={e => {
                         e.stopPropagation();
-                        imagePreviewer.setPayload({
+                        void imagePreviewer.setPayload({
                             type: 'open',
                             src: e.currentTarget.src,
                         });
@@ -86,7 +82,7 @@ function ProfileHeader({logOut}: {logOut: () => void}) {
                 <Button
                     className="cursor-pointer flex-1 sm:flex-none"
                     variant="secondary"
-                    onClick={() => setOpenQR(true)}
+                    onClick={() => void qrCode.setOpen(true)}
                 >
                     <QrCodeIcon className="w-4 h-4" />
                     <p className="hidden sm:block">{t('qr.title')}</p>
@@ -104,13 +100,12 @@ function ProfileHeader({logOut}: {logOut: () => void}) {
                 <Button
                     className="cursor-pointer flex-1 sm:flex-none"
                     variant="secondary"
-                    onClick={() => setOpenLogout(true)}
+                    onClick={() => void logout.setOpen(true)}
                 >
                     <LogOut className="w-4 h-4" />
                     <p className="hidden sm:block">{t('log_out')}</p>
                 </Button>
             </div>
-            <ImagePreviewer {...imagePreviewer} />
         </div>
     );
 }

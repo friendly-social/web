@@ -1,6 +1,6 @@
 import {ReactNode} from 'react';
 import {useAppContext} from '@/app.context';
-import {useState, useEffect} from 'react';
+import {useEffect} from 'react';
 import * as idb from 'idb-keyval';
 import * as emailTip from '@/app/tips/email-tip';
 import * as notificationsTip from '@/app/tips/notifications-tip';
@@ -15,11 +15,10 @@ export interface VisitTipProps {
 
 export function VisitTip({children}: VisitTipProps) {
     const app = useAppContext();
-    const [showEmail, setShowEmail] = useState(false);
-    const [showNotifications, setShowNotifications] = useState(false);
+    const emailTipController = emailTip.useController();
+    const notificationsTipController = notificationsTip.useController();
 
     useEffect(() => {
-        let cancel = false;
         void (async () => {
             let visits: number = (await idb.get(VISITS)) ?? 0;
             const visitRecorded = sessionStorage.getItem(VISIT_RECORDED);
@@ -28,7 +27,6 @@ export function VisitTip({children}: VisitTipProps) {
             }
             sessionStorage.setItem(VISIT_RECORDED, 'true');
             visits++;
-            if (cancel) return;
             await idb.set(VISITS, visits);
 
             let firstVisit: number | undefined = await idb.get(FIRST_VISIT);
@@ -36,37 +34,29 @@ export function VisitTip({children}: VisitTipProps) {
                 firstVisit = Date.now();
                 await idb.set(FIRST_VISIT, firstVisit);
             }
-            if (cancel) return;
 
             const [showEmail, showNotifications] = await Promise.all([
                 emailTip.shouldShow({app, visits, firstVisit}),
                 notificationsTip.shouldShow({visits, firstVisit}),
             ]);
-            if (cancel) return;
             if (showEmail) {
                 await emailTip.recordShow();
-                setShowEmail(true);
+                await emailTipController.setOpen(true);
                 return;
             }
             if (showNotifications) {
                 await notificationsTip.recordShow();
-                setShowNotifications(true);
+                await notificationsTipController.setOpen(true);
                 return;
             }
         })();
-        return () => {
-            cancel = true;
-        };
     }, []);
 
     return (
         <>
             {children}
-            <emailTip.Content show={showEmail} setShow={setShowEmail} />
-            <notificationsTip.Content
-                show={showNotifications}
-                setShow={setShowNotifications}
-            />
+            <emailTip.Content />
+            <notificationsTip.Content />
         </>
     );
 }

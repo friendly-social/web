@@ -1,4 +1,5 @@
 import {UserDetails} from '@/types/user-details';
+import {useAppRouter} from '@/components/app-router-provider';
 import {useMemo} from 'react';
 import {useTranslations} from 'use-intl';
 import {cn, createFileLink} from '@/lib/utils';
@@ -8,12 +9,44 @@ import {Dialog} from 'radix-ui';
 import {useFriendlyStorage} from '@/components/friendly-storage-provider';
 import {StyledDialogWrapper} from '@/components/styled-dialog-wrapper';
 import {StyledAvatar} from '@/components/styled-avatar';
-import {useNavigate} from 'react-router';
+import {useNavigate, useLocation} from 'react-router';
+
+type AllFriendsDialogState = {allFriendsDialog?: true} | null;
+
+export interface AllFriendsDialogController {
+    open: boolean;
+    setOpen: (open: boolean) => Promise<void>;
+}
+
+export function useAllFriendsDialogController(): AllFriendsDialogController {
+    const router = useAppRouter();
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    const open = !!(location.state as AllFriendsDialogState)?.allFriendsDialog;
+
+    function setOpen(value: boolean) {
+        const location = router.location();
+        if (value) {
+            return navigate(location, {
+                state: {
+                    ...(location.state as object),
+                    allFriendsDialog: true,
+                },
+            }) as Promise<void>;
+        } else {
+            return navigate(-1) as Promise<void>;
+        }
+    }
+
+    return {
+        open,
+        setOpen,
+    };
+}
 
 interface AllFriendsListProps {
     friends: UserDetails[];
-    open: boolean;
-    setOpen: (open: boolean) => void;
 }
 
 interface FriendListItemProps {
@@ -51,7 +84,8 @@ function FriendListItem({id, friend, onClick}: FriendListItemProps) {
     );
 }
 
-export function AllFriendsList({friends, open, setOpen}: AllFriendsListProps) {
+export function AllFriendsList({friends}: AllFriendsListProps) {
+    const {open, setOpen} = useAllFriendsDialogController();
     const t = useTranslations('profile');
     const storage = useFriendlyStorage();
     const navigate = useNavigate();
@@ -63,11 +97,15 @@ export function AllFriendsList({friends, open, setOpen}: AllFriendsListProps) {
                 accessHash: friend.accessHash,
             },
         ]);
+        await setOpen(false);
         await navigate(`/user/${friend.id}`);
     };
 
     return (
-        <StyledDialogWrapper open={open} onOpenChange={setOpen}>
+        <StyledDialogWrapper
+            open={open}
+            onOpenChange={value => void setOpen(value)}
+        >
             <div className="flex flex-col">
                 <div className="relative flex items-center mt-1 mx-1">
                     <Dialog.Title className="w-full text-base font-semibold text-center pt-2">

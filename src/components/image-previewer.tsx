@@ -1,4 +1,5 @@
 import * as Dialog from '@radix-ui/react-dialog';
+import {useLocation, useNavigate} from 'react-router';
 import {TopBar, useTopBarContext} from '@/app/top-bar';
 import {useRef, useEffect, useState, useLayoutEffect} from 'react';
 import createPanzoom, * as panzoom from '@y9san9/panzoom';
@@ -13,37 +14,19 @@ export type ImagePreviewerPayload =
           type: 'close';
       };
 
-export interface ImagePreviewerProps {
-    payload: ImagePreviewerPayload;
-    setPayload: (value: ImagePreviewerPayload) => void;
-}
-
-/*
- * Use image previewer with search params
- */
-export function useImagePreviewer(): ImagePreviewerProps {
-    const [payload, setPayload] = useState<ImagePreviewerPayload>({
-        type: 'close',
-    });
-
-    return {
-        payload,
-        setPayload,
-    };
-}
-
-export function ImagePreviewer({payload, setPayload}: ImagePreviewerProps) {
+export function ImagePreviewer() {
+    const {payload, setPayload} = useImagePreviewerController();
     return (
         <Dialog.Root
             open={payload.type === 'open'}
-            onOpenChange={() => setPayload({type: 'close'})}
+            onOpenChange={() => void setPayload({type: 'close'})}
         >
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-2 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:duration-100" />
                 <Dialog.Content
                     onClick={e => {
                         e.stopPropagation();
-                        setPayload({type: 'close'});
+                        void setPayload({type: 'close'});
                     }}
                     className={cn('z-2 fixed left-0 top-0 right-0 bottom-0')}
                 >
@@ -70,17 +53,6 @@ function Content({payload}: ContentProps) {
             },
         });
     }, []);
-
-    useEffect(() => {
-        function onResize() {
-            console.log('resize');
-            if (imgRef.current) {
-                onImageLoad(imgRef.current);
-            }
-        }
-        window.addEventListener('resize', onResize);
-        return () => window.removeEventListener('resize', onResize);
-    }, [onImageLoad]);
 
     useEffect(() => {
         const img = imgRef.current;
@@ -141,4 +113,40 @@ function Content({payload}: ContentProps) {
             </div>
         </div>
     );
+}
+
+type ImagePreviewerState = {
+    imagePreviewer: ImagePreviewerPayload | undefined;
+} | null;
+
+export interface ImagePreviewerController {
+    payload: ImagePreviewerPayload;
+    setPayload: (value: ImagePreviewerPayload) => Promise<void>;
+}
+
+export function useImagePreviewerController(): ImagePreviewerController {
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    const payload = (location.state as ImagePreviewerState)?.imagePreviewer ?? {
+        type: 'close',
+    };
+
+    function setPayload(value: ImagePreviewerPayload): Promise<void> {
+        switch (value.type) {
+            case 'open':
+                return navigate(location, {
+                    state: {
+                        ...(location.state as object),
+                        imagePreviewer: value,
+                    } as unknown,
+                }) as Promise<void>;
+            case 'close':
+                return navigate(-1) as Promise<void>;
+            default:
+                return value satisfies never;
+        }
+    }
+
+    return {payload, setPayload};
 }

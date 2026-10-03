@@ -22,7 +22,7 @@ import {useTranslations} from 'use-intl';
 import {Button} from '@/components/ui/button';
 import {StyledDialogWrapper} from '@/components/styled-dialog-wrapper';
 import {useSession} from '@/components/session-provider';
-import {LogoutDialog} from '../log-out-dialog';
+import {LogoutDialog, useLogoutDialogController} from '../log-out-dialog';
 
 export function BlockingQR(): ReactNode {
     const controller = useBlockingQR();
@@ -31,7 +31,7 @@ export function BlockingQR(): ReactNode {
     const [loading, setLoading] = useState(false);
     const [link, setLink] = useState('');
     const [linkError, setLinkError] = useState<string | null>();
-    const [openLogout, setOpenLogout] = useState(false);
+    const logout = useLogoutDialogController();
     const backend = useBackend();
     const session = useSession();
     const navigate = useNavigate();
@@ -119,7 +119,7 @@ export function BlockingQR(): ReactNode {
                             <Button
                                 className="cursor-pointer min-w-38"
                                 variant="outline"
-                                onClick={() => void setOpenLogout(true)}
+                                onClick={() => void logout.setOpen(true)}
                                 disabled={loading}
                             >
                                 {t('log_out')}
@@ -139,8 +139,6 @@ export function BlockingQR(): ReactNode {
             </StyledDialogWrapper>
 
             <LogoutDialog
-                open={openLogout}
-                onOpenChange={setOpenLogout}
                 suggestBindEmail={false}
                 onLogout={() =>
                     void (async () => {

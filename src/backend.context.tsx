@@ -1,5 +1,5 @@
 import {createContext, useContext} from 'react';
-import {authService} from '@/services/auth-service';
+import * as authService from '@/services/auth-service';
 import {BackendService} from '@/services/backend-service';
 import {FriendlyClient, FriendlyClientImpl} from '@/network/friendly-client';
 import {useAppContext, AppContext} from '@/app.context';

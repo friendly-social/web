@@ -1,4 +1,4 @@
-import {CodeDialog} from './code';
+import {CodeDialog, useCodeDialogController} from './code';
 import {useBackendLocale} from '@/network/backend-locale';
 import {
     InputGroup,
@@ -41,7 +41,7 @@ function SignInContent(): ReactNode {
     const [error, setError] = useState<string | null>();
     const [loading, setLoading] = useState(false);
 
-    const [openCode, setOpenCode] = useState(false);
+    const codeDialog = useCodeDialogController();
 
     const backend = useBackend();
     const locale = useBackendLocale();
@@ -64,7 +64,7 @@ function SignInContent(): ReactNode {
                 }
                 return;
             }
-            setOpenCode(true);
+            void codeDialog.setOpen(true);
         } finally {
             setLoading(false);
         }
@@ -76,7 +76,7 @@ function SignInContent(): ReactNode {
 
     return (
         <div className="relative flex flex-col items-center mt-1 mx-1 gap-2">
-            <CodeDialog email={email} open={openCode} setOpen={setOpenCode} />
+            <CodeDialog email={email} />
             <p className="w-full text-base font-semibold text-center">
                 {t('title')}
             </p>

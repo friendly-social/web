@@ -1,7 +1,7 @@
 import {FriendlyStorage} from '@/services/friendly-storage';
 import {QueryClient} from '@tanstack/react-query';
 import {BackendService} from '@/services/backend-service';
-import {AuthServiceContext} from '@/services/auth-service';
+import * as authService from '@/services/auth-service';
 import {
     ReactNode,
     useEffect,
@@ -19,7 +19,7 @@ const AppContextDescriptor = createContext<AppContext | null>(null);
  */
 export interface AppContext {
     backend: BackendService;
-    authServiceContext: AuthServiceContext;
+    authServiceContext: authService.Context;
     queryClient: QueryClient;
     storage: FriendlyStorage;
 }

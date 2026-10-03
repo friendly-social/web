@@ -1,15 +1,18 @@
 import {FriendCard} from './friend-card';
+import {Button} from '@/components/ui/button';
 import {useNavigationType, NavigationType} from 'react-router';
 import {useVirtualizer, VirtualItem} from '@tanstack/react-virtual';
-import {AllFriendsList} from './all-friends-list';
-import {Link} from 'react-router';
+import {
+    AllFriendsList,
+    useAllFriendsDialogController,
+} from './all-friends-list';
 import {useTranslations} from 'use-intl';
 import {useEffect, useState, ReactElement, useRef, useMemo} from 'react';
 import {UserDetails} from '@/types/user-details';
 
 export function FriendsBlock({friends}: {friends: UserDetails[]}) {
     const t = useTranslations('profile');
-    const [showAll, setShowAll] = useState(false);
+    const allFriends = useAllFriendsDialogController();
 
     const items = friends.map(friend => ({
         key: friend.id.toString(),
@@ -23,14 +26,14 @@ export function FriendsBlock({friends}: {friends: UserDetails[]}) {
                     <span className="flex-1 text-sm font-semibold uppercase text-foreground">
                         {t('friends.title')}
                     </span>
-                    <Link
-                        to="#"
+                    <Button
+                        variant="ghost"
                         className="text-sm text-muted-foreground font-normal hover:underline"
                         hidden={friends.length < 1}
-                        onClick={() => setShowAll(true)}
+                        onClick={() => void allFriends.setOpen(true)}
                     >
                         {t('friends.see-all')}
-                    </Link>
+                    </Button>
                 </p>
                 {friends.length > 0 ? (
                     <List items={items} />
@@ -38,11 +41,7 @@ export function FriendsBlock({friends}: {friends: UserDetails[]}) {
                     <p hidden={friends.length > 0}>{t('friends.no_friends')}</p>
                 )}
             </div>
-            <AllFriendsList
-                friends={friends}
-                open={showAll}
-                setOpen={setShowAll}
-            />
+            <AllFriendsList friends={friends} />
         </>
     );
 }

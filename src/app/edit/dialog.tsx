@@ -1,9 +1,11 @@
 import {useUserValidator, ValidateUserResult} from './user-validation';
+import {useAppRouter} from '@/components/app-router-provider';
+import {useNavigate, useLocation} from 'react-router';
 import {useAppContext} from '@/app.context';
 import {users} from '@/services/users-service';
 import {useEffect} from 'react';
 import {useBackendLocale} from '@/network/backend-locale';
-import {EmailDialog} from './email-dialog';
+import {EmailDialog, useEmailDialogController} from './email-dialog';
 import * as Dialog from '@radix-ui/react-dialog';
 import {MutableAvatarContent} from '@/components/mutable-avatar';
 import {UsersEditRequest} from '@/network/friendly-client';
@@ -23,23 +25,58 @@ import {Button} from '@/components/ui/button';
 import {StyledDialogWrapper} from '@/components/styled-dialog-wrapper';
 import {Textarea} from '@/components/ui/textarea';
 
-interface EditProfileProps {
+type EditDialogState = {editDialog?: true} | null;
+
+export interface EditDialogController {
     open: boolean;
-    setOpen: (value: boolean) => void;
+    setOpen: (open: boolean) => Promise<void>;
+}
+
+export function useEditDialogController(): EditDialogController {
+    const router = useAppRouter();
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    const open = !!(location.state as EditDialogState)?.editDialog;
+    function setOpen(value: boolean) {
+        const location = router.location();
+        if (value) {
+            return navigate(location, {
+                state: {
+                    ...(location.state as object),
+                    editDialog: true,
+                },
+            }) as Promise<void>;
+        } else {
+            return navigate(-1) as Promise<void>;
+        }
+    }
+
+    return {
+        open,
+        setOpen,
+    };
 }
 
 // TODO:
 // * use https://github.com/arvind-iyer-2001/zepto-chip/tree/master/src/components for interests
-export function EditProfileDialog(props: EditProfileProps): ReactNode {
-    const {open, setOpen} = props;
+export function EditProfileDialog(): ReactNode {
+    const {open, setOpen} = useEditDialogController();
     return (
-        <StyledDialogWrapper open={open} onOpenChange={setOpen}>
-            <EditProfileDialogContent {...props} />
+        <StyledDialogWrapper
+            open={open}
+            onOpenChange={value => void setOpen(value)}
+        >
+            <Content setOpen={value => void setOpen(value)} />
         </StyledDialogWrapper>
     );
 }
 
-function EditProfileDialogContent({setOpen}: EditProfileProps): ReactNode {
+interface ContentProps {
+    setOpen: (value: boolean) => void;
+}
+
+function Content({setOpen}: ContentProps): ReactNode {
     const t = useTranslations('edit_profile_dialog');
     const app = useAppContext();
 
@@ -55,8 +92,7 @@ function EditProfileDialogContent({setOpen}: EditProfileProps): ReactNode {
     const [email, setEmail] = useState(savedEmail);
     const [emailError, setEmailError] = useState<string | undefined>(undefined);
     const emailChanged = savedEmail !== email;
-
-    const [emailOpen, setEmailOpen] = useState(false);
+    const emailDialog = useEmailDialogController();
 
     useEffect(() => {
         setEmail(savedEmail);
@@ -128,11 +164,7 @@ function EditProfileDialogContent({setOpen}: EditProfileProps): ReactNode {
 
     return (
         <>
-            <EmailDialog
-                email={email}
-                open={emailOpen}
-                setOpen={setEmailOpen}
-            />
+            <EmailDialog email={email} />
             <div className="relative flex items-center mt-1 mx-1">
                 <Dialog.Title className="w-full text-base font-semibold text-center pt-2">
                     {t('title')}
@@ -180,7 +212,7 @@ function EditProfileDialogContent({setOpen}: EditProfileProps): ReactNode {
                         setEmail={setEmail}
                         emailError={emailError}
                         setEmailError={setEmailError}
-                        setEmailOpen={() => setEmailOpen(true)}
+                        setEmailOpen={() => void emailDialog.setOpen(true)}
                     />
                     <Field>
                         <FieldLabel htmlFor="description">
@@ -281,7 +313,7 @@ function EmailInput({
     const backend = useBackend();
     const locale = useBackendLocale();
 
-    const [openUnlink, setOpenUnlink] = useState(false);
+    const unlinkDialog = useUnlinkDialogController();
 
     const app = useAppContext();
 
@@ -327,7 +359,7 @@ function EmailInput({
             });
         } finally {
             setLoading(false);
-            setOpenUnlink(false);
+            void unlinkDialog.setOpen(false);
         }
     }
 
@@ -362,7 +394,9 @@ function EmailInput({
                         <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => savedEmail && setOpenUnlink(true)}
+                            onClick={() =>
+                                savedEmail && void unlinkDialog.setOpen(true)
+                            }
                         >
                             <X />
                         </Button>
@@ -370,7 +404,10 @@ function EmailInput({
                 </InputGroupAddon>
             </InputGroup>
             <FieldError>{emailError}</FieldError>
-            <StyledDialogWrapper open={openUnlink} onOpenChange={setOpenUnlink}>
+            <StyledDialogWrapper
+                open={unlinkDialog.open}
+                onOpenChange={open => void unlinkDialog.setOpen(open)}
+            >
                 <div>
                     <div className="relative flex items-center mt-1 mx-1">
                         <Dialog.Title className="w-full text-base font-semibold text-center pt-2">
@@ -394,7 +431,7 @@ function EmailInput({
                             <Button
                                 className="cursor-pointer"
                                 variant="outline"
-                                onClick={() => setOpenUnlink(false)}
+                                onClick={() => void unlinkDialog.setOpen(false)}
                                 disabled={loading}
                             >
                                 {t('cancel')}
@@ -413,4 +450,37 @@ function EmailInput({
             </StyledDialogWrapper>
         </Field>
     );
+}
+
+type UnlinkDialogState = {unlinkDialog?: true} | null;
+
+export interface UnlinkDialogController {
+    open: boolean;
+    setOpen: (open: boolean) => Promise<void>;
+}
+
+export function useUnlinkDialogController(): UnlinkDialogController {
+    const router = useAppRouter();
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    const open = !!(location.state as UnlinkDialogState)?.unlinkDialog;
+    function setOpen(value: boolean) {
+        const location = router.location();
+        if (value) {
+            return navigate(location, {
+                state: {
+                    ...(location.state as object),
+                    unlinkDialog: true,
+                },
+            }) as Promise<void>;
+        } else {
+            return navigate(-1) as Promise<void>;
+        }
+    }
+
+    return {
+        open,
+        setOpen,
+    };
 }

@@ -1,5 +1,5 @@
 import {Badge} from '@/components/ui/badge';
-import {ImagePreviewer, useImagePreviewer} from '@/components/image-previewer';
+import {useImagePreviewerController} from '@/components/image-previewer';
 import {MarkdownArea} from '@/components/ui/markdown-area';
 import {Button} from '@/components/ui/button';
 import {useFriendlyStorage} from '@/components/friendly-storage-provider';
@@ -11,8 +11,10 @@ import {useNavigate} from 'react-router';
 import {useTranslations} from 'use-intl';
 import {StyledAvatar} from '@/components/styled-avatar';
 import {AvatarGroup, AvatarGroupCount} from '@/components/ui/avatar';
-import {AllFriendsList} from '@/app/profile/all-friends-list';
-import {useState} from 'react';
+import {
+    AllFriendsList,
+    useAllFriendsDialogController,
+} from '@/app/profile/all-friends-list';
 
 interface FeedDialogProps {
     selectedCard: FeedItem;
@@ -30,9 +32,9 @@ export function FeedDialog({
     const t = useTranslations('profile.feed');
     const storage = useFriendlyStorage();
     const navigate = useNavigate();
-    const [showAllFriends, setShowAllFriends] = useState(false);
+    const allFriends = useAllFriendsDialogController();
 
-    const imagePreviewer = useImagePreviewer();
+    const imagePreviewer = useImagePreviewerController();
 
     async function routeToUser(friend: UserDetails) {
         await storage.userAccessHashes.save([
@@ -83,7 +85,9 @@ export function FeedDialog({
                             {selectedCard.commonFriends.length > 5 && (
                                 <AvatarGroupCount
                                     className="w-8 h-8 -ms-4 cursor-pointer"
-                                    onClick={() => setShowAllFriends(true)}
+                                    onClick={() =>
+                                        void allFriends.setOpen(true)
+                                    }
                                 >
                                     +{selectedCard.commonFriends.length - 5}
                                 </AvatarGroupCount>
@@ -106,11 +110,7 @@ export function FeedDialog({
                                       : null}
                             </Badge>
                         )}
-                        <AllFriendsList
-                            friends={selectedCard.commonFriends}
-                            open={showAllFriends}
-                            setOpen={setShowAllFriends}
-                        />
+                        <AllFriendsList friends={selectedCard.commonFriends} />
                     </div>
                 </div>
 
@@ -124,7 +124,7 @@ export function FeedDialog({
                     nickname={selectedCard.details.nickname}
                     onImageClick={e => {
                         e.stopPropagation();
-                        imagePreviewer.setPayload({
+                        void imagePreviewer.setPayload({
                             type: 'open',
                             src: e.currentTarget.src,
                         });
@@ -167,7 +167,7 @@ export function FeedDialog({
                             text={selectedCard.details.description}
                             onImageClick={e => {
                                 e.stopPropagation();
-                                imagePreviewer.setPayload({
+                                void imagePreviewer.setPayload({
                                     type: 'open',
                                     src: e.currentTarget.src,
                                 });
@@ -204,7 +204,6 @@ export function FeedDialog({
                     </Button>
                 </div>
             </div>
-            <ImagePreviewer {...imagePreviewer} />
         </div>
     );
 }

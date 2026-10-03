@@ -1,3 +1,5 @@
+import {useAppRouter} from '@/components/app-router-provider';
+import {useNavigate, useLocation} from 'react-router';
 import {useAppContext} from '@/app.context';
 import * as Dialog from '@radix-ui/react-dialog';
 import {useBackend} from '@/backend.context';
@@ -11,12 +13,43 @@ import {toast} from 'sonner';
 import {useTranslations} from 'use-intl';
 import {users} from '@/services/users-service';
 
-export interface QrCodeDialogProps {
+type QrCodeDialogState = {qrCodeDialog?: true} | null;
+
+export interface QrCodeDialogController {
     open: boolean;
-    setOpen: (value: boolean) => void;
+    setOpen: (open: boolean) => Promise<void>;
 }
 
-export function QrCodeDialog({open, setOpen}: QrCodeDialogProps) {
+export function useQrCodeDialogController(): QrCodeDialogController {
+    const router = useAppRouter();
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    const open = !!(location.state as QrCodeDialogState)?.qrCodeDialog;
+
+    function setOpen(value: boolean) {
+        const location = router.location();
+        if (value) {
+            return navigate(location, {
+                state: {
+                    ...(location.state as object),
+                    qrCodeDialog: true,
+                },
+            }) as Promise<void>;
+        } else {
+            return navigate(-1) as Promise<void>;
+        }
+    }
+
+    return {
+        open,
+        setOpen,
+    };
+}
+
+export function QrCodeDialog() {
+    const {open, setOpen} = useQrCodeDialogController();
+
     const t = useTranslations('profile');
     const backend = useBackend();
     const app = useAppContext();
@@ -34,7 +67,10 @@ export function QrCodeDialog({open, setOpen}: QrCodeDialogProps) {
             : null;
 
     return (
-        <StyledDialogWrapper open={open} onOpenChange={setOpen}>
+        <StyledDialogWrapper
+            open={open}
+            onOpenChange={value => void setOpen(value)}
+        >
             <div className="relative flex items-center mt-1 mx-1">
                 <Dialog.Title className="w-full text-base font-semibold text-center pt-2">
                     {t('qr.title')}
@@ -62,7 +98,7 @@ export function QrCodeDialog({open, setOpen}: QrCodeDialogProps) {
                         variant="default"
                         className="flex-1 cursor-pointer"
                         onClick={() => {
-                            setOpen(false);
+                            void setOpen(false);
                             void navigator.clipboard.writeText(url ?? '');
                             toast.success(t('qr.copied'));
                         }}

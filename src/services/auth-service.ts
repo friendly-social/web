@@ -4,36 +4,29 @@ import {forceUnwrap} from '@/network/result';
 import {AppContext} from '@/app.context';
 import * as idb from 'idb-keyval';
 
-export interface AuthServiceContext {
+export interface Context {
     authorization?: Authorization;
 }
 
-async function initialize(app: AppContext) {
+export async function initialize(app: AppContext) {
     await migration();
     app.authServiceContext = {
         authorization: await idb.get('auth'),
     };
 }
 
-function save(app: AppContext, authorization?: Authorization) {
+export function save(app: AppContext, authorization?: Authorization) {
     app.authServiceContext.authorization = authorization;
     void idb.set('auth', authorization);
 }
 
-function clear(app: AppContext) {
+export function clear(app: AppContext) {
     save(app, undefined);
 }
 
-function get(app: AppContext) {
+export function get(app: AppContext) {
     return app.authServiceContext.authorization;
 }
-
-export const authService = {
-    initialize,
-    save,
-    clear,
-    get,
-};
 
 async function migration() {
     if (localStorage.getItem('token') && localStorage.getItem('userId')) {

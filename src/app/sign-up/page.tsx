@@ -1,5 +1,5 @@
 import {Spinner} from '@/components/ui/spinner';
-import {authService} from '@/services/auth-service';
+import * as authService from '@/services/auth-service';
 import {FilePreuploadDescriptor} from '@/network/friendly-client';
 import {useAppContext} from '@/app.context';
 import {Textarea} from '@/components/ui/textarea';

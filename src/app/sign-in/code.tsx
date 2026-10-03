@@ -1,5 +1,6 @@
 import {REGEXP_ONLY_DIGITS} from 'input-otp';
-import {authService} from '@/services/auth-service';
+import {useAppRouter} from '@/components/app-router-provider';
+import * as authService from '@/services/auth-service';
 import {useAppContext} from '@/app.context';
 import {useSession} from '@/components/session-provider';
 import {useDeferredLink} from '@/app/redirect/[deeplink]/deferred-link';
@@ -9,7 +10,7 @@ import {toast} from 'sonner';
 import {X} from 'lucide-react';
 import {useBackend} from '@/backend.context';
 import {Spinner} from '@/components/ui/spinner';
-import {ReactNode, useState} from 'react';
+import {ReactNode, useState, useEffect} from 'react';
 import {useTranslations} from 'use-intl';
 import {Button} from '@/components/ui/button';
 import {
@@ -18,25 +19,68 @@ import {
     InputOTPSlot,
     InputOTPSeparator,
 } from '@/components/ui/input-otp';
-import {useNavigate} from 'react-router';
+import {useNavigate, useLocation} from 'react-router';
 import * as Notifications from '@/notifications';
 import {StyledDialogWrapper} from '@/components/styled-dialog-wrapper';
 
-export interface CodeDialogProps {
-    email: string;
+type CodeDialogState = {codeDialog?: true} | null;
+
+export interface CodeDialogController {
     open: boolean;
-    setOpen: (value: boolean) => void;
+    setOpen: (open: boolean) => Promise<void>;
 }
 
-export function CodeDialog(props: CodeDialogProps): ReactNode {
-    const {open, setOpen} = props;
+export function useCodeDialogController(): CodeDialogController {
+    const router = useAppRouter();
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    const open = !!(location.state as CodeDialogState)?.codeDialog;
+
+    function setOpen(value: boolean) {
+        const location = router.location();
+        if (value) {
+            return navigate(location, {
+                state: {
+                    ...(location.state as object),
+                    codeDialog: true,
+                },
+            }) as Promise<void>;
+        } else {
+            return navigate(-1) as Promise<void>;
+        }
+    }
+
+    return {
+        open,
+        setOpen,
+    };
+}
+
+export interface CodeDialogProps {
+    email: string;
+}
+
+export function CodeDialog({email}: CodeDialogProps): ReactNode {
+    const {open, setOpen} = useCodeDialogController();
+
+    useEffect(() => {
+        if (open && email.trim().length === 0) {
+            void setOpen(false);
+        }
+    }, [open, email]);
+
+    if (open && email.trim().length === 0) {
+        return;
+    }
+
     return (
         <StyledDialogWrapper
             open={open}
-            onOpenChange={setOpen}
+            onOpenChange={value => void setOpen(value)}
             preventDefault={true}
         >
-            <CodeDialogContent {...props} />
+            <CodeDialogContent email={email} />
         </StyledDialogWrapper>
     );
 }

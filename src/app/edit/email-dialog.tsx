@@ -1,4 +1,6 @@
 import {useAppContext} from '@/app.context';
+import {useNavigate, useLocation} from 'react-router';
+import {useAppRouter} from '@/components/app-router-provider';
 import {users} from '@/services/users-service';
 import {REGEXP_ONLY_DIGITS} from 'input-otp';
 import * as Dialog from '@radix-ui/react-dialog';
@@ -6,7 +8,7 @@ import {toast} from 'sonner';
 import {X} from 'lucide-react';
 import {useBackend} from '@/backend.context';
 import {Spinner} from '@/components/ui/spinner';
-import {ReactNode, useState} from 'react';
+import {ReactNode, useState, useEffect} from 'react';
 import {useTranslations} from 'use-intl';
 import {Button} from '@/components/ui/button';
 import {
@@ -17,24 +19,71 @@ import {
 } from '@/components/ui/input-otp';
 import {StyledDialogWrapper} from '@/components/styled-dialog-wrapper';
 
-export interface EmailDialogProps {
-    email: string;
+type EmailDialogState = {emailDialog?: true} | null;
+
+export interface EmailDialogController {
     open: boolean;
-    setOpen: (value: boolean) => void;
+    setOpen: (open: boolean) => Promise<void>;
 }
 
-export function EmailDialog(props: EmailDialogProps): ReactNode {
-    const {open, setOpen} = props;
+export function useEmailDialogController(): EmailDialogController {
+    const router = useAppRouter();
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    const open = !!(location.state as EmailDialogState)?.emailDialog;
+
+    function setOpen(value: boolean) {
+        const location = router.location();
+        if (value) {
+            return navigate(location, {
+                state: {
+                    ...(location.state as object),
+                    emailDialog: true,
+                },
+            }) as Promise<void>;
+        } else {
+            return navigate(-1) as Promise<void>;
+        }
+    }
+
+    return {
+        open,
+        setOpen,
+    };
+}
+
+export interface EmailDialogProps {
+    email: string;
+}
+
+export function EmailDialog({email}: EmailDialogProps): ReactNode {
+    const {open, setOpen} = useEmailDialogController();
+
+    useEffect(() => {
+        if (open && email.trim().length === 0) {
+            void setOpen(false);
+        }
+    }, [email, open]);
+
+    if (open && email.trim().length === 0) {
+        return;
+    }
+
     return (
-        <StyledDialogWrapper open={open} onOpenChange={setOpen}>
-            <EmailDialogContent {...props} />
+        <StyledDialogWrapper
+            open={open}
+            onOpenChange={value => void setOpen(value)}
+        >
+            <EmailDialogContent email={email} />
         </StyledDialogWrapper>
     );
 }
 
-function EmailDialogContent({setOpen, email}: EmailDialogProps): ReactNode {
+function EmailDialogContent({email}: EmailDialogProps): ReactNode {
     const t = useTranslations('email-dialog');
 
+    const {setOpen} = useEmailDialogController();
     const [value, setValue] = useState('');
     const [error, setError] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -69,7 +118,7 @@ function EmailDialogContent({setOpen, email}: EmailDialogProps): ReactNode {
                     email,
                 },
             });
-            setOpen(false);
+            void setOpen(false);
         } finally {
             setLoading(false);
         }

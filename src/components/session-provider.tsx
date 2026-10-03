@@ -6,7 +6,7 @@ import {
     useMemo,
     useState,
 } from 'react';
-import {authService} from '@/services/auth-service';
+import * as authService from '@/services/auth-service';
 import {useAppContext} from '@/app.context';
 import {useBackend} from '@/backend.context';
 

@@ -1,6 +1,6 @@
-import {ImagePreviewer, useImagePreviewer} from '@/components/image-previewer';
+import {useImagePreviewerController} from '@/components/image-previewer';
 import {useBackend} from '@/backend.context';
-import {authService} from '@/services/auth-service';
+import * as authService from '@/services/auth-service';
 import {useAppContext} from '@/app.context';
 import {useQueryClient} from '@tanstack/react-query';
 import {FriendsBlock} from './friends-block';
@@ -104,7 +104,7 @@ function ProfileHeader({
         [userDetails],
     );
 
-    const imagePreviewer = useImagePreviewer();
+    const imagePreviewer = useImagePreviewerController();
 
     return (
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 w-full">
@@ -115,7 +115,7 @@ function ProfileHeader({
                     nickname={userDetails?.nickname}
                     onImageClick={e => {
                         e.stopPropagation();
-                        imagePreviewer.setPayload({
+                        void imagePreviewer.setPayload({
                             type: 'open',
                             src: e.currentTarget.src,
                         });
@@ -140,8 +140,6 @@ function ProfileHeader({
                 />
                 <ActionButton userDetails={userDetails} onRequest={onRequest} />
             </div>
-
-            <ImagePreviewer {...imagePreviewer} />
         </div>
     );
 }
