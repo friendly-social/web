@@ -3,12 +3,12 @@ import {useBlockingQR} from '@/app/blocking-qr/page';
 import {forceUnwrap} from '@/network/result';
 import {users} from '@/services/users-service';
 import {useAppContext} from '@/app.context';
-import {useMemo, useCallback} from 'react';
+import {useMemo, useCallback, useEffect} from 'react';
 import {Badge} from '@/components/ui/badge';
 import {Separator} from '@/components/ui/separator';
 import {Activity, Loader2, LogOut, Pencil, QrCodeIcon} from 'lucide-react';
 import {Button} from '@/components/ui/button';
-import {useNavigate} from 'react-router';
+import {useNavigate, useLocation} from 'react-router';
 import {useBackend} from '@/backend.context';
 import {createFileLink} from '@/lib/utils';
 import {useQuery, useQueryClient} from '@tanstack/react-query';
@@ -20,6 +20,10 @@ import {ProfileDescription} from '@/components/profile-description';
 import {FriendsBlock} from '@/app/profile/friends-block';
 import {QrCodeDialog, useQrCodeDialogController} from '@/app/qr-code-dialog';
 import {StyledAvatar} from '@/components/styled-avatar';
+
+type ProfileLocationState = {
+    edit: boolean;
+} | null;
 
 // todo: state support with edit: true
 function ProfileHeader({logOut}: {logOut: () => void}) {
@@ -38,6 +42,13 @@ function ProfileHeader({logOut}: {logOut: () => void}) {
     const qrCode = useQrCodeDialogController();
 
     const imagePreviewer = useImagePreviewerController();
+
+    const location = useLocation().state as ProfileLocationState;
+    useEffect(() => {
+        if (location?.edit) {
+            onEditClick();
+        }
+    }, [location?.edit]);
 
     return (
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 w-full">

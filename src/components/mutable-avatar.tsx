@@ -16,9 +16,8 @@ import {
 import {ReactNode, useState, useRef, useEffect} from 'react';
 import {useTranslations} from 'use-intl';
 import {StyledAvatar} from './styled-avatar';
-import ReactCrop, {
+import  {
     centerCrop,
-    PercentCrop,
     makeAspectCrop,
 } from 'react-image-crop';
 
