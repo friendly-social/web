@@ -16,6 +16,11 @@ import {
 import {ReactNode, useState, useRef, useEffect} from 'react';
 import {useTranslations} from 'use-intl';
 import {StyledAvatar} from './styled-avatar';
+import ReactCrop, {
+    centerCrop,
+    PercentCrop,
+    makeAspectCrop,
+} from 'react-image-crop';
 
 interface MutableAvatarContentProps {
     nickname: string;
@@ -133,6 +138,18 @@ export function MutableAvatarContent({
                 setPayload={setAdjuster}
                 title={t('adjuster')}
                 aspect={1}
+                initialCrop={({width, height}) => {
+                    return centerCrop(
+                        makeAspectCrop(
+                            {unit: '%', width: 90, height: 90},
+                            1,
+                            width,
+                            height,
+                        ),
+                        width,
+                        height,
+                    );
+                }}
                 onAdjusted={(file, result) => void onAdjusted(file, result)}
             />
             <AvatarDropdown

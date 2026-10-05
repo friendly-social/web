@@ -27,12 +27,18 @@ export interface AdjusterCrop {
     height: number;
 }
 
+export interface InitialCropParams {
+    width: number;
+    height: number;
+}
+
 export interface AdjusterProps {
     payload: AdjusterPayload;
     setPayload: (value: AdjusterPayload) => void;
     aspect?: number;
     title: string;
     onAdjusted: (file: File, result: AdjusterCrop) => void;
+    initialCrop?: (params: InitialCropParams) => PercentCrop;
 }
 
 export function Adjuster({
@@ -41,6 +47,7 @@ export function Adjuster({
     aspect,
     title,
     onAdjusted,
+    initialCrop,
 }: AdjusterProps): ReactNode {
     const open = useMemo(() => payload.type === 'open', [payload]);
 
@@ -57,6 +64,7 @@ export function Adjuster({
                     setPayload={setPayload}
                     aspect={aspect}
                     onAdjusted={onAdjusted}
+                    initialCrop={initialCrop}
                 />
             )}
         </StyledDialogWrapper>
@@ -69,6 +77,7 @@ interface AdjusterContentProps {
     aspect?: number;
     title: string;
     onAdjusted: (file: File, result: AdjusterCrop) => void;
+    initialCrop?: (params: InitialCropParams) => PercentCrop;
 }
 
 function AdjusterContent({
@@ -77,6 +86,7 @@ function AdjusterContent({
     aspect,
     title,
     onAdjusted,
+    initialCrop,
 }: AdjusterContentProps): ReactNode {
     const t = useTranslations('adjuster');
     const [crop, setCrop] = useState<PercentCrop>();
@@ -98,13 +108,19 @@ function AdjusterContent({
 
     async function onContinue() {
         setPayload({type: 'close'});
-        if (!crop) return;
+
+        const cropOrFallback = {
+            x: crop?.x ?? 0,
+            y: crop?.y ?? 0,
+            width: crop?.width ?? 100,
+            height: crop?.height ?? 100,
+        };
 
         onAdjusted(payload.data, {
-            x: Math.round(crop.x),
-            y: Math.round(crop.y),
-            width: Math.round(crop.width),
-            height: Math.round(crop.height),
+            x: Math.round(cropOrFallback.x),
+            y: Math.round(cropOrFallback.y),
+            width: Math.round(cropOrFallback.width),
+            height: Math.round(cropOrFallback.height),
         });
     }
 
@@ -151,17 +167,9 @@ function AdjusterContent({
 
     function onImageLoad(event: React.UIEvent<HTMLImageElement>) {
         const {width, height} = upscaleIfSmall(event);
-        const crop = centerCrop(
-            makeAspectCrop(
-                {unit: '%', width: 90, height: 90},
-                1,
-                width,
-                height,
-            ),
-            width,
-            height,
-        );
-        setCrop(crop);
+        if (initialCrop) {
+            setCrop(initialCrop({width, height}));
+        }
     }
 
     return (
