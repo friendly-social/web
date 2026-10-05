@@ -332,7 +332,7 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
                 <div className="w-full flex-1 flex flex-col min-w-0">
                     {preview ? (
                         <MarkdownArea
-                            className="text-foreground mt-2 pt-0.5 mb-0.5"
+                            className="text-foreground mt-2"
                             text={text}
                             onImageClick={e => {
                                 e.stopPropagation();
@@ -348,6 +348,7 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
                             className={cn(
                                 'w-full mt-2',
                                 'outline-none resize-none field-sizing-content',
+                                'space-y-[1em] leading-5',
                             )}
                             value={text}
                             onChange={e => setText(e.target.value)}

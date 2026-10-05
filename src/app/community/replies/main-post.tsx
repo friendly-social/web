@@ -261,7 +261,7 @@ export function MainPostCard({
         return () => {
             observer.disconnect();
         };
-    }, []);
+    }, [preview]);
 
     return (
         <div className="scroll-m-40" ref={postRef}>
@@ -281,7 +281,7 @@ export function MainPostCard({
                 <div className="flex-1 min-w-0 flex flex-col">
                     {preview ? (
                         <MarkdownArea
-                            className="text-foreground mt-2 pt-0.5 mb-0.5"
+                            className="text-foreground"
                             text={displayText}
                             onImageClick={e => {
                                 e.stopPropagation();
@@ -298,6 +298,7 @@ export function MainPostCard({
                                 'min-h-10 w-full content-center',
                                 'text-sm outline-none resize-none',
                                 'scroll-m-60 field-sizing-content',
+                                'space-y-[1em] leading-5',
                             )}
                             id="reply"
                             value={displayText}
