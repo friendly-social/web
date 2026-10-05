@@ -1,4 +1,6 @@
 import {AdjusterPayload, Adjuster, AdjusterCrop} from '@/components/adjuster';
+import {MarkdownArea} from '@/components/ui/markdown-area';
+import {useImagePreviewerController} from '@/components/image-previewer';
 import {newPost} from '@/services/new-post-service';
 import {isMobile} from '@/lib/is-mobile';
 import {
@@ -23,6 +25,8 @@ import {
     SquarePen,
     Newspaper,
     Trash,
+    Eye,
+    Pen,
     Paperclip,
 } from 'lucide-react';
 import {useTranslations} from 'use-intl';
@@ -184,7 +188,9 @@ interface CreatePostCardProps {
 
 function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
     const [text, setText] = newPost.useNewText();
+    const [preview, setPreview] = useState(false);
     const [adjuster, setAdjuster] = useState<AdjusterPayload>({type: 'close'});
+    const imagePreviewer = useImagePreviewerController();
 
     const t = useTranslations('community');
     const postRef = useRef<HTMLTextAreaElement>(null);
@@ -248,12 +254,14 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
         mutationFn: async (props: {file: File; crop: AdjusterCrop}) => {
             const {file, crop} = props;
             const post = postRef.current;
-            if (!post) return;
             const compressed = await resizeImage(file, crop);
             const descriptor = forceUnwrap(
                 await backend.uploadFile(compressed),
             );
-            const selection = [post.selectionStart, post.selectionEnd] as const;
+            let selection = null;
+            if (post) {
+                selection = [post.selectionStart, post.selectionEnd] as const;
+            }
             setText(current => {
                 let result = current;
                 if (!current.endsWith('\n')) {
@@ -263,9 +271,11 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
                 result += `![](${url})\n`;
                 return result;
             });
-            setTimeout(() => {
-                post.setSelectionRange(...selection);
-            }, 1);
+            if (post && selection !== null) {
+                setTimeout(() => {
+                    post.setSelectionRange(...selection);
+                }, 1);
+            }
         },
     });
 
@@ -320,18 +330,32 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
                     nickname={userQuery?.data?.user?.nickname ?? ''}
                 />
                 <div className="w-full flex-1 flex flex-col min-w-0">
-                    <textarea
-                        ref={postRef}
-                        className={cn(
-                            'w-full mt-2',
-                            'outline-none resize-none field-sizing-content',
-                        )}
-                        value={text}
-                        onChange={e => setText(e.target.value)}
-                        onKeyDown={onKeyDown}
-                        onPaste={onPaste}
-                        placeholder={t('placeholder')}
-                    />
+                    {preview ? (
+                        <MarkdownArea
+                            className="text-foreground mt-2 pt-0.5 mb-0.5"
+                            text={text}
+                            onImageClick={e => {
+                                e.stopPropagation();
+                                void imagePreviewer.setPayload({
+                                    type: 'open',
+                                    src: e.currentTarget.src,
+                                });
+                            }}
+                        />
+                    ) : (
+                        <textarea
+                            ref={postRef}
+                            className={cn(
+                                'w-full mt-2',
+                                'outline-none resize-none field-sizing-content',
+                            )}
+                            value={text}
+                            onChange={e => setText(e.target.value)}
+                            onKeyDown={onKeyDown}
+                            onPaste={onPaste}
+                            placeholder={t('placeholder')}
+                        />
+                    )}
                     <div className="mt-1 w-full flex items-center">
                         {showTextLength ? (
                             <div
@@ -345,8 +369,22 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
                         ) : undefined}
                         <div className="flex-1" />
                         {text.length > 0 && (
-                            <Button onClick={() => setText('')} variant="ghost">
+                            <Button
+                                onClick={() => {
+                                    setText('');
+                                    setPreview(false);
+                                }}
+                                variant="ghost"
+                            >
                                 <Trash />
+                            </Button>
+                        )}
+                        {text.length > 0 && (
+                            <Button
+                                onClick={() => setPreview(!preview)}
+                                variant="ghost"
+                            >
+                                {preview ? <Pen /> : <Eye />}
                             </Button>
                         )}
                         <Button
@@ -398,9 +436,9 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
                 title={t('adjuster')}
                 payload={adjuster}
                 setPayload={setAdjuster}
-                onAdjusted={(file, result) =>
-                    void onImageAdjusted(file, result)
-                }
+                onAdjusted={(file, result) => {
+                    void onImageAdjusted(file, result);
+                }}
             />
         </div>
     );

@@ -3,7 +3,7 @@ import {useBlockingQR} from '@/app/blocking-qr/page';
 import {forceUnwrap} from '@/network/result';
 import {users} from '@/services/users-service';
 import {useAppContext} from '@/app.context';
-import {useMemo, useCallback, useEffect} from 'react';
+import {useMemo, useCallback, useEffect, useRef} from 'react';
 import {Badge} from '@/components/ui/badge';
 import {Separator} from '@/components/ui/separator';
 import {Activity, Loader2, LogOut, Pencil, QrCodeIcon} from 'lucide-react';
@@ -43,12 +43,23 @@ function ProfileHeader({logOut}: {logOut: () => void}) {
 
     const imagePreviewer = useImagePreviewerController();
 
-    const location = useLocation().state as ProfileLocationState;
+    const navigate = useNavigate();
+    const location = useLocation();
+    const state = location.state as ProfileLocationState;
+    const fired = useRef(false);
+
     useEffect(() => {
-        if (location?.edit) {
+        if (fired.current) return;
+        fired.current = true;
+        if (!state?.edit) return;
+        void (async () => {
+            await navigate(location, {
+                state: {...state, edit: undefined},
+                replace: true,
+            });
             onEditClick();
-        }
-    }, [location?.edit]);
+        })();
+    }, [state?.edit]);
 
     return (
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 w-full">

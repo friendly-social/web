@@ -16,10 +16,7 @@ import {
 import {ReactNode, useState, useRef, useEffect} from 'react';
 import {useTranslations} from 'use-intl';
 import {StyledAvatar} from './styled-avatar';
-import  {
-    centerCrop,
-    makeAspectCrop,
-} from 'react-image-crop';
+import {centerCrop, makeAspectCrop} from 'react-image-crop';
 
 interface MutableAvatarContentProps {
     nickname: string;

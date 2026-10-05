@@ -59,6 +59,8 @@ function Content({payload}: ContentProps) {
         if (!img) return;
         const panzoom = createPanzoom(img, {
             onTouch: () => false,
+            maxZoom: 100000,
+            minZoom: 1,
         });
         setPanzoom(panzoom);
         return panzoom.dispose;

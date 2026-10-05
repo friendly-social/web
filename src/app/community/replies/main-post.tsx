@@ -12,7 +12,7 @@ import {CommunityDetailsResponse} from '@/network/friendly-client';
 import {newPost} from '@/services/new-post-service';
 import {useMutation} from '@tanstack/react-query';
 import {MainPostMenu} from '@/app/community/replies/main-post-menu';
-import {Send, Loader2, Pen, X, Paperclip} from 'lucide-react';
+import {Send, Loader2, Pen, X, Paperclip, Check, Eye} from 'lucide-react';
 import {cn} from '@/lib/utils';
 import {users} from '@/services/users-service';
 import {useAppContext} from '@/app.context';
@@ -68,6 +68,7 @@ export function MainPostCard({
     const [editText, setEditText] = useState('');
     const [action, setAction] = useState<InputAction>('send');
     const [adjuster, setAdjuster] = useState<AdjusterPayload>({type: 'close'});
+    const imagePreviewer = useImagePreviewerController();
 
     const displayText = action === 'send' ? newText : editText;
     function setDisplayText(value: string | ((value: string) => string)) {
@@ -105,11 +106,10 @@ export function MainPostCard({
     const attachImageMutation = useAttachImageMutation({
         onSuccess: descriptor => {
             const input = inputRef.current;
-            if (!input) return;
-            const selection = [
-                input.selectionStart,
-                input.selectionEnd,
-            ] as const;
+            let selection = null;
+            if (input) {
+                selection = [input.selectionStart, input.selectionEnd] as const;
+            }
             setDisplayText(current => {
                 let result = current;
                 if (!current.endsWith('\n')) {
@@ -119,9 +119,11 @@ export function MainPostCard({
                 result += `![](${url})\n`;
                 return result;
             });
-            setTimeout(() => {
-                input.setSelectionRange(...selection);
-            }, 1);
+            if (input && selection !== null) {
+                setTimeout(() => {
+                    input.setSelectionRange(...selection);
+                }, 1);
+            }
         },
     });
 
@@ -230,9 +232,13 @@ export function MainPostCard({
         }
 
     const [verticalMenu, setVerticalMenu] = useState(false);
+    const [showPreviewOption, setShowPreviewOption] = useState(false);
+    const [preview, setPreview] = useState(false);
 
     useEffect(() => {
         setVerticalMenu(false);
+        setShowPreviewOption(false);
+        setPreview(false);
     }, [action]);
 
     useEffect(() => {
@@ -240,9 +246,14 @@ export function MainPostCard({
         if (!input) return;
 
         const observer = new ResizeObserver(([entry]) => {
+            const style = window.getComputedStyle(input);
             const height = entry.contentRect.height;
-            if (height > 70) {
+            const lines = height / parseFloat(style.lineHeight);
+            if (lines >= 3) {
                 setVerticalMenu(true);
+            }
+            if (lines >= 6) {
+                setShowPreviewOption(true);
             }
         });
         observer.observe(input);
@@ -268,20 +279,34 @@ export function MainPostCard({
                     nickname={self.data?.user?.nickname ?? ''}
                 />
                 <div className="flex-1 min-w-0 flex flex-col">
-                    <textarea
-                        ref={inputRef}
-                        className={cn(
-                            'min-h-10 w-full content-center',
-                            'text-sm outline-none resize-none',
-                            'scroll-m-60 field-sizing-content',
-                        )}
-                        id="reply"
-                        value={displayText}
-                        onKeyDown={onKeyDown}
-                        onChange={e => setDisplayText(e.target.value)}
-                        onPaste={onPaste}
-                        placeholder={t('reply-placeholder')}
-                    />
+                    {preview ? (
+                        <MarkdownArea
+                            className="text-foreground mt-2 pt-0.5 mb-0.5"
+                            text={displayText}
+                            onImageClick={e => {
+                                e.stopPropagation();
+                                void imagePreviewer.setPayload({
+                                    type: 'open',
+                                    src: e.currentTarget.src,
+                                });
+                            }}
+                        />
+                    ) : (
+                        <textarea
+                            ref={inputRef}
+                            className={cn(
+                                'min-h-10 w-full content-center',
+                                'text-sm outline-none resize-none',
+                                'scroll-m-60 field-sizing-content',
+                            )}
+                            id="reply"
+                            value={displayText}
+                            onKeyDown={onKeyDown}
+                            onChange={e => setDisplayText(e.target.value)}
+                            onPaste={onPaste}
+                            placeholder={t('reply-placeholder')}
+                        />
+                    )}
                     <div className="w-full flex">
                         {textTooLong ? (
                             <div className="text-destructive text-xs mb-2">
@@ -303,12 +328,15 @@ export function MainPostCard({
                 </div>
                 <SubmitMenu
                     vertical={verticalMenu}
+                    preview={preview}
+                    showPreviewOption={showPreviewOption}
                     action={action}
                     forbidSubmit={forbidSubmit}
                     isSubmitting={isSubmitting}
                     isAttaching={attachImageMutation.isPending}
                     onStopEdit={stopEditing}
                     onAttach={onAttach}
+                    onPreview={() => setPreview(!preview)}
                     onSubmit={() => handleSubmit(displayText)}
                 />
             </div>
@@ -714,14 +742,17 @@ function useEditMutation({details, onSuccess}: UseEditMutationProps) {
     });
 }
 
-interface MenuProps {
+interface SubmitMenuProps {
     vertical: boolean;
+    preview: boolean;
+    showPreviewOption: boolean;
     action: InputAction;
     forbidSubmit: boolean;
     isSubmitting: boolean;
     isAttaching: boolean;
     onStopEdit: () => void;
     onSubmit: () => void;
+    onPreview: () => void;
     onAttach: (file: File) => void;
 }
 
@@ -734,7 +765,10 @@ function SubmitMenu({
     forbidSubmit,
     isSubmitting,
     isAttaching,
-}: MenuProps) {
+    preview,
+    onPreview,
+    showPreviewOption,
+}: SubmitMenuProps) {
     const imageInputRef = useRef<HTMLInputElement | null>(null);
 
     function onImageSelected(file: File) {
@@ -812,16 +846,21 @@ function SubmitMenu({
                     ) : action === 'send' ? (
                         <Send />
                     ) : (
-                        <Pen />
+                        <Check />
                     )}
                 </Button>
                 <Button
                     className="mt-1 w-8 h-8"
+                    disabled={isAttaching}
                     onClick={attachImage}
                     onMouseDown={event => event.preventDefault()}
                     variant="ghost"
                 >
-                    <Paperclip />
+                    {isAttaching ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                        <Paperclip />
+                    )}
                     <input
                         className="hidden"
                         ref={imageInputRef}
@@ -836,6 +875,15 @@ function SubmitMenu({
                         }}
                     />
                 </Button>
+                {showPreviewOption && (
+                    <Button
+                        className="mt-1 w-8 h-8 mt-1"
+                        onClick={() => onPreview()}
+                        variant="ghost"
+                    >
+                        {preview ? <Pen /> : <Eye />}
+                    </Button>
+                )}
                 {action === 'edit' ? (
                     <Button
                         className="w-8 h-8"

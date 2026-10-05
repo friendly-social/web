@@ -1,9 +1,6 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import 'react-image-crop/dist/ReactCrop.css';
-import ReactCrop, {
-    
-    PercentCrop,
-} from 'react-image-crop';
+import ReactCrop, {PercentCrop} from 'react-image-crop';
 import {X} from 'lucide-react';
 import {ReactNode, useState, useMemo, useEffect} from 'react';
 import {useTranslations} from 'use-intl';
