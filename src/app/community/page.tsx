@@ -189,6 +189,7 @@ interface CreatePostCardProps {
 function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
     const [text, setText] = newPost.useNewText();
     const [preview, setPreview] = useState(false);
+    const [showPreviewOption, setShowPreviewOption] = useState(false);
     const [adjuster, setAdjuster] = useState<AdjusterPayload>({type: 'close'});
     const imagePreviewer = useImagePreviewerController();
 
@@ -316,6 +317,23 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
         attachImageMutation.mutate({file, crop});
     }
 
+    useEffect(() => {
+        const post = postRef.current;
+        if (!post) return;
+
+        const observer = new ResizeObserver(([entry]) => {
+            const style = window.getComputedStyle(post);
+            const height = entry.contentRect.height;
+            const lines = height / parseFloat(style.lineHeight);
+            setShowPreviewOption(lines >= 6);
+        });
+        observer.observe(post);
+
+        return () => {
+            observer.disconnect();
+        };
+    }, [preview]);
+
     return (
         <div
             className={cn(
@@ -380,7 +398,7 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
                                 <Trash />
                             </Button>
                         )}
-                        {text.length > 0 && (
+                        {showPreviewOption && (
                             <Button
                                 onClick={() => setPreview(!preview)}
                                 variant="ghost"
