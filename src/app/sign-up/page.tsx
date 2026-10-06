@@ -218,8 +218,11 @@ export default function SignUpPage() {
                             onClick={() => void onSignUp()}
                             disabled={loading || avatarLoading}
                         >
-                            {!loading && t('sign-up')}
-                            {loading && <Spinner />}
+                            {loading ? (
+                                <Spinner />
+                            ) : (
+                                <span>{t('sign-up')}</span>
+                            )}
                         </Button>
                         <div className="flex justify-center items-center gap-1">
                             <p className="text-sm">
