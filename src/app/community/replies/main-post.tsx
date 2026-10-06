@@ -790,6 +790,7 @@ function SubmitMenu({
                     <Button
                         className="mt-1 w-8 h-8"
                         onClick={onStopEdit}
+                        onMouseDown={event => event.preventDefault()}
                         variant="ghost"
                     >
                         <X />
@@ -841,6 +842,7 @@ function SubmitMenu({
                     className="mt-1 w-8 h-8"
                     onClick={onSubmit}
                     disabled={forbidSubmit}
+                    onMouseDown={event => event.preventDefault()}
                 >
                     {isSubmitting ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -889,6 +891,7 @@ function SubmitMenu({
                     <Button
                         className="w-8 h-8"
                         onClick={onStopEdit}
+                        onMouseDown={event => event.preventDefault()}
                         variant="ghost"
                     >
                         <X />
