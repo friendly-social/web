@@ -72,6 +72,7 @@ function MarkdownAreaComponent(
                             className={linkClass}
                             onClickCapture={e => e.stopPropagation()}
                             onClick={e => e.stopPropagation()}
+                            onAuxClick={event => event.stopPropagation()}
                         >
                             {children}
                         </a>

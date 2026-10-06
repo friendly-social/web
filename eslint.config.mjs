@@ -108,10 +108,5 @@ export default defineConfig([
         },
     },
     prettier,
-    globalIgnores([
-        '**/build/',
-        'dist/',
-        'test/fixtures/',
-        '**/template/',
-    ]),
+    globalIgnores(['**/build/', 'dist/', 'test/fixtures/', '**/template/']),
 ]);

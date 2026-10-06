@@ -10,9 +10,9 @@
         "watch": "tsc -p tsconfig.json --noEmit --pretty false -w",
         "build": "vite build",
         "start": "vite preview --host 0.0.0.0",
-        "format": "eslint --fix . && prettier --write src",
-        "format-unix": "eslint --fix . --format unix && prettier --write src",
-        "lint": "tsc && eslint '**/*.ts*' && prettier --check ."
+        "format": "eslint --fix . && prettier --write .",
+        "format-unix": "eslint --fix . --format unix && prettier --write .",
+        "lint": "tsc && eslint . && prettier --check ."
     },
     "engines": {
         "node": ">=24.0.0"

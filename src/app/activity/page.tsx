@@ -263,7 +263,7 @@ function ReplyActivityCard({details, beforeClick}: ReplyActivityCardProps) {
                 void navigate(url, {
                     state: {
                         popDepth: 1,
-                    } as unknown,
+                    },
                 }),
         });
     }
@@ -272,6 +272,7 @@ function ReplyActivityCard({details, beforeClick}: ReplyActivityCardProps) {
         <div
             className="flex gap-2 items-center m-4"
             onClick={e => {
+                if (window.getSelection()?.isCollapsed === false) return;
                 beforeClick();
                 void navigateReplies(e);
             }}
