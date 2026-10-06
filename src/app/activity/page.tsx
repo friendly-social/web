@@ -290,7 +290,10 @@ function ReplyActivityCard({details, beforeClick}: ReplyActivityCardProps) {
                 <MarkdownSpan text={details.post.text} />"
             </span>
             <div className="flex-1" />
-            <span className="flex items-center gap-1 text-sm text-muted-foreground whitespace-nowrap">
+            <span
+                title={details.instant.toLocaleString()}
+                className="flex items-center gap-1 text-sm text-muted-foreground whitespace-nowrap"
+            >
                 <Clock className="h-3 w-3" />
                 {formatTimeAgo(t, details.instant)}
             </span>
