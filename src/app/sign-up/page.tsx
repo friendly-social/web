@@ -86,6 +86,7 @@ export default function SignUpPage() {
     }
 
     async function onSignUp() {
+        if (loading || avatarLoading) return;
         const validated = validator();
         if (!validated) return;
         setLoading(true);
@@ -130,7 +131,13 @@ export default function SignUpPage() {
                         {t('title')}
                     </div>
                 </div>
-                <div className="p-4 space-y-4">
+                <form
+                    className="p-4 space-y-4"
+                    onSubmit={e => {
+                        e.preventDefault();
+                        void onSignUp();
+                    }}
+                >
                     <MutableAvatarContent
                         nickname={nickname}
                         loading={avatarLoading}
@@ -215,7 +222,6 @@ export default function SignUpPage() {
                         <Button
                             className="cursor-pointer"
                             variant="secondary"
-                            onClick={() => void onSignUp()}
                             disabled={loading || avatarLoading}
                         >
                             {!loading && t('sign-up')}
@@ -228,13 +234,14 @@ export default function SignUpPage() {
                             <Button
                                 className="cursor-pointer text-sm p-0"
                                 variant="link"
+                                type="button"
                                 onClick={() => void onSignIn()}
                             >
                                 {t('sign-in')}
                             </Button>
                         </div>
                     </div>
-                </div>
+                </form>
             </div>
         </div>
     );

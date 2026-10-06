@@ -48,6 +48,7 @@ function SignInContent(): ReactNode {
     const navigate = useNavigate();
 
     async function onSend() {
+        if (loading) return;
         setError(null);
         if (!emailRegex.test(email)) {
             setError(t('email-invalid'));
@@ -81,44 +82,53 @@ function SignInContent(): ReactNode {
                 {t('title')}
             </p>
             <p>{t('description')}</p>
-            <FieldGroup className="gap-4">
-                <Field>
-                    <InputGroup>
-                        <InputGroupInput
-                            id="email"
-                            placeholder={t('email-placeholder')}
-                            type="email"
-                            value={email}
-                            onChange={e => setEmail(e.target.value)}
-                        />
-                        <InputGroupAddon>
-                            <Mail />
-                        </InputGroupAddon>
-                    </InputGroup>
-                    <FieldError>{error}</FieldError>
-                </Field>
-            </FieldGroup>
-            <div className="flex flex-col items-center justify-center w-full">
-                <Button
-                    className="cursor-pointer w-full"
-                    variant="secondary"
-                    onClick={() => void onSend()}
-                    disabled={loading}
-                >
-                    {!loading && t('send-code')}
-                    {loading && <Spinner />}
-                </Button>
-                <div className="flex justify-center items-center gap-1">
-                    <p className="text-sm">{t('dont-have-account')}</p>
+            <form
+                className="w-full gap-2 flex flex-col"
+                onSubmit={e => {
+                    e.preventDefault();
+                    void onSend();
+                }}
+                noValidate
+            >
+                <FieldGroup className="gap-4">
+                    <Field>
+                        <InputGroup>
+                            <InputGroupInput
+                                id="email"
+                                placeholder={t('email-placeholder')}
+                                type="email"
+                                value={email}
+                                onChange={e => setEmail(e.target.value)}
+                            />
+                            <InputGroupAddon>
+                                <Mail />
+                            </InputGroupAddon>
+                        </InputGroup>
+                        <FieldError>{error}</FieldError>
+                    </Field>
+                </FieldGroup>
+                <div className="flex flex-col items-center justify-center w-full">
                     <Button
-                        className="cursor-pointer text-sm p-0"
-                        variant="link"
-                        onClick={onSignUp}
+                        className="cursor-pointer w-full"
+                        variant="secondary"
+                        disabled={loading}
                     >
-                        {t('sign-up')}
+                        {!loading && t('send-code')}
+                        {loading && <Spinner />}
                     </Button>
+                    <div className="flex justify-center items-center gap-1">
+                        <p className="text-sm">{t('dont-have-account')}</p>
+                        <Button
+                            className="cursor-pointer text-sm p-0"
+                            variant="link"
+                            type="button"
+                            onClick={onSignUp}
+                        >
+                            {t('sign-up')}
+                        </Button>
+                    </div>
                 </div>
-            </div>
+            </form>
         </div>
     );
 }
