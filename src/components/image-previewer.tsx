@@ -52,7 +52,7 @@ function Content({payload}: ContentProps) {
                 // clicking anywhere on top bar closes image
             },
         });
-    }, [topBar]);
+    }, []);
 
     useEffect(() => {
         const img = imgRef.current;
