@@ -20,17 +20,16 @@ export function AppPage() {
         if (location.pathname === '/') {
             void navigate('/community');
         }
-    }, []);
+    }, [navigate]);
 
     useEffect(() => {
         const timeout = setTimeout(() => setLoadingLong(true), 500);
         return () => clearTimeout(timeout);
     }, []);
 
-    useEffect(() => {
-        if (session.status === 'loading') return;
+    if (loading && session.status !== 'loading') {
         setLoading(false);
-    }, [session.status]);
+    }
 
     if (loading && loadingLong) {
         return (
@@ -50,16 +49,17 @@ export function AuthorizedGuard() {
     const blockingQR = useBlockingQR();
     const [initialStatus, setInitialStatus] = useState<SessionStatus>();
 
-    useLayoutEffect(() => {
-        if (session.status === 'loading') return;
-        if (initialStatus !== undefined) return;
+    if (initialStatus === undefined && session.status !== 'loading') {
         setInitialStatus(session.status);
+    }
+
+    useLayoutEffect(() => {
         if (session.status === 'guest') {
             void navigate('/sign-up');
         } else if (blockingQR.shouldBlock) {
             void navigate('/blocking-qr');
         }
-    }, [navigate, session.status, initialStatus, blockingQR.shouldBlock]);
+    }, [navigate, session.status, blockingQR.shouldBlock]);
 
     useEffect(() => {
         if (session.status !== 'authed') return;
@@ -78,14 +78,15 @@ export function UnauthorizedGuard() {
     const session = useSession();
     const [initialStatus, setInitialStatus] = useState<SessionStatus>();
 
-    useLayoutEffect(() => {
-        if (session.status === 'loading') return;
-        if (initialStatus !== undefined) return;
+    if (initialStatus === undefined && session.status !== 'loading') {
         setInitialStatus(session.status);
+    }
+
+    useLayoutEffect(() => {
         if (session.status === 'authed') {
             void navigate('/');
         }
-    }, [session.status, navigate, initialStatus]);
+    }, [session.status, navigate]);
 
     if (initialStatus === 'guest') {
         return <Outlet />;

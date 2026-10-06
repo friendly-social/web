@@ -21,7 +21,7 @@ function use(app: AppContext) {
     useEffect(() => {
         if (session.status !== 'authed') return;
         void app.queryClient.invalidateQueries(selfOptions(app));
-    }, [session.status]);
+    }, [app, session.status]);
 }
 
 function self(app: AppContext): Resource<UserDetailsResponse> {

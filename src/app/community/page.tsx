@@ -42,10 +42,6 @@ export function CommunityPage() {
 
     const postsQuery = communityPosts.useCachedQuery(app);
 
-    function onPostCreated() {
-        virtualizer.scrollToOffset(0);
-    }
-
     useEffect(() => {
         if (!postsQuery.data) return;
         let shouldBreak = false;
@@ -106,6 +102,11 @@ export function CommunityPage() {
     }
 
     const virtualizer = useListVirtualizer({items, parentRef});
+
+    function onPostCreated() {
+        virtualizer.scrollToOffset(0);
+    }
+
     let content;
 
     if (postsQuery.isPending) {
@@ -500,6 +501,7 @@ function useListVirtualizer({items, parentRef}: ListVirtualizerProps) {
         ) as ScrollState;
     }, [navigationType]);
 
+    // eslint-disable-next-line react-hooks/incompatible-library
     const virtualizer = useVirtualizer({
         count: items.length,
         getItemKey: index => items[index].key,
@@ -548,6 +550,7 @@ interface ListProps {
 }
 
 function List({virtualizer, parentRef, items}: ListProps) {
+    'use no memo';
     return (
         <div
             ref={parentRef}

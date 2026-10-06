@@ -2,7 +2,7 @@ import {UserAccessHashesService} from '@/services/useraccesshashes-service';
 import {useAppContext} from '@/app.context';
 import {CommunityPostsDB} from '@/services/community-posts-db';
 import {FriendlyStorage} from '@/services/friendly-storage';
-import {createContext, useContext, useMemo} from 'react';
+import {createContext, useContext, useState} from 'react';
 
 const FriendlyStorageContext = createContext<FriendlyStorage | null>(null);
 
@@ -15,14 +15,17 @@ export function FriendlyStorageProvider({
 }) {
     const app = useAppContext();
 
-    const value = useMemo<FriendlyStorage>(() => {
+    const [value] = useState<FriendlyStorage>(() => {
         const value = {
             userAccessHashes: new UserAccessHashesService(),
             communityPosts: new CommunityPostsDB(),
         };
-        app.storage = value;
         return value;
-    }, []);
+    });
+
+    // This is idempotent
+    // eslint-disable-next-line react-hooks/immutability
+    app.storage = value;
 
     return (
         <FriendlyStorageContext.Provider value={value}>

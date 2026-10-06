@@ -11,12 +11,13 @@ import {
 import {ScrollArea} from '@/components/ui/scroll-area';
 import {AlertTriangle, Copy, RefreshCw, RotateCcw} from 'lucide-react';
 import {useRouteError, useNavigate, isRouteErrorResponse} from 'react-router';
+import {useState} from 'react';
 
 export default function RouteErrorScreen() {
     const t = useTranslations('route-error');
     const routeError = useRouteError();
     const navigate = useNavigate();
-    const timestamp = new Date();
+    const [timestamp] = useState(() => new Date());
 
     const err: Error = isRouteErrorResponse(routeError)
         ? Object.assign(new Error(routeError.statusText || 'Route error'), {

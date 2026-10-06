@@ -6,9 +6,12 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig([
-    js.configs.recommended,
-    ...tseslint.configs.recommendedTypeChecked,
     {
+        files: ['src/**/*.{ts,tsx}'],
+        extends: [
+            js.configs.recommended,
+            ...tseslint.configs.recommendedTypeChecked,
+        ],
         plugins: {
             n,
             'react-hooks': reactHooks,
@@ -19,16 +22,12 @@ export default defineConfig([
             // prevents the plugin from trying to auto-detect it and failing.
             react: {version: '19'},
         },
-    },
-    {
         languageOptions: {
             parserOptions: {
                 projectService: true,
                 tsconfigRootDir: import.meta.dirname,
             },
         },
-    },
-    {
         rules: {
             'block-scoped-var': 'error',
             eqeqeq: 'error',
@@ -60,12 +59,7 @@ export default defineConfig([
                     property: 'only',
                 },
             ],
-        },
-    },
-    {
-        files: ['**/*.ts', '**/*.tsx'],
 
-        rules: {
             '@typescript-eslint/ban-ts-comment': 'warn',
             '@typescript-eslint/no-floating-promises': 'error',
             '@typescript-eslint/no-non-null-assertion': 'off',
@@ -102,14 +96,14 @@ export default defineConfig([
             'n/no-missing-require': 'off',
             'n/shebang': 'off',
             'no-dupe-class-members': 'off',
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             'require-atomic-updates': 'off',
         },
     },
     {
-        files: ['**/*.tsx'],
-
+        files: ['src/**/*.tsx'],
         rules: {
+            ...reactHooks.configs.recommended.rules,
+            'react-hooks/exhaustive-deps': 'off',
             'react-hooks/set-state-in-effect': 'off',
         },
     },
@@ -119,8 +113,5 @@ export default defineConfig([
         'dist/',
         'test/fixtures/',
         '**/template/',
-
-        // Ignore shadcn components folder
-        'src/components/ui/**',
     ]),
 ]);

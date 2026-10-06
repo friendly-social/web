@@ -1,6 +1,5 @@
-import React, {useMemo} from 'react';
+import React from 'react';
 import {Image} from 'lucide-react';
-import {useTranslations} from 'use-intl';
 import ReactMarkdown from 'react-markdown';
 import {cn} from '@/lib/utils';
 import remarkBreaks from 'remark-breaks';
@@ -20,14 +19,12 @@ export interface MarkdownSpanProps {
 }
 
 function MarkdownSpanComponent({text}: MarkdownSpanProps) {
-    const t = useTranslations('markdown');
-
     return (
         <ReactMarkdown
             remarkPlugins={[remarkBreaks, remarkGfm, remarkGemoji]}
             rehypePlugins={[rehypeRaw, rehypeSanitize]}
             components={{
-                a: ({href, children}) => (
+                a: ({children}) => (
                     <span className={linkClass}>
                         {children}
                     </span>
@@ -39,7 +36,7 @@ function MarkdownSpanComponent({text}: MarkdownSpanProps) {
                 h4: ({ children }) => <><b>{children}</b><Br/></>,
                 h5: ({ children }) => <><b>{children}</b><Br/></>,
                 h6: ({ children }) => <><b>{children}</b><Br/></>,
-                img: ({ children }) => <><Image className="inline h-[1em] w-[1em]" /><Br /></>,
+                img: () => <><Image className="inline h-[1em] w-[1em]" /><Br /></>,
                 ol: ({children}) => <ol className="list-decimal list-inside">
                     {children}
                 </ol>,

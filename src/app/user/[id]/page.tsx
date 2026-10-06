@@ -205,12 +205,8 @@ function InterestsBlock({interests}: {interests: string[]}) {
 }
 
 export default function UserPage() {
-    const t = useTranslations('profile');
     const navigate = useNavigate();
     const app = useAppContext();
-    const backend = useBackend();
-    const storage = useFriendlyStorage();
-    const queryClient = useQueryClient();
 
     const {id} = useParams();
     const userId = Number(id);
@@ -226,7 +222,20 @@ export default function UserPage() {
         return;
     }
 
-    const userKey = ['user', id];
+    return <UserPageGuarded userId={userId} />;
+}
+
+interface UserPageGuardedProps {
+    userId: number;
+}
+
+function UserPageGuarded({userId}: UserPageGuardedProps) {
+    const t = useTranslations('profile');
+    const backend = useBackend();
+    const storage = useFriendlyStorage();
+    const queryClient = useQueryClient();
+
+    const userKey = ['user', userId];
 
     const {mutate: declineFriend, isPending: isDeclinePending} = useMutation({
         mutationFn: async () => {
@@ -258,14 +267,10 @@ export default function UserPage() {
     const userQuery = useQuery({
         queryKey: userKey,
         queryFn: async () => {
-            if (!id) {
-                throw new Error('Id is null or undefined');
-            }
-            const idNum = parseInt(id);
-            const userPair = await storage.userAccessHashes.get(idNum);
+            const userPair = await storage.userAccessHashes.get(userId);
             const accessHash = userPair.accessHash;
             const result = await backend.getUserDetailsById2(
-                parseInt(id),
+                userId,
                 accessHash,
             );
             return forceUnwrap(result);

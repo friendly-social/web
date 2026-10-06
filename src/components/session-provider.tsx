@@ -1,14 +1,6 @@
-import {
-    createContext,
-    useCallback,
-    useContext,
-    useEffect,
-    useMemo,
-    useState,
-} from 'react';
+import {createContext, useCallback, useContext, useMemo, useState} from 'react';
 import * as authService from '@/services/auth-service';
 import {useAppContext} from '@/app.context';
-import {useBackend} from '@/backend.context';
 
 export type SessionStatus = 'loading' | 'authed' | 'guest';
 
@@ -23,27 +15,24 @@ interface SessionContextValue {
 const SessionContext = createContext<SessionContextValue | null>(null);
 
 export function SessionProvider({children}: {children: React.ReactNode}) {
-    const backend = useBackend();
     const app = useAppContext();
-    const [status, setStatus] = useState<SessionStatus>('loading');
+    const [status, setStatus] = useState<SessionStatus>(() =>
+        authService.get(app) ? 'authed' : 'guest',
+    );
 
     const refresh = useCallback(() => {
         const ok = authService.get(app);
         setStatus(ok ? 'authed' : 'guest');
-    }, [backend]);
+    }, [app]);
 
     const setAuthed = useCallback(() => setStatus('authed'), []);
 
     const logOut = useCallback(() => {
         localStorage.clear();
-        backend.clearAuthorization();
+        app.backend.clearAuthorization();
         authService.clear(app);
         setStatus('guest');
-    }, [backend]);
-
-    useEffect(() => {
-        refresh();
-    }, [refresh]);
+    }, [app]);
 
     const value = useMemo(
         () => ({

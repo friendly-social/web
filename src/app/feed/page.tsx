@@ -60,7 +60,7 @@ export default function FeedPage() {
                 toast.error(t('error-connection'));
             }
         },
-        [backend],
+        [t, backend],
     );
 
     const handleReview = async (direction: SwipeDirection) => {

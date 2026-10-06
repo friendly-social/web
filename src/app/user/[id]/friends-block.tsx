@@ -63,6 +63,8 @@ interface ScrollState {
 }
 
 function List({items, id}: ListProps) {
+    'use no memo';
+
     const parentRef = useRef(null);
 
     const navigationType = useNavigationType();
@@ -75,6 +77,7 @@ function List({items, id}: ListProps) {
         ) as ScrollState;
     }, [navigationType]);
 
+    // eslint-disable-next-line react-hooks/incompatible-library
     const virtualizer = useVirtualizer({
         count: items.length,
         horizontal: true,

@@ -36,10 +36,11 @@ function ProfileHeader({logOut}: {logOut: () => void}) {
         [userDetails],
     );
 
-    const onEditClick = useCallback(() => void edit.setOpen(true), []);
     const logout = useLogoutDialogController();
     const edit = useEditDialogController();
     const qrCode = useQrCodeDialogController();
+
+    const onEditClick = useCallback(() => void edit.setOpen(true), []);
 
     const imagePreviewer = useImagePreviewerController();
 

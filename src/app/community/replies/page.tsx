@@ -19,9 +19,7 @@ import {CommunityPostCard} from '../post';
 import {useAppContext} from '@/app.context';
 
 export function RepliesPage() {
-    const t = useTranslations('replies');
     const navigate = useNavigate();
-    const app = useAppContext();
 
     const {id} = useParams();
     const idInt = id ? (Number(id) as CommunityPostId) : null;
@@ -31,6 +29,17 @@ export function RepliesPage() {
         }
     }, [idInt]);
     if (!idInt) return;
+    return <RepliesPageGuarded idInt={idInt} />;
+}
+
+export interface RepliesPageGuardedProps {
+    idInt: CommunityPostId;
+}
+
+function RepliesPageGuarded({idInt}: RepliesPageGuardedProps) {
+    const t = useTranslations('replies');
+    const app = useAppContext();
+    const navigate = useNavigate();
 
     const replyTo = communityPosts.useDetails(app, idInt);
 
@@ -140,6 +149,8 @@ function ReplyContent({
     const app = useAppContext();
     const t = useTranslations('replies');
 
+    // This is idempotent
+    // eslint-disable-next-line react-hooks/immutability
     replyTo = {
         ...replyTo,
         post: communityPosts.usePost(replyTo.post.id).data!,

@@ -1,4 +1,6 @@
-import React, {useMemo, useEffect, useState} from 'react';
+/* eslint-disable @typescript-eslint/no-base-to-string */
+
+import React, { useEffect, useState} from 'react';
 import remarkBreaks from 'remark-breaks';
 import remarkGemoji from 'remark-gemoji';
 import rehypeRaw from 'rehype-raw';
@@ -53,7 +55,7 @@ function MarkdownAreaComponent(
                 remarkPlugins={[remarkBreaks, remarkGfm, remarkGemoji, injectPlaintext]}
                 rehypePlugins={[rehypeRaw, [rehypeSanitize, sanitizeSchema]]}
                 components={{
-                    img: ({ node, ...props }) => (
+                    img: ({ node: _, ...props }) => (
                         <img
                             onClick={onImageClick}
                             className={cn(
@@ -99,10 +101,10 @@ function MarkdownAreaComponent(
                             </table>
                         </div>
                     ),
-                    audio: ({node, ...props}) => (
+                    audio: ({node: _, ...props}) => (
                         <audio controls {...props} />
                     ),
-                    code: ({children, className, node, ...rest}) => {
+                    code: ({children, className, node: _, ...rest}) => {
                         const match = /language-(\w+)/.exec(className || '')
                         return match ? (
                             <SyntaxHighlighter
@@ -165,7 +167,7 @@ function useCodeStyle() {
         case 'dark':
             setCodeStyle(oneDark);
             return () => {};
-        case 'system':
+        case 'system': {
             const mediaQuery = window.matchMedia(
                 '(prefers-color-scheme: dark)',
             );
@@ -178,6 +180,7 @@ function useCodeStyle() {
             handleChange();
             mediaQuery.addEventListener('change', handleChange);
             return () => mediaQuery.removeEventListener('change', handleChange);
+        }
         }
     }, [theme]);
 

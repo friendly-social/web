@@ -69,7 +69,7 @@ function useCachedQuery(app: AppContext) {
         return () => {
             cancelled = true;
         };
-    }, []);
+    }, [app]);
 
     return query;
 }

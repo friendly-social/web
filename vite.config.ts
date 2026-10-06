@@ -1,6 +1,6 @@
 import {defineConfig, type Plugin} from 'vite';
 import react from '@vitejs/plugin-react';
-import manifest from './package.json';
+import manifest from './package.json' with { type: 'json' };
 import {execFileSync} from 'child_process';
 import {VitePWA} from 'vite-plugin-pwa';
 
@@ -64,7 +64,7 @@ export default defineConfig({
         sourcemap: true,
     },
     plugins: [
-        react(),
+        react({ compiler: true }),
         appVersionPlugin(),
         VitePWA({
             registerType: 'autoUpdate',

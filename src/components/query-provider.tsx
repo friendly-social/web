@@ -70,6 +70,8 @@ interface PopulateQueryClientProps {
 function PopulateQueryClient({children}: PopulateQueryClientProps): ReactNode {
     const client = useQueryClient();
     const app = useAppContext();
+    // This is idempotent
+    // eslint-disable-next-line react-hooks/immutability
     app.queryClient = client;
     return children;
 }
