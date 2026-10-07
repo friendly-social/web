@@ -84,7 +84,7 @@ export default defineConfig({
                 // },
                 theme_color: '#007AFF',
                 background_color: '#222222',
-                display: 'fullscreen',
+                display: 'standalone',
                 icons: [
                     {
                         src: 'pwa-icon.svg',
