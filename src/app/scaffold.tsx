@@ -81,11 +81,13 @@ export function Scaffold({children}: ScaffoldProps): ReactNode {
                                 className={cn(
                                     'w-full h-px md:hidden',
                                     'bg-border',
-                                    'pb-safe pl-safe pr-safe',
                                 )}
                             />
                             <div
-                                className={cn('w-full', 'bg-card', 'md:hidden')}
+                                className={cn(
+                                    'w-full bg-card md:hidden',
+                                    'pb-safe pl-safe pr-safe',
+                                )}
                             >
                                 <MenuBar />
                             </div>
