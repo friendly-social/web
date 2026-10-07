@@ -8,8 +8,17 @@
 @custom-variant label (& [data-label]);
 @custom-variant focus-input-within (&:has(input:focus));
 
-@utility mb-safe {
-    margin-bottom: env(safe-area-inset-bottom);
+@utility pl-safe {
+    padding-left: env(safe-area-inset-left);
+}
+@utility pr-safe {
+    padding-right: env(safe-area-inset-right);
+}
+@utility pt-safe {
+    padding-top: env(safe-area-inset-top);
+}
+@utility pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
 @utility fade-mask {
@@ -119,7 +128,8 @@
     }
 }
 
-/* Dark theme that works before React.js generates page
+/*
+ * Dark theme that works before React.js generates page
  * You may need this in case of using
  * static builds.
  */
@@ -128,8 +138,7 @@
         background-color: #0a0a0a;
     }
 }
-/* ---break---
- */
+
 @layer base {
     * {
         @apply border-border outline-ring/50;

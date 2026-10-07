@@ -29,40 +29,42 @@ export function useTopBarContext(): TopBarContext {
 export function TopBar({closeButton}: TopBarContext): ReactNode {
     return (
         <div className="w-full h-16 flex flex-col items-center">
-            <div
-                className={cn(
-                    'flex p-4',
-                    'bg-card',
-                    'w-full flex-1 min-h-0',
-                    'items-center',
-                )}
-            >
-                <Link className="h-full" to="/">
-                    <img
-                        className="dark:hidden h-full"
-                        src="/banner-light.svg"
-                    />
-                    <img
-                        className="hidden dark:block h-full"
-                        src="/banner-dark.svg"
-                    />
-                </Link>
-                <div className="flex-1" />
-                {closeButton && (
-                    <Button
-                        className={cn(
-                            'h-10 w-10 ghost cursor-pointer block',
-                            closeButton.showDesktop === false
-                                ? 'md:hidden'
-                                : '',
-                        )}
-                        variant="ghost"
-                        onClick={closeButton.onClick}
-                        tabIndex={-1}
-                    >
-                        <X />
-                    </Button>
-                )}
+            <div className="bg-card pl-safe pr-safe pt-safe h-full w-full">
+                <div
+                    className={cn(
+                        'h-full w-full',
+                        'flex p-4',
+                        'flex-1 min-h-0',
+                        'items-center',
+                    )}
+                >
+                    <Link className="h-full" to="/">
+                        <img
+                            className="dark:hidden h-full"
+                            src="/banner-light.svg"
+                        />
+                        <img
+                            className="hidden dark:block h-full"
+                            src="/banner-dark.svg"
+                        />
+                    </Link>
+                    <div className="flex-1" />
+                    {closeButton && (
+                        <Button
+                            className={cn(
+                                'h-10 w-10 ghost cursor-pointer block',
+                                closeButton.showDesktop === false
+                                    ? 'md:hidden'
+                                    : '',
+                            )}
+                            variant="ghost"
+                            onClick={closeButton.onClick}
+                            tabIndex={-1}
+                        >
+                            <X />
+                        </Button>
+                    )}
+                </div>
             </div>
             <div className="w-full h-px bg-border" />
         </div>

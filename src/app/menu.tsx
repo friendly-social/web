@@ -107,11 +107,7 @@ export function MenuBar() {
     return (
         <div className="grid grid-cols-5 gap-2 p-2 w-full max-w-md mx-auto">
             {MENUBAR_ITEMS.map(item => (
-                <Link
-                    key={item.path}
-                    to={item.path}
-                    className="min-w-0 w-full mb-safe"
-                >
+                <Link key={item.path} to={item.path} className="min-w-0 w-full">
                     <Button
                         variant="ghost"
                         className={cn(

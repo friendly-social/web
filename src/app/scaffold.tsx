@@ -47,6 +47,7 @@ export function Scaffold({children}: ScaffoldProps): ReactNode {
                             className={cn(
                                 'h-full',
                                 'bg-card',
+                                'pl-safe pb-safe',
                                 'hidden md:block',
                             )}
                         >
@@ -61,11 +62,18 @@ export function Scaffold({children}: ScaffoldProps): ReactNode {
                     </>
                 )}
                 <div className="flex flex-col flex-1 min-w-0">
-                    <div ref={scrollRef} className="overflow-y-auto flex-1">
-                        <ScrollRestoration scrollRef={scrollRef} />
-                        <ScaffoldContextKey.Provider value={context}>
-                            {children}
-                        </ScaffoldContextKey.Provider>
+                    <div
+                        className={cn(
+                            'flex-1 min-h-0 pr-safe pl-safe',
+                            showMenu ? 'md:pl-0 md:pb-safe' : 'pb-safe',
+                        )}
+                    >
+                        <div ref={scrollRef} className="overflow-y-auto h-full">
+                            <ScrollRestoration scrollRef={scrollRef} />
+                            <ScaffoldContextKey.Provider value={context}>
+                                {children}
+                            </ScaffoldContextKey.Provider>
+                        </div>
                     </div>
                     {showMenu && (
                         <>
@@ -73,6 +81,7 @@ export function Scaffold({children}: ScaffoldProps): ReactNode {
                                 className={cn(
                                     'w-full h-px md:hidden',
                                     'bg-border',
+                                    'pb-safe pl-safe pr-safe',
                                 )}
                             />
                             <div
