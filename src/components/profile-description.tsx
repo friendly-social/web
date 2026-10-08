@@ -1,7 +1,8 @@
 import {useImagePreviewerController} from '@/components/image-previewer';
+import {normalizeLink} from '@/lib/utils';
 import {cn} from '@/lib/utils';
 import {useTranslations} from 'use-intl';
-import {ChevronDown, ChevronUp} from 'lucide-react';
+import {ChevronDown, Link} from 'lucide-react';
 import {useEffect, useRef, useState, lazy} from 'react';
 
 const MarkdownArea = lazy(() =>
@@ -10,7 +11,15 @@ const MarkdownArea = lazy(() =>
     })),
 );
 
-export function ProfileDescription({description}: {description: string}) {
+export interface ProfileDescriptionProps {
+    description: string;
+    socialLink: string | null;
+}
+
+export function ProfileDescription({
+    description,
+    socialLink,
+}: ProfileDescriptionProps) {
     const [expanded, setExpanded] = useState(false);
     const [canExpand, setCanExpand] = useState(false);
     const imagePreviewer = useImagePreviewerController();
@@ -26,14 +35,15 @@ export function ProfileDescription({description}: {description: string}) {
     }, [description]);
 
     return (
-        <>
+        <div className="flex flex-col gap-2">
             <MarkdownArea
                 className={cn(
-                    'text-muted-foreground wrap-break-word transition-all duration-300 ease-in-out',
+                    'text-muted-foreground wrap-break-word transition-all',
+                    'duration-300 ease-in-out',
                     !expanded && 'line-clamp-4 sm:line-clamp-3',
                 )}
-                ref={descriptionRef}
                 text={description}
+                ref={descriptionRef}
                 onImageClick={e => {
                     e.stopPropagation();
                     void imagePreviewer.setPayload({
@@ -43,24 +53,28 @@ export function ProfileDescription({description}: {description: string}) {
                 }}
             />
 
-            {canExpand && (
+            {socialLink && expanded && (
+                <a
+                    href={normalizeLink(socialLink)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    <div className="text-sm w-full gap-1 flex items-center text-primary cursor-pointer hover:underline mt-1">
+                        <Link className="h-[1em] w-[1em] inline" />
+                        {socialLink}
+                    </div>
+                </a>
+            )}
+
+            {canExpand && !expanded && (
                 <button
                     onClick={() => setExpanded(v => !v)}
                     className="mt-1 flex items-center gap-1 text-sm text-primary hover:underline cursor-pointer"
                 >
-                    {expanded ? (
-                        <>
-                            <ChevronUp className="w-4 h-4" />
-                            {t('show-less')}
-                        </>
-                    ) : (
-                        <>
-                            <ChevronDown className="w-4 h-4" />
-                            {t('show-more')}
-                        </>
-                    )}
+                    <ChevronDown className="w-4 h-4" />
+                    {t('show-more')}
                 </button>
             )}
-        </>
+        </div>
     );
 }

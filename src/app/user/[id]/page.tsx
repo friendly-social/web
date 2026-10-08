@@ -1,4 +1,5 @@
 import {useImagePreviewerController} from '@/components/image-previewer';
+import {useScaffoldContext} from '@/app/scaffold';
 import {useAppRouter} from '@/components/app-router-provider';
 import {useBackend} from '@/backend.context';
 import * as authService from '@/services/auth-service';
@@ -7,7 +8,7 @@ import {useQueryClient} from '@tanstack/react-query';
 import {FriendsBlock} from './friends-block';
 import {forceUnwrap} from '@/network/result';
 import {cn} from '@/lib/utils';
-import {createFileLink, normalizeLink} from '@/lib/utils';
+import {createFileLink} from '@/lib/utils';
 import {useMutation, useQuery} from '@tanstack/react-query';
 import {
     Activity,
@@ -17,7 +18,7 @@ import {
     Ellipsis,
 } from 'lucide-react';
 import {useTranslations} from 'use-intl';
-import {useMemo, useEffect} from 'react';
+import {useMemo, useLayoutEffect, useEffect} from 'react';
 import {UserDetails} from '@/types/user-details';
 import {Badge} from '@/components/ui/badge';
 import {Separator} from '@/components/ui/separator';
@@ -34,94 +35,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import {ConfirmationDialog} from '@/components/confirmation-dialog';
 import {StyledAvatar} from '@/components/styled-avatar';
-
-type RemoveFriendDialogState = {removeFriendDialog?: true} | null;
-
-export interface RemoveFriendDialogController {
-    open: boolean;
-    setOpen: (open: boolean) => Promise<void>;
-}
-
-export function useRemoveFriendDialogController(): RemoveFriendDialogController {
-    const router = useAppRouter();
-    const location = useLocation();
-    const navigate = useNavigate();
-
-    const open = !!(location.state as RemoveFriendDialogState)
-        ?.removeFriendDialog;
-
-    function setOpen(value: boolean) {
-        const location = router.location();
-        if (value) {
-            return navigate(location, {
-                state: {
-                    ...(location.state as object),
-                    removeFriendDialog: true,
-                },
-            }) as Promise<void>;
-        } else {
-            return navigate(-1) as Promise<void>;
-        }
-    }
-
-    return {
-        open,
-        setOpen,
-    };
-}
-
-interface ProfileDropdownProps {
-    showDecline: boolean;
-    onDecline: () => void;
-}
-
-function ProfileDropdown({onDecline, showDecline}: ProfileDropdownProps) {
-    const tProfile = useTranslations('profile');
-    const tRemoveFriendDialog = useTranslations('remove-friend-dialog');
-
-    const removeFriendDialog = useRemoveFriendDialogController();
-
-    if (!showDecline) {
-        return;
-    }
-
-    return (
-        <>
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="secondary" className="cursor-pointer">
-                        <Ellipsis />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                    <DropdownMenuGroup>
-                        <DropdownMenuItem
-                            variant="destructive"
-                            onClick={() =>
-                                void removeFriendDialog.setOpen(true)
-                            }
-                        >
-                            <UserXIcon className="size-4" />
-                            {tProfile('dropdown.remove_friend')}
-                        </DropdownMenuItem>
-                    </DropdownMenuGroup>
-                </DropdownMenuContent>
-            </DropdownMenu>
-
-            <ConfirmationDialog
-                variant="default"
-                icon={<UserXIcon />}
-                title={tRemoveFriendDialog('title')}
-                description={tRemoveFriendDialog('description')}
-                actionLabel={tRemoveFriendDialog('action')}
-                cancelLabel={tRemoveFriendDialog('cancel')}
-                onAction={onDecline}
-                open={removeFriendDialog.open}
-                onOpenChange={value => void removeFriendDialog.setOpen(value)}
-            />
-        </>
-    );
-}
 
 interface ProfileHeaderProps {
     userDetails: UserDetails;
@@ -164,14 +77,22 @@ function ProfileHeader({
                 </p>
 
                 <ProfileDescription
-                    description={userDetails?.description ?? ''}
+                    description={userDetails.description}
+                    socialLink={userDetails.socialLink}
                 />
             </div>
 
-            <div className="flex sm:flex-col gap-2 sm:ml-auto w-full sm:w-auto">
+            <div
+                className={cn(
+                    'flex sm:flex-col gap-2 sm:ml-auto w-full sm:w-auto',
+                    userDetails.friendship === 'friends'
+                        ? 'hidden md:flex'
+                        : '',
+                )}
+            >
                 <ProfileDropdown
-                    showDecline={userDetails.friendship === 'friends'}
                     onDecline={onDecline}
+                    showDecline={userDetails.friendship === 'friends'}
                 />
                 <ActionButton userDetails={userDetails} onRequest={onRequest} />
             </div>
@@ -345,25 +266,7 @@ interface ActionButtonProps {
 function ActionButton({userDetails, onRequest}: ActionButtonProps) {
     const t = useTranslations('profile');
     if (userDetails.friendship === 'friends') {
-        if (!userDetails?.socialLink) {
-            return;
-        }
-        return (
-            <Button
-                variant="secondary"
-                onClick={() => {
-                    window.open(
-                        userDetails?.socialLink
-                            ? normalizeLink(userDetails?.socialLink)
-                            : '#',
-                        '_blank',
-                    );
-                }}
-                className="grow-1 sm:grow-0 cursor-pointer"
-            >
-                {t('open_social')}
-            </Button>
-        );
+        return;
     } else if (userDetails.friendship === 'incomingRequest') {
         return (
             <Button
@@ -395,4 +298,109 @@ function ActionButton({userDetails, onRequest}: ActionButtonProps) {
             </Button>
         );
     }
+}
+
+type RemoveFriendDialogState = {removeFriendDialog?: true} | null;
+
+export interface RemoveFriendDialogController {
+    open: boolean;
+    setOpen: (open: boolean) => Promise<void>;
+}
+
+export function useRemoveFriendDialogController(): RemoveFriendDialogController {
+    const router = useAppRouter();
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    const open = !!(location.state as RemoveFriendDialogState)
+        ?.removeFriendDialog;
+
+    function setOpen(value: boolean) {
+        const location = router.location();
+        if (value) {
+            return navigate(location, {
+                state: {
+                    ...(location.state as object),
+                    removeFriendDialog: true,
+                },
+            }) as Promise<void>;
+        } else {
+            return navigate(-1) as Promise<void>;
+        }
+    }
+
+    return {
+        open,
+        setOpen,
+    };
+}
+
+interface ProfileDropdownProps {
+    showDecline: boolean;
+    onDecline: () => void;
+}
+
+function ProfileDropdown({onDecline, showDecline}: ProfileDropdownProps) {
+    const tProfile = useTranslations('profile');
+    const tRemoveFriendDialog = useTranslations('remove-friend-dialog');
+
+    const removeFriendDialog = useRemoveFriendDialogController();
+    const topBar = useScaffoldContext().topBar;
+
+    // some other props in the future?
+    const showMenu = showDecline;
+
+    let dropdownContent = null;
+
+    if (showMenu) {
+        dropdownContent = (
+            <DropdownMenuGroup>
+                <DropdownMenuItem
+                    variant="destructive"
+                    onClick={() => void removeFriendDialog.setOpen(true)}
+                >
+                    <UserXIcon className="size-4" />
+                    {tProfile('dropdown.remove_friend')}
+                </DropdownMenuItem>
+            </DropdownMenuGroup>
+        );
+    }
+
+    useLayoutEffect(() => {
+        if (dropdownContent === null) return;
+        topBar.setDropdownMenu({
+            showDesktop: false,
+            Content: dropdownContent,
+        });
+        return () => topBar.setDropdownMenu(null);
+    }, [dropdownContent]);
+
+    if (!showMenu) {
+        return;
+    }
+
+    return (
+        <div className="hidden md:block">
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="secondary" className="cursor-pointer">
+                        <Ellipsis />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>{dropdownContent}</DropdownMenuContent>
+            </DropdownMenu>
+
+            <ConfirmationDialog
+                variant="default"
+                icon={<UserXIcon />}
+                title={tRemoveFriendDialog('title')}
+                description={tRemoveFriendDialog('description')}
+                actionLabel={tRemoveFriendDialog('action')}
+                cancelLabel={tRemoveFriendDialog('cancel')}
+                onAction={onDecline}
+                open={removeFriendDialog.open}
+                onOpenChange={value => void removeFriendDialog.setOpen(value)}
+            />
+        </div>
+    );
 }

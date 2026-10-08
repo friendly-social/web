@@ -1,4 +1,5 @@
 import {useImagePreviewerController} from '@/components/image-previewer';
+import {cn} from '@/lib/utils';
 import {useBlockingQR} from '@/app/blocking-qr/page';
 import {forceUnwrap} from '@/network/result';
 import {users} from '@/services/users-service';
@@ -25,7 +26,6 @@ type ProfileLocationState = {
     edit: boolean;
 } | null;
 
-// todo: state support with edit: true
 function ProfileHeader({logOut}: {logOut: () => void}) {
     const t = useTranslations('profile');
     const app = useAppContext();
@@ -91,13 +91,18 @@ function ProfileHeader({logOut}: {logOut: () => void}) {
                 />
             </div>
 
-            <div className="flex flex-1 flex-col gap-2 min-w-0 items-center sm:items-start">
-                <p className="font-bold text-xl sm:text-2xl text-foreground truncate">
+            <div
+                className={cn(
+                    'flex flex-1 flex-col gap-2 items-center w-full',
+                    'sm:items-start sm:min-w-0',
+                )}
+            >
+                <p className="font-bold text-xl sm:text-2xl text-foreground truncate w-full">
                     {userDetails?.nickname}
                 </p>
-
                 <ProfileDescription
-                    description={userDetails?.description ?? ''}
+                    description={userDetails.description}
+                    socialLink={userDetails.socialLink}
                 />
             </div>
 
