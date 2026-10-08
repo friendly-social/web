@@ -21,10 +21,23 @@ import {useTranslations} from 'use-intl';
 import {CommunityPostDetailsPlain} from '@/network/friendly-client';
 import {StyledAvatar} from '@/components/styled-avatar';
 import {createFileLink} from '@/lib/utils';
-import {MarkdownArea} from '@/components/ui/markdown-area';
 import {useNavigate} from 'react-router';
 import {useFriendlyStorage} from '@/components/friendly-storage-provider';
-import React, {RefObject, useRef, useState, useMemo, useEffect} from 'react';
+import React, {
+    RefObject,
+    useRef,
+    useState,
+    useMemo,
+    useEffect,
+    lazy,
+    Suspense,
+} from 'react';
+
+const MarkdownArea = lazy(() =>
+    import('@/components/ui/markdown-area').then(m => ({
+        default: m.MarkdownArea,
+    })),
+);
 
 interface MainPostCardProps {
     first: boolean;
@@ -280,17 +293,19 @@ export function MainPostCard({
                 />
                 <div className="flex-1 min-w-0 flex flex-col">
                     {preview ? (
-                        <MarkdownArea
-                            className="text-foreground"
-                            text={displayText}
-                            onImageClick={e => {
-                                e.stopPropagation();
-                                void imagePreviewer.setPayload({
-                                    type: 'open',
-                                    src: e.currentTarget.src,
-                                });
-                            }}
-                        />
+                        <Suspense>
+                            <MarkdownArea
+                                className="text-foreground"
+                                text={displayText}
+                                onImageClick={e => {
+                                    e.stopPropagation();
+                                    void imagePreviewer.setPayload({
+                                        type: 'open',
+                                        src: e.currentTarget.src,
+                                    });
+                                }}
+                            />
+                        </Suspense>
                     ) : (
                         <textarea
                             ref={inputRef}
@@ -509,17 +524,19 @@ function MainPostCardPlain({
                             showDelete={isAuthor}
                         />
                     </div>
-                    <MarkdownArea
-                        className="text-foreground break-words"
-                        text={post.text}
-                        onImageClick={e => {
-                            e.stopPropagation();
-                            void imagePreviewer.setPayload({
-                                type: 'open',
-                                src: e.currentTarget.src,
-                            });
-                        }}
-                    />
+                    <Suspense>
+                        <MarkdownArea
+                            className="text-foreground break-words"
+                            text={post.text}
+                            onImageClick={e => {
+                                e.stopPropagation();
+                                void imagePreviewer.setPayload({
+                                    type: 'open',
+                                    src: e.currentTarget.src,
+                                });
+                            }}
+                        />
+                    </Suspense>
                 </div>
             </div>
         </div>

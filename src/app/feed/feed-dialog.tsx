@@ -1,6 +1,5 @@
 import {Badge} from '@/components/ui/badge';
 import {useImagePreviewerController} from '@/components/image-previewer';
-import {MarkdownArea} from '@/components/ui/markdown-area';
 import {Button} from '@/components/ui/button';
 import {useFriendlyStorage} from '@/components/friendly-storage-provider';
 import {cn, createFileLink} from '@/lib/utils';
@@ -15,6 +14,13 @@ import {
     AllFriendsList,
     useAllFriendsDialogController,
 } from '@/app/profile/all-friends-list';
+import {lazy, Suspense} from 'react';
+
+const MarkdownArea = lazy(() =>
+    import('@/components/ui/markdown-area').then(m => ({
+        default: m.MarkdownArea,
+    })),
+);
 
 interface FeedDialogProps {
     selectedCard: FeedItem;
@@ -163,16 +169,18 @@ export function FeedDialog({
 
                 <div className="break-words text-sm leading-6 text-foreground">
                     {selectedCard.details.description ? (
-                        <MarkdownArea
-                            text={selectedCard.details.description}
-                            onImageClick={e => {
-                                e.stopPropagation();
-                                void imagePreviewer.setPayload({
-                                    type: 'open',
-                                    src: e.currentTarget.src,
-                                });
-                            }}
-                        />
+                        <Suspense>
+                            <MarkdownArea
+                                text={selectedCard.details.description}
+                                onImageClick={e => {
+                                    e.stopPropagation();
+                                    void imagePreviewer.setPayload({
+                                        type: 'open',
+                                        src: e.currentTarget.src,
+                                    });
+                                }}
+                            />
+                        </Suspense>
                     ) : (
                         <p>{t('no_description')}</p>
                     )}

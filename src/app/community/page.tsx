@@ -1,5 +1,4 @@
 import {AdjusterPayload, Adjuster, AdjusterCrop} from '@/components/adjuster';
-import {MarkdownArea} from '@/components/ui/markdown-area';
 import {useImagePreviewerController} from '@/components/image-previewer';
 import {newPost} from '@/services/new-post-service';
 import {isMobile} from '@/lib/is-mobile';
@@ -30,11 +29,25 @@ import {
     Paperclip,
 } from 'lucide-react';
 import {useTranslations} from 'use-intl';
-import React, {ReactElement, useMemo, useRef, useEffect, useState} from 'react';
+import React, {
+    ReactElement,
+    useMemo,
+    useRef,
+    useEffect,
+    useState,
+    lazy,
+    Suspense,
+} from 'react';
 import {toast} from 'sonner';
 import {StyledAvatar} from '@/components/styled-avatar';
 import {createFileLink} from '@/lib/utils';
 import {CommunityPostCard} from './post';
+
+const MarkdownArea = lazy(() =>
+    import('@/components/ui/markdown-area').then(m => ({
+        default: m.MarkdownArea,
+    })),
+);
 
 export function CommunityPage() {
     const t = useTranslations('community');
@@ -350,17 +363,19 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
                 />
                 <div className="w-full flex-1 flex flex-col min-w-0">
                     {preview ? (
-                        <MarkdownArea
-                            className="text-foreground mt-2"
-                            text={text}
-                            onImageClick={e => {
-                                e.stopPropagation();
-                                void imagePreviewer.setPayload({
-                                    type: 'open',
-                                    src: e.currentTarget.src,
-                                });
-                            }}
-                        />
+                        <Suspense>
+                            <MarkdownArea
+                                className="text-foreground mt-2"
+                                text={text}
+                                onImageClick={e => {
+                                    e.stopPropagation();
+                                    void imagePreviewer.setPayload({
+                                        type: 'open',
+                                        src: e.currentTarget.src,
+                                    });
+                                }}
+                            />
+                        </Suspense>
                     ) : (
                         <textarea
                             ref={postRef}

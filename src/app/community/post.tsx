@@ -10,13 +10,18 @@ import {
 } from '@/network/friendly-client';
 import {StyledAvatar} from '@/components/styled-avatar';
 import {createFileLink} from '@/lib/utils';
-import {MarkdownArea} from '@/components/ui/markdown-area';
 import {useNavigate} from 'react-router';
 import {useFriendlyStorage} from '@/components/friendly-storage-provider';
 import {communityPosts} from '@/services/community-posts-service';
 import {CommunityPostId} from '@/network/friendly-client';
 import {cn} from '@/lib/utils';
-import {useEffect, useRef, useState} from 'react';
+import {useEffect, useRef, useState, lazy, Suspense} from 'react';
+
+const MarkdownArea = lazy(() =>
+    import('@/components/ui/markdown-area').then(m => ({
+        default: m.MarkdownArea,
+    })),
+);
 
 export interface CommunityPostCardProps {
     className?: string;
@@ -162,24 +167,26 @@ function CommunityPostCardPlain({
                             {post.edited ? ' ' + t('edited') : undefined}
                         </span>
                     </div>
-                    <MarkdownArea
-                        className={cn(
-                            'text-foreground transition-all duration-300 ease-in-out',
-                            minimizeText && [
-                                'line-clamp-10 max-h-[50vh]',
-                                isTruncated && 'fade-mask',
-                            ],
-                        )}
-                        ref={textRef}
-                        text={post.text}
-                        onImageClick={e => {
-                            e.stopPropagation();
-                            void imagePreviewer.setPayload({
-                                type: 'open',
-                                src: e.currentTarget.src,
-                            });
-                        }}
-                    />
+                    <Suspense>
+                        <MarkdownArea
+                            className={cn(
+                                'text-foreground transition-all duration-300 ease-in-out',
+                                minimizeText && [
+                                    'line-clamp-10 max-h-[50vh]',
+                                    isTruncated && 'fade-mask',
+                                ],
+                            )}
+                            ref={textRef}
+                            text={post.text}
+                            onImageClick={e => {
+                                e.stopPropagation();
+                                void imagePreviewer.setPayload({
+                                    type: 'open',
+                                    src: e.currentTarget.src,
+                                });
+                            }}
+                        />
+                    </Suspense>
                 </div>
             </div>
             {!minimizeToolbar && (
