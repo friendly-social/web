@@ -1,11 +1,14 @@
 /* eslint-disable @typescript-eslint/no-base-to-string */
 
+import 'katex/dist/katex.min.css';
 import React, { useEffect, useState} from 'react';
 import remarkBreaks from 'remark-breaks';
 import remarkGemoji from 'remark-gemoji';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 import rehypeSanitize, {defaultSchema} from 'rehype-sanitize';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 import ReactMarkdown from 'react-markdown';
 import {useTheme} from '@/components/theme-provider';
 import {cn} from '@/lib/utils';
@@ -52,8 +55,8 @@ function MarkdownAreaComponent(
                 className,
             )}>
             <ReactMarkdown
-                remarkPlugins={[remarkBreaks, remarkGfm, remarkGemoji, injectPlaintext]}
-                rehypePlugins={[rehypeRaw, [rehypeSanitize, sanitizeSchema]]}
+                remarkPlugins={[remarkBreaks, remarkGfm, remarkGemoji, injectPlaintext, remarkMath]}
+                rehypePlugins={[rehypeRaw, [rehypeSanitize, sanitizeSchema], rehypeKatex]}
                 components={{
                     img: ({ node: _, ...props }) => (
                         <img
@@ -130,7 +133,7 @@ function MarkdownAreaComponent(
                             </SyntaxHighlighter>
                         ) : (
                             <code {...rest} className={cn(
-                                "bg-muted text-muted-foreground p-0.5 px-1 h-full text-sm rounded-lg",
+                                "bg-muted text-muted-foreground p-0.5 px-1 h-full text-xs rounded-lg",
                                 className,
                             )}>
                                 {String(children)}

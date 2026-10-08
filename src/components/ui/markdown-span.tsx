@@ -1,8 +1,11 @@
+import 'katex/dist/katex.min.css';
 import React from 'react';
 import {Image} from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import {cn} from '@/lib/utils';
 import remarkBreaks from 'remark-breaks';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 import rehypeSanitize from 'rehype-sanitize';
@@ -20,37 +23,48 @@ export interface MarkdownSpanProps {
 
 function MarkdownSpanComponent({text}: MarkdownSpanProps) {
     return (
-        <ReactMarkdown
-            remarkPlugins={[remarkBreaks, remarkGfm, remarkGemoji]}
-            rehypePlugins={[rehypeRaw, rehypeSanitize]}
-            components={{
-                a: ({children}) => (
-                    <span className={linkClass}>
+        <span className="align-baseline">
+            <ReactMarkdown
+                remarkPlugins={[remarkBreaks, remarkGfm, remarkGemoji, remarkMath]}
+                rehypePlugins={[rehypeRaw, rehypeSanitize, rehypeKatex]}
+                components={{
+                    a: ({children}) => (
+                        <span className={linkClass}>
+                            {children}
+                        </span>
+                    ),
+                    p: ({ children }) => <><span>{children}</span><Br /></>,
+                    h1: ({ children }) => <><b>{children}</b><Br /></>,
+                    h2: ({ children }) => <><b>{children}</b><Br /></>,
+                    h3: ({ children }) => <><b>{children}</b><Br /></>,
+                    h4: ({ children }) => <><b>{children}</b><Br /></>,
+                    h5: ({ children }) => <><b>{children}</b><Br /></>,
+                    h6: ({ children }) => <><b>{children}</b><Br /></>,
+                    img: () => <><Image className="inline h-[0.8em] w-[0.8em] align-baseline" /></>,
+                    ol: ({children}) => <ol className="list-decimal list-inside">
                         {children}
-                    </span>
-                ),
-                p: ({ children }) => <>{children}<Br/></>,
-                h1: ({ children }) => <><b>{children}</b><Br/></>,
-                h2: ({ children }) => <><b>{children}</b><Br/></>,
-                h3: ({ children }) => <><b>{children}</b><Br/></>,
-                h4: ({ children }) => <><b>{children}</b><Br/></>,
-                h5: ({ children }) => <><b>{children}</b><Br/></>,
-                h6: ({ children }) => <><b>{children}</b><Br/></>,
-                img: () => <><Image className="inline h-[1em] w-[1em]" /><Br /></>,
-                ol: ({children}) => <ol className="list-decimal list-inside">
-                    {children}
-                </ol>,
-                ul: ({children}) => <ul className={cn(
-                    "list-disc list-inside marker:content-['•']",
-                    "[&_li]:before:inline-block",
-                    "[&_li]:before:pr-2",
-                )}>
-                    {children}
-                </ul>,
-            }}
-        >
-            {text}
-        </ReactMarkdown>
+                    </ol>,
+                    ul: ({children}) => <ul className={cn(
+                        "list-disc list-inside marker:content-['•']",
+                        "[&_li]:before:inline-block",
+                        "[&_li]:before:pr-2",
+                    )}>
+                        {children}
+                    </ul>,
+                    blockquote: ({children}) => (
+                        <span className={cn(
+                            "text-muted-foreground bg-muted",
+                            "border-s-muted-foreground border-1 border-s-4",
+                            "rounded-sm px-1",
+                        )}>
+                            {children}
+                        </span>
+                    ),
+                }}
+            >
+                {text}
+            </ReactMarkdown>
+        </span>
     );
 }
 
