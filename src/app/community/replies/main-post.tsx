@@ -30,7 +30,6 @@ import React, {
     useMemo,
     useEffect,
     lazy,
-    Suspense,
 } from 'react';
 
 const MarkdownArea = lazy(() =>
@@ -293,19 +292,17 @@ export function MainPostCard({
                 />
                 <div className="flex-1 min-w-0 flex flex-col">
                     {preview ? (
-                        <Suspense>
-                            <MarkdownArea
-                                className="text-foreground"
-                                text={displayText}
-                                onImageClick={e => {
-                                    e.stopPropagation();
-                                    void imagePreviewer.setPayload({
-                                        type: 'open',
-                                        src: e.currentTarget.src,
-                                    });
-                                }}
-                            />
-                        </Suspense>
+                        <MarkdownArea
+                            className="text-foreground"
+                            text={displayText}
+                            onImageClick={e => {
+                                e.stopPropagation();
+                                void imagePreviewer.setPayload({
+                                    type: 'open',
+                                    src: e.currentTarget.src,
+                                });
+                            }}
+                        />
                     ) : (
                         <textarea
                             ref={inputRef}
@@ -524,19 +521,17 @@ function MainPostCardPlain({
                             showDelete={isAuthor}
                         />
                     </div>
-                    <Suspense>
-                        <MarkdownArea
-                            className="text-foreground break-words"
-                            text={post.text}
-                            onImageClick={e => {
-                                e.stopPropagation();
-                                void imagePreviewer.setPayload({
-                                    type: 'open',
-                                    src: e.currentTarget.src,
-                                });
-                            }}
-                        />
-                    </Suspense>
+                    <MarkdownArea
+                        className="text-foreground break-words"
+                        text={post.text}
+                        onImageClick={e => {
+                            e.stopPropagation();
+                            void imagePreviewer.setPayload({
+                                type: 'open',
+                                src: e.currentTarget.src,
+                            });
+                        }}
+                    />
                 </div>
             </div>
         </div>

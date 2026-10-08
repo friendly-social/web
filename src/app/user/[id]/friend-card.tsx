@@ -1,11 +1,16 @@
 import {UserDetails} from '@/types/user-details';
 import {useFriendlyStorage} from '@/components/friendly-storage-provider';
-import {useMemo} from 'react';
+import {useMemo, lazy} from 'react';
 import {createFileLink} from '@/lib/utils';
 import {useNavigate} from 'react-router';
 import {StyledAvatar} from '@/components/styled-avatar';
 import {useTranslations} from 'use-intl';
-import {MarkdownSpan} from '@/components/ui/markdown-span';
+
+const MarkdownSpan = lazy(() =>
+    import('@/components/ui/markdown-span').then(m => ({
+        default: m.MarkdownSpan,
+    })),
+);
 
 export function FriendCard({friend}: {friend: UserDetails}) {
     const t = useTranslations('profile.friends');

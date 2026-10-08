@@ -7,8 +7,7 @@ import {cn, createFileLink} from '@/lib/utils';
 import {useAppContext} from '@/app.context';
 import {communityPosts} from '@/services/community-posts-service';
 import {useNavigate} from 'react-router';
-import {useState, useEffect, ReactElement, useRef, useMemo} from 'react';
-import {MarkdownSpan} from '@/components/ui/markdown-span';
+import {useState, useEffect, ReactElement, useRef, useMemo, lazy} from 'react';
 import {StyledAvatar} from '@/components/styled-avatar';
 import {forceUnwrap} from '@/network/result';
 import {Button} from '@/components/ui/button';
@@ -19,6 +18,12 @@ import {
     ActivityDetailsReply,
     ActivityId,
 } from '@/network/friendly-client';
+
+const MarkdownSpan = lazy(() =>
+    import('@/components/ui/markdown-span').then(m => ({
+        default: m.MarkdownSpan,
+    })),
+);
 
 export function ActivityPage() {
     const t = useTranslations('activity');

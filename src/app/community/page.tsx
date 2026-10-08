@@ -36,7 +36,6 @@ import React, {
     useEffect,
     useState,
     lazy,
-    Suspense,
 } from 'react';
 import {toast} from 'sonner';
 import {StyledAvatar} from '@/components/styled-avatar';
@@ -363,19 +362,17 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
                 />
                 <div className="w-full flex-1 flex flex-col min-w-0">
                     {preview ? (
-                        <Suspense>
-                            <MarkdownArea
-                                className="text-foreground mt-2"
-                                text={text}
-                                onImageClick={e => {
-                                    e.stopPropagation();
-                                    void imagePreviewer.setPayload({
-                                        type: 'open',
-                                        src: e.currentTarget.src,
-                                    });
-                                }}
-                            />
-                        </Suspense>
+                        <MarkdownArea
+                            className="text-foreground mt-2"
+                            text={text}
+                            onImageClick={e => {
+                                e.stopPropagation();
+                                void imagePreviewer.setPayload({
+                                    type: 'open',
+                                    src: e.currentTarget.src,
+                                });
+                            }}
+                        />
                     ) : (
                         <textarea
                             ref={postRef}

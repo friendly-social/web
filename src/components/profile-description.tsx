@@ -2,7 +2,7 @@ import {useImagePreviewerController} from '@/components/image-previewer';
 import {cn} from '@/lib/utils';
 import {useTranslations} from 'use-intl';
 import {ChevronDown, ChevronUp} from 'lucide-react';
-import {useEffect, useRef, useState, lazy, Suspense} from 'react';
+import {useEffect, useRef, useState, lazy} from 'react';
 
 const MarkdownArea = lazy(() =>
     import('@/components/ui/markdown-area').then(m => ({
@@ -27,23 +27,21 @@ export function ProfileDescription({description}: {description: string}) {
 
     return (
         <>
-            <Suspense>
-                <MarkdownArea
-                    className={cn(
-                        'text-muted-foreground wrap-break-word transition-all duration-300 ease-in-out',
-                        !expanded && 'line-clamp-4 sm:line-clamp-3',
-                    )}
-                    ref={descriptionRef}
-                    text={description}
-                    onImageClick={e => {
-                        e.stopPropagation();
-                        void imagePreviewer.setPayload({
-                            type: 'open',
-                            src: e.currentTarget.src,
-                        });
-                    }}
-                />
-            </Suspense>
+            <MarkdownArea
+                className={cn(
+                    'text-muted-foreground wrap-break-word transition-all duration-300 ease-in-out',
+                    !expanded && 'line-clamp-4 sm:line-clamp-3',
+                )}
+                ref={descriptionRef}
+                text={description}
+                onImageClick={e => {
+                    e.stopPropagation();
+                    void imagePreviewer.setPayload({
+                        type: 'open',
+                        src: e.currentTarget.src,
+                    });
+                }}
+            />
 
             {canExpand && (
                 <button

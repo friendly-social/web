@@ -14,7 +14,7 @@ import {
     AllFriendsList,
     useAllFriendsDialogController,
 } from '@/app/profile/all-friends-list';
-import {lazy, Suspense} from 'react';
+import {lazy} from 'react';
 
 const MarkdownArea = lazy(() =>
     import('@/components/ui/markdown-area').then(m => ({
@@ -169,18 +169,16 @@ export function FeedDialog({
 
                 <div className="break-words text-sm leading-6 text-foreground">
                     {selectedCard.details.description ? (
-                        <Suspense>
-                            <MarkdownArea
-                                text={selectedCard.details.description}
-                                onImageClick={e => {
-                                    e.stopPropagation();
-                                    void imagePreviewer.setPayload({
-                                        type: 'open',
-                                        src: e.currentTarget.src,
-                                    });
-                                }}
-                            />
-                        </Suspense>
+                        <MarkdownArea
+                            text={selectedCard.details.description}
+                            onImageClick={e => {
+                                e.stopPropagation();
+                                void imagePreviewer.setPayload({
+                                    type: 'open',
+                                    src: e.currentTarget.src,
+                                });
+                            }}
+                        />
                     ) : (
                         <p>{t('no_description')}</p>
                     )}
