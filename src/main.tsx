@@ -145,3 +145,10 @@ createRoot(document.getElementById('root')!).render(
         </AppRouterProvider>
     </StrictMode>,
 );
+
+function preloadEssentialComponents() {
+    void import('@/components/ui/markdown-area');
+    void import('@/components/ui/markdown-span');
+}
+
+void preloadEssentialComponents();
