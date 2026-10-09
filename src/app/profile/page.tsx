@@ -93,7 +93,7 @@ function ProfileHeader({logOut}: {logOut: () => void}) {
 
             <div
                 className={cn(
-                    'flex flex-1 flex-col items-center w-full',
+                    'flex flex-1 flex-col gap-1 items-center w-full',
                     'sm:items-start sm:min-w-0',
                 )}
             >
