@@ -2,7 +2,7 @@ import {useImagePreviewerController} from '@/components/image-previewer';
 import {normalizeLink} from '@/lib/utils';
 import {cn} from '@/lib/utils';
 import {useTranslations} from 'use-intl';
-import {ChevronDown, Link} from 'lucide-react';
+import {ChevronDown, Link, ChevronUp} from 'lucide-react';
 import {useEffect, useRef, useState, lazy} from 'react';
 
 const MarkdownArea = lazy(() =>
@@ -35,7 +35,21 @@ export function ProfileDescription({
     }, [description]);
 
     return (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 w-full">
+            {socialLink && (
+                <a
+                    href={normalizeLink(socialLink)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="self-center sm:w-full"
+                >
+                    <div className="text-sm gap-1 flex items-center text-primary cursor-pointer hover:underline">
+                        <Link className="h-[1em] w-[1em] inline" />
+                        {socialLink}
+                    </div>
+                </a>
+            )}
+
             <MarkdownArea
                 className={cn(
                     'text-muted-foreground wrap-break-word transition-all',
@@ -53,26 +67,22 @@ export function ProfileDescription({
                 }}
             />
 
-            {socialLink && expanded && (
-                <a
-                    href={normalizeLink(socialLink)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <div className="text-sm w-full gap-1 flex items-center text-primary cursor-pointer hover:underline mt-1">
-                        <Link className="h-[1em] w-[1em] inline" />
-                        {socialLink}
-                    </div>
-                </a>
-            )}
-
-            {canExpand && !expanded && (
+            {canExpand && (
                 <button
                     onClick={() => setExpanded(v => !v)}
                     className="mt-1 flex items-center gap-1 text-sm text-primary hover:underline cursor-pointer"
                 >
-                    <ChevronDown className="w-4 h-4" />
-                    {t('show-more')}
+                    {expanded ? (
+                        <>
+                            <ChevronUp className="w-4 h-4" />
+                            {t('show-less')}
+                        </>
+                    ) : (
+                        <>
+                            <ChevronDown className="w-4 h-4" />
+                            {t('show-more')}
+                        </>
+                    )}
                 </button>
             )}
         </div>

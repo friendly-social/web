@@ -71,8 +71,13 @@ function ProfileHeader({
                 />
             </div>
 
-            <div className="flex flex-1 flex-col gap-2 min-w-0 items-center sm:items-start">
-                <p className="font-bold text-xl sm:text-2xl text-foreground truncate">
+            <div
+                className={cn(
+                    'flex flex-1 flex-col gap-1 items-center w-full',
+                    'sm:items-start sm:min-w-0',
+                )}
+            >
+                <p className="font-bold text-xl sm:text-2xl text-foreground truncate md:w-full max-w-full">
                     {userDetails?.nickname}
                 </p>
 

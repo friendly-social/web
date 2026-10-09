@@ -93,11 +93,11 @@ function ProfileHeader({logOut}: {logOut: () => void}) {
 
             <div
                 className={cn(
-                    'flex flex-1 flex-col gap-2 items-center w-full',
+                    'flex flex-1 flex-col items-center w-full',
                     'sm:items-start sm:min-w-0',
                 )}
             >
-                <p className="font-bold text-xl sm:text-2xl text-foreground truncate w-full">
+                <p className="font-bold text-xl sm:text-2xl text-foreground truncate md:w-full max-w-full">
                     {userDetails?.nickname}
                 </p>
                 <ProfileDescription
