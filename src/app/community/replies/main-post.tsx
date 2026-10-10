@@ -508,7 +508,7 @@ function MainPostCardPlain({
                         </p>
                         <span
                             title={postTime.toLocaleString()}
-                            className="flex items-center gap-1 text-xs text-muted-foreground whitespace-nowrap"
+                            className="flex items-center gap-1 text-xs text-muted-foreground whitespace-nowrap shrink-0"
                         >
                             <Clock className="h-3 w-3" />
                             {formatTimeAgo(t, postTime)}

@@ -67,7 +67,7 @@ export function MainPostMenu({
         <>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Ellipsis />
+                    <Ellipsis className="h-[1.2em] w-[1.2em] shrink-0" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                     <DropdownMenuGroup>
