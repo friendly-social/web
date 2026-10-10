@@ -7,12 +7,12 @@ import {
 } from '@tanstack/react-query';
 import {useQueryClient} from '@tanstack/react-query';
 import {useAppContext} from '@/app.context';
-import {useMemo, useEffect, useState} from 'react';
+import {useEffect, useState} from 'react';
 import {get, set, del} from 'idb-keyval';
 import {ReactNode} from 'react';
 
 export function QueryProvider({children}: {children: React.ReactNode}) {
-    const client = useMemo(
+    const [client] = useState(
         () =>
             new QueryClient({
                 defaultOptions: {
@@ -28,7 +28,6 @@ export function QueryProvider({children}: {children: React.ReactNode}) {
                     },
                 },
             }),
-        [],
     );
 
     const [hydrated, setHydrated] = useState(false);
@@ -44,7 +43,7 @@ export function QueryProvider({children}: {children: React.ReactNode}) {
         return () => {
             abort.abort();
         };
-    });
+    }, []);
 
     if (!hydrated) return;
 
