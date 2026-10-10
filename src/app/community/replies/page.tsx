@@ -160,6 +160,8 @@ function ReplyContent({
     const postRef = useRef<HTMLDivElement>(null);
     const scrollableRef = useRef<HTMLDivElement>(null);
 
+    useScrollBottomAnchor(scrollableRef);
+
     useEffect(() => {
         let shouldBreak = false;
         void (async () => {
@@ -400,4 +402,30 @@ function ThreadContent({thread, popDepth}: ThreadContentProps) {
             />
         </>
     );
+}
+
+/**
+ * By default, element scroll is anchored to top. Which means, when keyboard
+ * hides on mobile, top stays pinned and what was under keyboard is shown.
+ * But for replies the opposite is required. Once user hides keyboard, current
+ * content should be anchored to bottom, and what is next on top should be shown
+ * instead.
+ */
+function useScrollBottomAnchor(ref: React.RefObject<HTMLDivElement | null>) {
+    useEffect(() => {
+        const element = ref.current;
+        if (!element) return;
+
+        let cachedHeight = element.clientHeight;
+
+        const onResize = () => {
+            element.scrollTop =
+                element.scrollTop + cachedHeight - element.clientHeight;
+            cachedHeight = element.clientHeight;
+        };
+        window.visualViewport?.addEventListener('resize', onResize);
+
+        return () =>
+            window.visualViewport?.removeEventListener('resize', onResize);
+    }, [ref]);
 }
