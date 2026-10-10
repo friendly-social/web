@@ -89,8 +89,10 @@ function CommunityPostCardPlain({
     useEffect(() => {
         const el = textRef.current;
         if (!el) return;
-        const check = () =>
-            setIsTruncated(el.scrollHeight - el.clientHeight > 1);
+        const lineHeight = parseFloat(getComputedStyle(el).lineHeight);
+        const check = () => {
+            setIsTruncated(el.scrollHeight - el.clientHeight > lineHeight / 2);
+        };
         check();
         const observer = new ResizeObserver(check);
         observer.observe(el);
