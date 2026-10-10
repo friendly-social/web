@@ -195,13 +195,18 @@ function UserPageGuarded({userId}: UserPageGuardedProps) {
     const userQuery = useQuery({
         queryKey: userKey,
         queryFn: async () => {
+            console.log('userPair start');
             const userPair = await storage.userAccessHashes.get(userId);
             const accessHash = userPair.accessHash;
+            console.log('result start');
             const result = await backend.getUserDetailsById2(
                 userId,
                 accessHash,
             );
-            return forceUnwrap(result);
+            console.log('forceUnwrap start');
+            const temp = forceUnwrap(result);
+            console.log('after forceUnwrap', result);
+            return temp;
         },
     });
 
