@@ -28,7 +28,7 @@ export function ImagePreviewer() {
                         e.stopPropagation();
                         void setPayload({type: 'close'});
                     }}
-                    className={cn('z-2 fixed left-0 top-0 right-0 bottom-0')}
+                    className={cn('z-3 fixed left-0 top-0 right-0 bottom-0')}
                 >
                     {payload.type === 'open' && <Content payload={payload} />}
                 </Dialog.Content>

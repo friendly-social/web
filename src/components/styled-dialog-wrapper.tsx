@@ -30,7 +30,7 @@ export function StyledDialogWrapper({
                         onInteractOutside: e => e.preventDefault(),
                     })}
                     className={cn(
-                        'z-2 fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
+                        'z-3 fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
                         'w-full max-h-dvh overflow-y-auto',
                         'sm:p-8 scrollbar-none box-border',
                         'sm:min-w-lg',
