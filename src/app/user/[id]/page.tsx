@@ -156,6 +156,8 @@ interface UserPageGuardedProps {
 }
 
 function UserPageGuarded({userId}: UserPageGuardedProps) {
+    'use no memo';
+
     const t = useTranslations('profile');
     const backend = useBackend();
     const storage = useFriendlyStorage();
@@ -202,6 +204,15 @@ function UserPageGuarded({userId}: UserPageGuardedProps) {
             return forceUnwrap(result);
         },
     });
+
+    useEffect(() => {
+        console.log(
+            'User statuses',
+            userQuery.isPending,
+            isDeclinePending,
+            isRequestPending,
+        );
+    }, [userQuery.isPending, isDeclinePending, isRequestPending]);
 
     let content;
 
