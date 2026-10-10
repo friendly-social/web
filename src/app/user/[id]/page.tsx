@@ -214,6 +214,14 @@ function UserPageGuarded({userId}: UserPageGuardedProps) {
         );
     }, [userQuery.isPending, isDeclinePending, isRequestPending]);
 
+    console.log(
+        'cache:',
+        queryClient.getQueryState(userKey)?.status,
+        'hook:',
+        userQuery.status,
+        userQuery.fetchStatus,
+    );
+
     let content;
 
     if (userQuery.isPending || isDeclinePending || isRequestPending) {
