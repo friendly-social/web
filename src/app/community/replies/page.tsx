@@ -419,8 +419,10 @@ function useScrollBottomAnchor(ref: React.RefObject<HTMLDivElement | null>) {
         let cachedHeight = element.clientHeight;
 
         const onResize = () => {
-            element.scrollTop =
-                element.scrollTop + cachedHeight - element.clientHeight;
+            const scrollToTop = element.clientHeight - cachedHeight;
+            if (scrollToTop > 0) {
+                element.scrollTop -= scrollToTop;
+            }
             cachedHeight = element.clientHeight;
         };
         window.visualViewport?.addEventListener('resize', onResize);
