@@ -1,10 +1,10 @@
 import {useMutation} from '@tanstack/react-query';
+import {useAppContext} from '@/app.context';
 import {openBlankShortcut} from '@/lib/open-blank-shortcut';
 import {useNavigationType, NavigationType} from 'react-router';
 import {useVirtualizer, VirtualItem} from '@tanstack/react-virtual';
 import {activity} from '@/services/activity-service';
 import {cn, createFileLink} from '@/lib/utils';
-import {useAppContext} from '@/app.context';
 import {communityPosts} from '@/services/community-posts-service';
 import {useNavigate} from 'react-router';
 import {useState, useEffect, ReactElement, useRef, useMemo, lazy} from 'react';
@@ -29,6 +29,8 @@ export function ActivityPage() {
     const t = useTranslations('activity');
     const app = useAppContext();
     const activityQuery = activity.useCachedQuery(app);
+
+    useAcknowledgeUnreads();
 
     if (activityQuery.isPending) {
         return (
@@ -439,4 +441,25 @@ function useOverscanAnimation(target: number): number {
         return () => window.clearTimeout(callback);
     }, [overscan]);
     return overscan;
+}
+
+function useAcknowledgeUnreads() {
+    const app = useAppContext();
+
+    const mutation = useMutation({
+        mutationKey: ['activityAcknowledgeUnreads'],
+        mutationFn: async () => {
+            app.queryClient.setQueryData(['activityNewUnreads'], {
+                type: 'none',
+            });
+            const result = await app.backend.activityAcknowledgeUnreads();
+            return forceUnwrap(result);
+        },
+    });
+
+    useEffect(() => {
+        if (!mutation.isPending) {
+            mutation.mutate();
+        }
+    }, []);
 }

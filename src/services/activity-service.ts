@@ -4,12 +4,16 @@ import {Resource} from '@/network/resource';
 import {forceUnwrap} from '@/network/result';
 import {
     useQuery,
+    useQueries,
     queryOptions,
     useInfiniteQuery,
     infiniteQueryOptions,
 } from '@tanstack/react-query';
 import {useState, useEffect} from 'react';
-import {ActivityId} from '@/network/friendly-client';
+import {
+    ActivityId,
+    ActivityNewUnreadsResponse,
+} from '@/network/friendly-client';
 import {ActivityDetails} from '@/network/friendly-client';
 import {communityPosts} from '@/services/community-posts-service';
 
@@ -93,12 +97,36 @@ async function setDetails(app: AppContext, values: ActivityDetails[]) {
         );
     await communityPosts.setPosts(app, replies);
     for (const value of values) {
-        app.queryClient.setQueryData(detailsOptions(value.id).queryKey, value);
+        app.queryClient.setQueryData(
+            detailsOptions(value.id).queryKey,
+            oldData => ({
+                ...value,
+                isRead: oldData?.isRead || value.isRead,
+            }),
+        );
     }
 }
 
 function useDetails(id: ActivityId): Resource<ActivityDetails> {
     const query = useQuery(detailsOptions(id));
+    return Resource.ofUseQuery(query);
+}
+
+function useManyDetails(ids: ActivityId[]): Resource<ActivityDetails>[] {
+    const queries = useQueries({
+        queries: ids.map(id => detailsOptions(id)),
+    });
+    return queries.map(query => Resource.ofUseQuery(query));
+}
+
+function useNewUnreads(app: AppContext): Resource<ActivityNewUnreadsResponse> {
+    const query = useQuery({
+        queryKey: ['activityNewUnreads'],
+        queryFn: async () => {
+            const result = await app.backend.activityNewUnreads();
+            return forceUnwrap(result);
+        },
+    });
     return Resource.ofUseQuery(query);
 }
 
@@ -108,4 +136,6 @@ export const activity = {
     detailsOptions,
     setDetails,
     useDetails,
+    useManyDetails,
+    useNewUnreads,
 };

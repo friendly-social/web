@@ -17,6 +17,7 @@ import {
     CommunityEditRequest,
     ActivityListRequest,
     ActivityListResponse,
+    ActivityNewUnreadsResponse,
     ActivityReadRequest,
     NetworkDetailsResponse,
     SendFriendRequest,
@@ -211,6 +212,16 @@ export class BackendService {
         request: ActivityListRequest,
     ): Promise<Result<ActivityListResponse, NetworkError>> {
         return this.client.activityList(request);
+    }
+
+    async activityNewUnreads(): Promise<
+        Result<ActivityNewUnreadsResponse, NetworkError>
+    > {
+        return this.client.activityNewUnreads();
+    }
+
+    async activityAcknowledgeUnreads(): Promise<Result<void, NetworkError>> {
+        return this.client.activityAcknowledgeUnreads();
     }
 
     async activityRead(

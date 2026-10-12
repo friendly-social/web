@@ -6,6 +6,8 @@ import {NetworkError} from '@/network/errors';
 import {backendConfig} from './backend-config';
 import {err, ok, Result} from './result';
 
+export const LATEST_COMPATIBLE = 2;
+
 export interface FriendlyClient {
     setAuthToken(token: string | null, userId: string | null): void;
     generateAccount(
@@ -82,6 +84,10 @@ export interface FriendlyClient {
     activityList(
         request: ActivityListRequest,
     ): Promise<Result<ActivityListResponse, NetworkError>>;
+    activityNewUnreads(): Promise<
+        Result<ActivityNewUnreadsResponse, NetworkError>
+    >;
+    activityAcknowledgeUnreads(): Promise<Result<void, NetworkError>>;
     activityRead(
         request: ActivityReadRequest,
     ): Promise<Result<void, NetworkError>>;
@@ -450,6 +456,24 @@ export class FriendlyClientImpl implements FriendlyClient {
         );
     }
 
+    activityNewUnreads(): Promise<
+        Result<ActivityNewUnreadsResponse, NetworkError>
+    > {
+        return this.safeRequest(
+            this.client
+                .get<ActivityNewUnreadsResponse>('/activity/unreads/new')
+                .then(r => r.data),
+        );
+    }
+
+    activityAcknowledgeUnreads(): Promise<Result<void, NetworkError>> {
+        return this.safeRequest(
+            this.client
+                .post('/activity/unreads/acknowledge')
+                .then(() => undefined),
+        );
+    }
+
     activityRead({
         id,
     }: ActivityReadRequest): Promise<Result<void, NetworkError>> {
@@ -619,6 +643,15 @@ export interface ActivityListResponse {
     data: ActivityDetails[];
     nextId: string | null;
 }
+
+export type ActivityNewUnreadsResponse =
+    | {
+          type: 'none';
+      }
+    | {
+          type: 'some';
+          activityId: ActivityId;
+      };
 
 export interface ActivityReadRequest {
     id: ActivityId;
