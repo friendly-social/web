@@ -3,7 +3,7 @@
     "version": "2026.3",
     "private": true,
     "type": "module",
-    "packageManager": "pnpm@12.10.1",
+    "packageManager": "pnpm@12.11.2",
     "scripts": {
         "dev": "vite",
         "compile": "tsc --pretty false --noErrorTruncation",

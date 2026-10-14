@@ -81,6 +81,10 @@ export interface FriendlyClient {
         id: CommunityPostId,
         request: CommunityEditRequest,
     ): Promise<Result<void, NetworkError>>;
+    communityView({
+        id,
+        accessHash,
+    }: CommunityViewRequest): Promise<Result<void, NetworkError>>;
     activityList(
         request: ActivityListRequest,
     ): Promise<Result<ActivityListResponse, NetworkError>>;
@@ -104,6 +108,7 @@ export class FriendlyClientImpl implements FriendlyClient {
             baseURL: this.baseUrl,
             headers: {
                 'Content-Type': 'application/json',
+                'X-Compatible': LATEST_COMPATIBLE,
             },
         });
     }
@@ -442,6 +447,17 @@ export class FriendlyClientImpl implements FriendlyClient {
         );
     }
 
+    communityView({
+        id,
+        accessHash,
+    }: CommunityViewRequest): Promise<Result<void, NetworkError>> {
+        return this.safeRequest(
+            this.client
+                .post(`/community/${id}/${accessHash}/view`)
+                .then(() => undefined),
+        );
+    }
+
     activityList({
         cursorId,
     }: ActivityListRequest): Promise<
@@ -635,6 +651,11 @@ export interface CommunityEditRequest {
     text: EditField<string>;
 }
 
+export interface CommunityViewRequest {
+    id: number;
+    accessHash: string;
+}
+
 export interface ActivityListRequest {
     cursorId: string | null;
 }
@@ -662,22 +683,16 @@ export interface CommunityPostDescriptor {
     accessHash: CommunityPostAccessHash;
 }
 
-export type CommunityPostDetails = {
-    id: CommunityPostId;
-    accessHash: CommunityPostAccessHash;
-    instant: string;
-    text?: string;
-    owner?: UserDetails;
-} & (
+export type CommunityPostDetails =
     | ({type: 'plain'} & CommunityPostDetailsPlain)
-    | ({type: 'deleted'} & CommunityPostDetailsDeleted)
-);
+    | ({type: 'deleted'} & CommunityPostDetailsDeleted);
 
 export interface CommunityPostDetailsPlain {
     id: CommunityPostId;
     accessHash: CommunityPostAccessHash;
     instant: string;
     replyPreviews: UserDetails[];
+    newReply: CommunityPostNewReply | null;
     text: string;
     owner: UserDetails;
     edited: boolean;
@@ -688,6 +703,12 @@ export interface CommunityPostDetailsDeleted {
     accessHash: CommunityPostAccessHash;
     instant: string;
     replyPreviews: UserDetails[];
+    newReply: CommunityPostNewReply | null;
+}
+
+export interface CommunityPostNewReply {
+    id: CommunityPostId;
+    transitive: boolean;
 }
 
 export type CommunityPostReply =

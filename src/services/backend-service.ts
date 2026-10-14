@@ -15,6 +15,7 @@ import {
     CommunityDetailsResponse,
     CommunityDeleteRequest,
     CommunityEditRequest,
+    CommunityViewRequest,
     ActivityListRequest,
     ActivityListResponse,
     ActivityNewUnreadsResponse,
@@ -206,6 +207,12 @@ export class BackendService {
         request: CommunityEditRequest,
     ): Promise<Result<void, NetworkError>> {
         return this.client.communityEdit(id, request);
+    }
+
+    communityView(
+        request: CommunityViewRequest,
+    ): Promise<Result<void, NetworkError>> {
+        return this.client.communityView(request);
     }
 
     async activityList(

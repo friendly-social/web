@@ -165,6 +165,16 @@ function ReplyContent({
     useEffect(() => {
         let shouldBreak = false;
         void (async () => {
+            await app.backend.communityView({...replyTo.post});
+            if (replyTo.post.newReply?.transitive === false) {
+                communityPosts.markAsViewed(app, replyTo.post.id);
+            }
+            for (const upstream of replyTo.upstream) {
+                if (upstream.newReply?.id === replyTo.post.id) {
+                    communityPosts.markAsViewed(app, upstream.id);
+                }
+            }
+            if (shouldBreak) return;
             const replies = replyTo.replies.data.flatMap(reply => {
                 switch (reply.type) {
                     case 'single':
@@ -242,7 +252,6 @@ function ReplyContent({
             <div className="flex flex-col">
                 {replyTo.upstream.length > 0 && (
                     <CommunityPostCard
-                        key={replyTo.upstream[0].id}
                         className={cn(
                             'bg-card rounded-tl-xl rounded-tr-xl',
                             'border-t border-l border-r border-border',

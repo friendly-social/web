@@ -128,7 +128,8 @@ function MenuBarItem(item: MenuBarItemProps) {
                         className={cn(
                             'absolute h-2 w-2 bg-primary rounded-full',
                             'bottom-1/2 right-1/2',
-                            'translate-x-[calc(50%+12px)] translate-y-[calc(50%-12px)]',
+                            'translate-x-[calc(50%+12px)]',
+                            'translate-y-[calc(50%-12px)]',
                         )}
                     />
                 )}
