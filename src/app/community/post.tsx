@@ -191,7 +191,7 @@ function CommunityPostCardPlain({
             </div>
             {!minimizeToolbar && (
                 <div className="flex items-center justify-end mt-2">
-                    {post.newReply !== null && (
+                    {post.newReply && (
                         <span
                             className={cn(
                                 'h-2 w-2 bg-primary rounded-full me-2.5',
