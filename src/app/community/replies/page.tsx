@@ -159,21 +159,14 @@ function ReplyContent({
     const upstreamRef = useRef<HTMLDivElement>(null);
     const postRef = useRef<HTMLDivElement>(null);
     const scrollableRef = useRef<HTMLDivElement>(null);
+    const view = communityPosts.useViewMutation(app, replyTo.post);
 
     useScrollBottomAnchor(scrollableRef);
 
     useEffect(() => {
         let shouldBreak = false;
         void (async () => {
-            await app.backend.communityView({...replyTo.post});
-            if (replyTo.post.newReply?.transitive === false) {
-                communityPosts.markAsViewed(app, replyTo.post.id);
-            }
-            for (const upstream of replyTo.upstream) {
-                if (upstream.newReply?.id === replyTo.post.id) {
-                    communityPosts.markAsViewed(app, upstream.id);
-                }
-            }
+            await view.mutateAsync();
             if (shouldBreak) return;
             const replies = replyTo.replies.data.flatMap(reply => {
                 switch (reply.type) {
@@ -201,7 +194,7 @@ function ReplyContent({
         return () => {
             shouldBreak = true;
         };
-    }, [replyTo]);
+    }, [replyTo.replies.data.length]);
 
     useEffect(() => {
         const upstream = upstreamRef.current;

@@ -30,7 +30,7 @@ export function ActivityPage() {
     const app = useAppContext();
     const activityQuery = activity.useCachedQuery(app);
 
-    useAcknowledgeUnreads();
+    useAcknowledgeUnreads(activityQuery.data?.pages?.[0]?.data?.[0]?.id);
 
     if (activityQuery.isPending) {
         return (
@@ -443,7 +443,7 @@ function useOverscanAnimation(target: number): number {
     return overscan;
 }
 
-function useAcknowledgeUnreads() {
+function useAcknowledgeUnreads(id: ActivityId | undefined) {
     const app = useAppContext();
 
     const mutation = useMutation({
@@ -461,5 +461,5 @@ function useAcknowledgeUnreads() {
         if (!mutation.isPending) {
             mutation.mutate();
         }
-    }, []);
+    }, [id]);
 }

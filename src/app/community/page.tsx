@@ -238,7 +238,7 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
                 owner: (await users.ensureCachedSelf(app)).user,
                 instant: new Date().toISOString(),
                 replyPreviews: [],
-                newReply: null,
+                newUnreadId: null,
                 edited: false,
             };
             await communityPosts.setDetails(app, [

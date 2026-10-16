@@ -81,10 +81,10 @@ export interface FriendlyClient {
         id: CommunityPostId,
         request: CommunityEditRequest,
     ): Promise<Result<void, NetworkError>>;
-    communityView({
+    communityRead({
         id,
         accessHash,
-    }: CommunityViewRequest): Promise<Result<void, NetworkError>>;
+    }: CommunityReadRequest): Promise<Result<void, NetworkError>>;
     activityList(
         request: ActivityListRequest,
     ): Promise<Result<ActivityListResponse, NetworkError>>;
@@ -447,13 +447,13 @@ export class FriendlyClientImpl implements FriendlyClient {
         );
     }
 
-    communityView({
+    communityRead({
         id,
         accessHash,
-    }: CommunityViewRequest): Promise<Result<void, NetworkError>> {
+    }: CommunityReadRequest): Promise<Result<void, NetworkError>> {
         return this.safeRequest(
             this.client
-                .post(`/community/${id}/${accessHash}/view`)
+                .post(`/community/${id}/${accessHash}/read`)
                 .then(() => undefined),
         );
     }
@@ -651,7 +651,7 @@ export interface CommunityEditRequest {
     text: EditField<string>;
 }
 
-export interface CommunityViewRequest {
+export interface CommunityReadRequest {
     id: number;
     accessHash: string;
 }
@@ -692,7 +692,7 @@ export interface CommunityPostDetailsPlain {
     accessHash: CommunityPostAccessHash;
     instant: string;
     replyPreviews: UserDetails[];
-    newReply: CommunityPostNewReply | null;
+    newUnreadId: CommunityPostId | null;
     text: string;
     owner: UserDetails;
     edited: boolean;
@@ -703,12 +703,7 @@ export interface CommunityPostDetailsDeleted {
     accessHash: CommunityPostAccessHash;
     instant: string;
     replyPreviews: UserDetails[];
-    newReply: CommunityPostNewReply | null;
-}
-
-export interface CommunityPostNewReply {
-    id: CommunityPostId;
-    transitive: boolean;
+    newUnreadId: CommunityPostId | null;
 }
 
 export type CommunityPostReply =

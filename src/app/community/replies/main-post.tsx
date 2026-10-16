@@ -633,7 +633,7 @@ function useDeleteMutation({details, popDepth}: UseDeleteMutationProps) {
                         accessHash: details.post.accessHash,
                         instant: details.post.instant,
                         replyPreviews: details.post.replyPreviews,
-                        newReply: details.post.newReply,
+                        newUnreadId: details.post.newUnreadId,
                     },
                 ]);
             }
@@ -704,7 +704,7 @@ function useCreateMutation({
                     ...post,
                     ...forceUnwrap(result),
                     replyPreviews: [],
-                    newReply: null,
+                    newUnreadId: null,
                     instant: new Date().toISOString(),
                     owner: (await users.ensureCachedSelf(app)).user,
                     edited: false,

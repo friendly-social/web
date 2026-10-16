@@ -3,11 +3,11 @@ import {Resource} from '@/network/resource';
 import {
     CommunityPostDescriptor,
     CommunityDetailsResponse,
-    CommunityPostNewReply,
 } from '@/network/friendly-client';
 import {forceUnwrap} from '@/network/result';
 import {
     useQuery,
+    useMutation,
     queryOptions,
     useInfiniteQuery,
     infiniteQueryOptions,
@@ -19,16 +19,6 @@ import {CommunityPostDetails} from '@/network/friendly-client';
 function postOptions(id: CommunityPostId) {
     return queryOptions<CommunityPostDetails>({
         queryKey: ['post', id],
-        queryFn: async () => {
-            throw new Error('Post is cache-only');
-        },
-        enabled: false,
-    });
-}
-
-function postViewedOptions(id: CommunityPostId) {
-    return queryOptions<CommunityPostId>({
-        queryKey: ['post', id, 'viewed'],
         queryFn: async () => {
             throw new Error('Post is cache-only');
         },
@@ -136,19 +126,26 @@ function saveDescriptors(
     return app.storage.communityPosts.save(descriptors);
 }
 
-function markAsViewed(app: AppContext, id: CommunityPostId) {
-    const post = app.queryClient.getQueryData(postOptions(id).queryKey);
-    if (!post) return;
-    app.queryClient.setQueryData(postOptions(id).queryKey, {
-        ...post,
-        newReply: null,
+function useViewMutation(app: AppContext, descriptor: CommunityPostDescriptor) {
+    const id = descriptor.id;
+    return useMutation({
+        mutationKey: ['communityPost', id, 'read'],
+        mutationFn: async () => {
+            await app.backend.communityRead(descriptor);
+            const post = app.queryClient.getQueryData(postOptions(id).queryKey);
+            if (!post) return;
+            app.queryClient.setQueryData(postOptions(id).queryKey, {
+                ...post,
+                newUnreadId: null,
+            });
+            void app.queryClient.invalidateQueries({
+                queryKey: postDetailsOptions(app, id).queryKey,
+            });
+            void app.queryClient.invalidateQueries({
+                queryKey: ['activityNewUnreads'],
+            });
+        },
     });
-    if (post.newReply !== null) {
-        app.queryClient.setQueryData(
-            postViewedOptions(id).queryKey,
-            post.newReply.id,
-        );
-    }
 }
 
 async function setDetails(app: AppContext, values: CommunityDetailsResponse[]) {
@@ -167,31 +164,8 @@ async function setDetails(app: AppContext, values: CommunityDetailsResponse[]) {
 async function setPosts(app: AppContext, values: CommunityPostDetails[]) {
     await app.storage.communityPosts.save(values);
     for (const value of values) {
-        app.queryClient.setQueryData(postOptions(value.id).queryKey, old => ({
-            ...value,
-            newReply: solveNewReplyConflict(app, old, value),
-        }));
+        app.queryClient.setQueryData(postOptions(value.id).queryKey, value);
     }
-}
-
-function solveNewReplyConflict(
-    app: AppContext,
-    old: CommunityPostDetails | undefined,
-    value: CommunityPostDetails,
-): CommunityPostNewReply | null {
-    if (!value.newReply) return null;
-    if (!old) return value.newReply;
-    if (old.newReply !== null) return value.newReply;
-
-    const oldViewedId = app.queryClient.getQueryData(
-        postViewedOptions(value.id).queryKey,
-    );
-    if (oldViewedId === value.newReply.id) {
-        // already viewed that reply
-        return null;
-    }
-
-    return value.newReply;
 }
 
 function useCachedQuery(app: AppContext) {
@@ -297,5 +271,5 @@ export const communityPosts = {
     invalidateDetails,
     prefetchDetails,
     prefetchList,
-    markAsViewed,
+    useViewMutation,
 };
