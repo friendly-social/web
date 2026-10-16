@@ -258,6 +258,7 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
         },
         onSuccess: () => {
             setText('');
+            setPreview(false);
             onPostCreated();
         },
         onError: error => {
