@@ -11,11 +11,12 @@ import {useState, useEffect, ReactElement, useRef, useMemo, lazy} from 'react';
 import {StyledAvatar} from '@/components/styled-avatar';
 import {forceUnwrap} from '@/network/result';
 import {Button} from '@/components/ui/button';
-import {Loader2, AlertCircle, Inbox, Clock} from 'lucide-react';
+import {Loader2, AlertCircle, Inbox, Clock, Radio} from 'lucide-react';
 import {useTranslations} from 'use-intl';
 import {
     ActivityDetails,
     ActivityDetailsReply,
+    ActivityDetailsIndirectReplies,
     ActivityId,
 } from '@/network/friendly-client';
 
@@ -100,6 +101,13 @@ function ActivityList({activity, onFetch, hasNext}: ActivityListProps) {
                 if (shouldBreak) break;
                 switch (item.type) {
                     case 'reply':
+                        await communityPosts.prefetchDetails(
+                            app,
+                            item.post.id,
+                            {staleTime: Infinity},
+                        );
+                        break;
+                    case 'indirect_replies':
                         await communityPosts.prefetchDetails(
                             app,
                             item.post.id,
@@ -232,6 +240,14 @@ function ActivityCard({id}: ActivityCardProps) {
                 />
             );
             break;
+        case 'indirect_replies':
+            content = (
+                <IndirectRepliesActivityCard
+                    details={details}
+                    beforeClick={beforeClick}
+                />
+            );
+            break;
     }
 
     return (
@@ -293,6 +309,78 @@ function ReplyActivityCard({details, beforeClick}: ReplyActivityCardProps) {
                 nickname={details.post.owner.nickname}
                 src={avatar}
             />
+            <span className="line-clamp-2 text-foreground break-words">
+                {text} "
+                <MarkdownSpan text={details.post.text} />"
+            </span>
+            <div className="flex-1" />
+            <span
+                title={details.instant.toLocaleString()}
+                className="flex items-center gap-1 text-sm text-muted-foreground whitespace-nowrap"
+            >
+                <Clock className="h-3 w-3" />
+                {formatTimeAgo(t, details.instant)}
+            </span>
+        </div>
+    );
+}
+
+export interface IndirectRepliesActivityCardProps {
+    details: ActivityDetailsIndirectReplies;
+    beforeClick: () => void;
+}
+
+function IndirectRepliesActivityCard({
+    details,
+    beforeClick,
+}: IndirectRepliesActivityCardProps) {
+    const t = useTranslations('activity');
+
+    const navigate = useNavigate();
+    const avatar = details.post.owner.avatar
+        ? createFileLink(details.post.owner.avatar)
+        : undefined;
+    const text = t('indirect_replies');
+
+    function navigateReplies(event: React.MouseEvent) {
+        openBlankShortcut(event, {
+            url: `/community/${details.post.id}/replies`,
+            onNavigate: url =>
+                void navigate(url, {
+                    state: {
+                        popDepth: 1,
+                    },
+                }),
+        });
+    }
+
+    return (
+        <div
+            className="flex gap-2 items-center m-4"
+            onClick={e => {
+                if (window.getSelection()?.isCollapsed === false) return;
+                beforeClick();
+                void navigateReplies(e);
+            }}
+            onAuxClick={e => {
+                beforeClick();
+                void navigateReplies(e);
+            }}
+        >
+            <span className="relative pb-2 pe-2">
+                <StyledAvatar
+                    avatarClassName="w-10 h-10"
+                    nickname={details.post.owner.nickname}
+                    src={avatar}
+                />
+                <Radio
+                    className={cn(
+                        'absolute bottom-0 right-0',
+                        'w-6 h-6 bg-card border border-muted-foreground',
+                        'rounded-full p-1',
+                    )}
+                />
+            </span>
             <span className="line-clamp-2 text-foreground break-words">
                 {text} "
                 <MarkdownSpan text={details.post.text} />"

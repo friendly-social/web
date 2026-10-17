@@ -201,6 +201,7 @@
         "empty-desc": "Recent activity will appear here",
         "load-more": "Load more",
         "reply": "Reply from <b>{nickname}</b>:",
+        "indirect_replies": "New activity under",
         "just_now": "Just now",
         "minutes_ago": "{count, plural, one {1 min} other {# mins}} ago",
         "hours_ago": "{count, plural, one {1 hour} other {# hours}} ago",

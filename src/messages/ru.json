@@ -202,6 +202,7 @@
         "empty-desc": "Скоро тут будет недавняя активность",
         "load-more": "Загрузить",
         "reply": "Ответ от <b>{nickname}</b>",
+        "indirect_replies": "Новые ответы под постом",
         "just_now": "Только что",
         "minutes_ago": "{count, plural, one {# минуту} few {# минуты} many {# минут} other {# минут}} назад",
         "hours_ago": "{count, plural, one {# час} few {# часа} many {# часов} other {# часов}} назад",

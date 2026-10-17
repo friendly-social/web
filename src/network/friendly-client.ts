@@ -720,7 +720,10 @@ export interface CommunityPostReplyThread {
 
 export type ActivityId = number & {readonly __brand: unique symbol};
 
-export type ActivityDetails = ActivityDetailsReply | ActivityDetailsUnknown;
+export type ActivityDetails =
+    | ActivityDetailsReply
+    | ActivityDetailsIndirectReplies
+    | ActivityDetailsUnknown;
 
 export interface ActivityDetailsReply {
     type: 'reply';
@@ -728,6 +731,15 @@ export interface ActivityDetailsReply {
     instant: string;
     isRead: boolean;
     post: CommunityPostDetailsPlain;
+}
+
+export interface ActivityDetailsIndirectReplies {
+    type: 'indirect_replies';
+    id: ActivityId;
+    instant: string;
+    isRead: boolean;
+    post: CommunityPostDetailsPlain;
+    newUnreadId: CommunityPostId;
 }
 
 export interface ActivityDetailsUnknown {
