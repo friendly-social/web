@@ -77,6 +77,15 @@ export class UserAccessHashesService {
     }
 
     async get(id: number): Promise<UserPair> {
+        const pair = await this.find(id);
+        if (!pair) {
+            throw new Error(`Can't get an user pair for id=${id}.`);
+        }
+        return pair;
+    }
+
+    // Same as get method, but resolves to undefined if there is no pair.
+    async find(id: number): Promise<UserPair | undefined> {
         if (typeof window === 'undefined') {
             return Promise.reject(
                 new Error('IndexedDB is only available in the browser.'),
@@ -94,10 +103,7 @@ export class UserAccessHashesService {
             };
             request.onsuccess = () => {
                 const pair = request.result as unknown;
-                if (!pair)
-                    return reject(
-                        new Error(`Can't get an user pair for id=${id}.`),
-                    );
+                if (!pair) return resolve(undefined);
                 if (!isUserPair(pair))
                     return reject(
                         new Error(`Can't get an user pair for id=${id}.`),

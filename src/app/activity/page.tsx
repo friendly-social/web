@@ -6,19 +6,40 @@ import {useVirtualizer, VirtualItem} from '@tanstack/react-virtual';
 import {activity} from '@/services/activity-service';
 import {cn, createFileLink} from '@/lib/utils';
 import {communityPosts} from '@/services/community-posts-service';
+import {users} from '@/services/users-service';
 import {useNavigate} from 'react-router';
-import {useState, useEffect, ReactElement, useRef, useMemo, lazy} from 'react';
+import {
+    useState,
+    useEffect,
+    ReactElement,
+    ReactNode,
+    useRef,
+    useMemo,
+    lazy,
+} from 'react';
 import {StyledAvatar} from '@/components/styled-avatar';
 import {forceUnwrap} from '@/network/result';
 import {Button} from '@/components/ui/button';
-import {Loader2, AlertCircle, Inbox, Clock, Radio, Reply} from 'lucide-react';
+import {
+    Loader2,
+    AlertCircle,
+    Inbox,
+    Clock,
+    Radio,
+    Reply,
+    UserCheck,
+    UserPlus,
+    LucideIcon,
+} from 'lucide-react';
 import {useTranslations} from 'use-intl';
 import {
     ActivityDetails,
     ActivityDetailsReply,
     ActivityDetailsIndirectReplies,
     ActivityId,
+    ActivityDetailsFriendRequest,
 } from '@/network/friendly-client';
+import {UserDetails} from '@/types/user-details';
 
 const MarkdownSpan = lazy(() =>
     import('@/components/ui/markdown-span').then(m => ({
@@ -113,6 +134,11 @@ function ActivityList({activity, onFetch, hasNext}: ActivityListProps) {
                             item.post.id,
                             {staleTime: Infinity},
                         );
+                        break;
+                    case 'friend_request':
+                        await users.prefetchDetails(app, item.from.id, {
+                            staleTime: Infinity,
+                        });
                         break;
                     default:
                         item satisfies never;
@@ -248,6 +274,14 @@ function ActivityCard({id}: ActivityCardProps) {
                 />
             );
             break;
+        case 'friend_request':
+            content = (
+                <FriendRequestActivityCard
+                    details={details}
+                    beforeClick={beforeClick}
+                />
+            );
+            break;
     }
 
     return (
@@ -262,30 +296,36 @@ function ActivityCard({id}: ActivityCardProps) {
     );
 }
 
-export interface ReplyActivityCardProps {
-    details: ActivityDetailsReply;
+interface ActivityCardTemplateProps {
+    user: UserDetails;
+    icon: LucideIcon;
+    text: ReactNode;
+    instant: string;
+    url: string;
     beforeClick: () => void;
 }
 
-function ReplyActivityCard({details, beforeClick}: ReplyActivityCardProps) {
+function ActivityCardTemplate({
+    user,
+    icon: Icon,
+    text,
+    instant,
+    url,
+    beforeClick,
+}: ActivityCardTemplateProps) {
     const t = useTranslations('activity');
 
     const navigate = useNavigate();
-    const avatar = details.post.owner.avatar
-        ? createFileLink(details.post.owner.avatar)
-        : undefined;
-    const text = t.rich('reply', {
-        nickname: details.post.owner.nickname,
-        b: text => <strong>{text}</strong>,
-    });
+    const avatar = user.avatar ? createFileLink(user.avatar) : undefined;
 
-    function navigateReplies(event: React.MouseEvent) {
+    function navigateUrl(event: React.MouseEvent) {
         openBlankShortcut(event, {
-            url: `/community/${details.post.id}/replies`,
+            url,
             onNavigate: url =>
                 void navigate(url, {
                     state: {
                         popDepth: 1,
+                        from: '/activity',
                     },
                 }),
         });
@@ -297,20 +337,20 @@ function ReplyActivityCard({details, beforeClick}: ReplyActivityCardProps) {
             onClick={e => {
                 if (window.getSelection()?.isCollapsed === false) return;
                 beforeClick();
-                void navigateReplies(e);
+                navigateUrl(e);
             }}
             onAuxClick={e => {
                 beforeClick();
-                void navigateReplies(e);
+                navigateUrl(e);
             }}
         >
             <span className="relative pb-2 pe-2">
                 <StyledAvatar
                     avatarClassName="w-10 h-10"
-                    nickname={details.post.owner.nickname}
+                    nickname={user.nickname}
                     src={avatar}
                 />
-                <Reply
+                <Icon
                     className={cn(
                         'absolute bottom-0 right-0',
                         'w-6 h-6 bg-card border border-muted-foreground',
@@ -319,18 +359,47 @@ function ReplyActivityCard({details, beforeClick}: ReplyActivityCardProps) {
                 />
             </span>
             <span className="line-clamp-2 text-foreground break-words">
-                {text} "
-                <MarkdownSpan text={details.post.text} />"
+                {text}
             </span>
             <div className="flex-1" />
             <span
-                title={details.instant.toLocaleString()}
+                title={instant.toLocaleString()}
                 className="flex items-center gap-1 text-sm text-muted-foreground whitespace-nowrap"
             >
                 <Clock className="h-3 w-3" />
-                {formatTimeAgo(t, details.instant)}
+                {formatTimeAgo(t, instant)}
             </span>
         </div>
+    );
+}
+
+export interface ReplyActivityCardProps {
+    details: ActivityDetailsReply;
+    beforeClick: () => void;
+}
+
+function ReplyActivityCard({details, beforeClick}: ReplyActivityCardProps) {
+    const t = useTranslations('activity');
+
+    const text = t.rich('reply', {
+        nickname: details.post.owner.nickname,
+        b: text => <strong>{text}</strong>,
+    });
+
+    return (
+        <ActivityCardTemplate
+            user={details.post.owner}
+            icon={Reply}
+            text={
+                <>
+                    {text} "
+                    <MarkdownSpan text={details.post.text} />"
+                </>
+            }
+            instant={details.instant}
+            url={`/community/${details.post.id}/replies`}
+            beforeClick={beforeClick}
+        />
     );
 }
 
@@ -345,64 +414,54 @@ function IndirectRepliesActivityCard({
 }: IndirectRepliesActivityCardProps) {
     const t = useTranslations('activity');
 
-    const navigate = useNavigate();
-    const avatar = details.post.owner.avatar
-        ? createFileLink(details.post.owner.avatar)
-        : undefined;
     const text = t('indirect_replies');
 
-    function navigateReplies(event: React.MouseEvent) {
-        openBlankShortcut(event, {
-            url: `/community/${details.post.id}/replies`,
-            onNavigate: url =>
-                void navigate(url, {
-                    state: {
-                        popDepth: 1,
-                    },
-                }),
-        });
-    }
+    return (
+        <ActivityCardTemplate
+            user={details.post.owner}
+            icon={Radio}
+            text={
+                <>
+                    {text} "
+                    <MarkdownSpan text={details.post.text} />"
+                </>
+            }
+            instant={details.instant}
+            url={`/community/${details.post.id}/replies`}
+            beforeClick={beforeClick}
+        />
+    );
+}
+
+export interface FriendRequestActivityCardProps {
+    details: ActivityDetailsFriendRequest;
+    beforeClick: () => void;
+}
+
+function FriendRequestActivityCard({
+    details,
+    beforeClick,
+}: FriendRequestActivityCardProps) {
+    const t = useTranslations('activity.friend_request');
+
+    const text = t.rich(details.isComplete ? 'isAccept' : 'isNew', {
+        nickname: details.from.nickname,
+        b: text => <strong>{text}</strong>,
+    });
 
     return (
-        <div
-            className="flex gap-2 items-center m-4"
-            onClick={e => {
-                if (window.getSelection()?.isCollapsed === false) return;
-                beforeClick();
-                void navigateReplies(e);
-            }}
-            onAuxClick={e => {
-                beforeClick();
-                void navigateReplies(e);
-            }}
-        >
-            <span className="relative pb-2 pe-2">
-                <StyledAvatar
-                    avatarClassName="w-10 h-10"
-                    nickname={details.post.owner.nickname}
-                    src={avatar}
-                />
-                <Radio
-                    className={cn(
-                        'absolute bottom-0 right-0',
-                        'w-6 h-6 bg-card border border-muted-foreground',
-                        'rounded-full p-1',
-                    )}
-                />
-            </span>
-            <span className="line-clamp-2 text-foreground break-words">
-                {text} "
-                <MarkdownSpan text={details.post.text} />"
-            </span>
-            <div className="flex-1" />
-            <span
-                title={details.instant.toLocaleString()}
-                className="flex items-center gap-1 text-sm text-muted-foreground whitespace-nowrap"
-            >
-                <Clock className="h-3 w-3" />
-                {formatTimeAgo(t, details.instant)}
-            </span>
-        </div>
+        <ActivityCardTemplate
+            user={details.from}
+            icon={details.isComplete ? UserCheck : UserPlus}
+            text={text}
+            instant={details.instant}
+            url={
+                details.isComplete
+                    ? `/user/${details.from.id}`
+                    : `/feed/${details.from.id}`
+            }
+            beforeClick={beforeClick}
+        />
     );
 }
 

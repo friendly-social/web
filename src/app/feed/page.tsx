@@ -3,14 +3,13 @@ import {useQueryClient} from '@tanstack/react-query';
 import {forceUnwrap} from '@/network/result';
 import {Button} from '@/components/ui/button';
 import {FeedItem} from '@/network/friendly-client';
-import {Activity, BookUser, Loader2, X, Check, Heart} from 'lucide-react';
+import {Activity, BookUser, Loader2} from 'lucide-react';
 import {useCallback, useState} from 'react';
 import {useTranslations} from 'use-intl';
-import {FeedDialog} from '@/app/feed/feed-dialog';
+import {FeedCard} from '@/app/feed/feed-card';
 import {useBackend} from '@/backend.context';
 import {useQuery} from '@tanstack/react-query';
 import {toast} from 'sonner';
-import {cn} from '@/lib/utils';
 
 export type SwipeDirection = 'left' | 'right';
 
@@ -128,51 +127,10 @@ export default function FeedPage() {
     }
 
     return (
-        <div className={cn('w-full h-full flex flex-row justify-center')}>
-            <div
-                className={cn(
-                    'h-full w-full sm:w-fit flex overflow-y-auto scrollbar-none sm:py-4',
-                )}
-            >
-                <div
-                    className={cn(
-                        'my-auto',
-                        'w-full shrink-0 sm:w-90 md:w-100',
-                        'sm:rounded-2xl sm:border sm:border-border bg-card',
-                    )}
-                >
-                    {selectedCard && (
-                        <FeedDialog
-                            selectedCard={selectedCard}
-                            loading={loading}
-                            handleReview={direction =>
-                                void handleReview(direction)
-                            }
-                        />
-                    )}
-                </div>
-            </div>
-            <div className="sm:flex flex-col hidden ms-4 self-center gap-2">
-                <Button
-                    className="h-15 w-15 cursor-pointer rounded-full"
-                    disabled={loading}
-                    onClick={() => void handleReview('right')}
-                >
-                    {selectedCard.isRequest ? (
-                        <Check className="h-8 w-8" />
-                    ) : (
-                        <Heart className="h-8 w-8" />
-                    )}
-                </Button>
-                <Button
-                    variant="outline"
-                    className="h-15 w-15 cursor-pointer rounded-full"
-                    disabled={loading}
-                    onClick={() => void handleReview('left')}
-                >
-                    <X className="h-8 w-8" />
-                </Button>
-            </div>
-        </div>
+        <FeedCard
+            selectedCard={selectedCard}
+            loading={loading}
+            handleReview={direction => void handleReview(direction)}
+        />
     );
 }

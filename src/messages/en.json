@@ -202,6 +202,10 @@
         "load-more": "Load more",
         "reply": "Reply from <b>{nickname}</b>:",
         "indirect_replies": "New activity under",
+        "friend_request": {
+            "isAccept": "<b>{nickname}</b> is now your friend",
+            "isNew": "New friend request from <b>{nickname}</b>"
+        },
         "just_now": "Just now",
         "minutes_ago": "{count, plural, one {1 min} other {# mins}} ago",
         "hours_ago": "{count, plural, one {1 hour} other {# hours}} ago",

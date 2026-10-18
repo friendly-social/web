@@ -96,6 +96,13 @@ async function setDetails(app: AppContext, values: ActivityDetails[]) {
                 ({type: 'plain', ...value.post}) satisfies CommunityPostDetails,
         );
     await communityPosts.setPosts(app, replies);
+    const friendRequestUsers = values
+        .filter(value => value.type === 'friend_request')
+        .map(value => ({
+            id: value.from.id,
+            accessHash: value.from.accessHash,
+        }));
+    await app.storage.userAccessHashes.save(friendRequestUsers);
     for (const value of values) {
         app.queryClient.setQueryData(
             detailsOptions(value.id).queryKey,

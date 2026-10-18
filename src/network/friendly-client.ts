@@ -723,6 +723,7 @@ export type ActivityId = number & {readonly __brand: unique symbol};
 export type ActivityDetails =
     | ActivityDetailsReply
     | ActivityDetailsIndirectReplies
+    | ActivityDetailsFriendRequest
     | ActivityDetailsUnknown;
 
 export interface ActivityDetailsReply {
@@ -740,6 +741,15 @@ export interface ActivityDetailsIndirectReplies {
     isRead: boolean;
     post: CommunityPostDetailsPlain;
     newUnreadId: CommunityPostId;
+}
+
+export interface ActivityDetailsFriendRequest {
+    type: 'friend_request';
+    id: ActivityId;
+    instant: string;
+    isRead: boolean
+    from: UserDetails;
+    isComplete: boolean;
 }
 
 export interface ActivityDetailsUnknown {

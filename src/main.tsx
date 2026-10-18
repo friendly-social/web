@@ -21,6 +21,7 @@ import {ProfilePage} from '@/app/profile/page';
 import {RootLayout} from '@/app/layout';
 import {createBrowserRouter, RouterProvider} from 'react-router';
 import FeedPage from '@/app/feed/page';
+import FeedUserPage from '@/app/feed/[id]/page';
 import RouteErrorScreen from '@/route-errorscreen';
 import IntlProvider from '@/components/intl-provider';
 import {AppContext} from '@/app.context';
@@ -107,6 +108,10 @@ const router = createBrowserRouter([
                     {
                         path: 'feed',
                         Component: FeedPage,
+                    },
+                    {
+                        path: 'feed/:id',
+                        Component: FeedUserPage,
                     },
                 ],
             },

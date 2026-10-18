@@ -3,7 +3,8 @@ import {UserDetailsResponse} from '@/network/friendly-client';
 import {useEffect} from 'react';
 import {useQuery, queryOptions} from '@tanstack/react-query';
 import {AppContext} from '@/app.context';
-import {forceUnwrap} from '@/network/result';
+import {err, forceUnwrap} from '@/network/result';
+import {isRetryable, NetworkError} from '@/network/errors';
 import {useSession} from '@/components/session-provider';
 
 function selfOptions(app: AppContext) {
@@ -13,6 +14,41 @@ function selfOptions(app: AppContext) {
             const result = await app.backend.getUserDetails2();
             return forceUnwrap(result);
         },
+    });
+}
+
+function userOptions(app: AppContext, id: number) {
+    return queryOptions({
+        queryKey: ['user', id],
+        queryFn: async () => {
+            const userPair = await app.storage.userAccessHashes.find(id);
+            if (!userPair) {
+                return forceUnwrap(
+                    err({type: 'status', status: 404} satisfies NetworkError),
+                );
+            }
+            const result = await app.backend.getUserDetailsById2(
+                id,
+                userPair.accessHash,
+            );
+            return forceUnwrap(result);
+        },
+        retry: (_failureCount, error) => isRetryable(error),
+    });
+}
+
+export interface PrefetchDetailsOptions {
+    staleTime: number;
+}
+
+function prefetchDetails(
+    app: AppContext,
+    id: number,
+    options?: PrefetchDetailsOptions,
+): Promise<void> {
+    return app.queryClient.prefetchQuery({
+        ...userOptions(app, id),
+        ...options,
     });
 }
 
@@ -56,6 +92,8 @@ function useSelf(app: AppContext): Resource<UserDetailsResponse> {
 }
 
 export const users = {
+    userOptions,
+    prefetchDetails,
     use,
     self,
     setSelf,

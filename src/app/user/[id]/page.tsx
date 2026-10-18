@@ -3,10 +3,10 @@ import {useScaffoldContext} from '@/app/scaffold';
 import {useAppRouter} from '@/components/app-router-provider';
 import {useBackend} from '@/backend.context';
 import * as authService from '@/services/auth-service';
+import {users} from '@/services/users-service';
 import {useAppContext} from '@/app.context';
 import {useQueryClient} from '@tanstack/react-query';
 import {FriendsBlock} from './friends-block';
-import {forceUnwrap} from '@/network/result';
 import {cn} from '@/lib/utils';
 import {createFileLink} from '@/lib/utils';
 import {useMutation, useQuery} from '@tanstack/react-query';
@@ -159,11 +159,12 @@ function UserPageGuarded({userId}: UserPageGuardedProps) {
     'use no memo';
 
     const t = useTranslations('profile');
+    const app = useAppContext();
     const backend = useBackend();
     const storage = useFriendlyStorage();
     const queryClient = useQueryClient();
 
-    const userKey = ['user', userId];
+    const userKey = users.userOptions(app, userId).queryKey;
 
     const {mutate: declineFriend, isPending: isDeclinePending} = useMutation({
         mutationFn: async () => {
@@ -192,18 +193,7 @@ function UserPageGuarded({userId}: UserPageGuardedProps) {
             }),
     });
 
-    const userQuery = useQuery({
-        queryKey: userKey,
-        queryFn: async () => {
-            const userPair = await storage.userAccessHashes.get(userId);
-            const accessHash = userPair.accessHash;
-            const result = await backend.getUserDetailsById2(
-                userId,
-                accessHash,
-            );
-            return forceUnwrap(result);
-        },
-    });
+    const userQuery = useQuery(users.userOptions(app, userId));
 
     let content;
 
