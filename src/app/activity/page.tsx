@@ -110,7 +110,7 @@ function ActivityList({activity, onFetch, hasNext}: ActivityListProps) {
                     case 'indirect_replies':
                         await communityPosts.prefetchDetails(
                             app,
-                            item.post.id,
+                            item.commonDenominator.id,
                             {staleTime: Infinity},
                         );
                         break;
@@ -353,7 +353,7 @@ function IndirectRepliesActivityCard({
 
     function navigateReplies(event: React.MouseEvent) {
         openBlankShortcut(event, {
-            url: `/community/${details.post.id}/replies`,
+            url: `/community/${details.commonDenominator.id}/replies`,
             onNavigate: url =>
                 void navigate(url, {
                     state: {

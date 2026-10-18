@@ -1,5 +1,4 @@
 import {AppContext} from '@/app.context';
-import {CommunityPostDetails} from '@/network/friendly-client';
 import {Resource} from '@/network/resource';
 import {forceUnwrap} from '@/network/result';
 import {
@@ -89,13 +88,24 @@ function detailsOptions(id: ActivityId) {
 }
 
 async function setDetails(app: AppContext, values: ActivityDetails[]) {
-    const replies = values
-        .filter(value => value.type === 'reply')
-        .map(
-            value =>
-                ({type: 'plain', ...value.post}) satisfies CommunityPostDetails,
-        );
-    await communityPosts.setPosts(app, replies);
+    const posts = values
+        .map(value => {
+            switch (value.type) {
+                case 'reply':
+                    return [{type: 'plain' as const, ...value.post}];
+                case 'indirect_replies':
+                    return [
+                        {type: 'plain' as const, ...value.post},
+                        value.commonDenominator,
+                    ];
+                default:
+                    value satisfies never;
+                    return null;
+            }
+        })
+        .filter(value => value !== null)
+        .flat();
+    await communityPosts.setPosts(app, posts);
     for (const value of values) {
         app.queryClient.setQueryData(
             detailsOptions(value.id).queryKey,

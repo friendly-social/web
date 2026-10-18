@@ -740,6 +740,7 @@ export interface ActivityDetailsIndirectReplies {
     isRead: boolean;
     post: CommunityPostDetailsPlain;
     newUnreadId: CommunityPostId;
+    commonDenominator: CommunityPostDetails;
 }
 
 export interface ActivityDetailsUnknown {

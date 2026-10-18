@@ -37,7 +37,7 @@ export function QueryProvider({children}: {children: React.ReactNode}) {
         void runCustomPersister({
             client,
             setHydrated: () => setHydrated(true),
-            buster: '5',
+            buster: '6',
             abort: abort.signal,
         });
         return () => {
