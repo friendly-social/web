@@ -11,7 +11,7 @@ import {useState, useEffect, ReactElement, useRef, useMemo, lazy} from 'react';
 import {StyledAvatar} from '@/components/styled-avatar';
 import {forceUnwrap} from '@/network/result';
 import {Button} from '@/components/ui/button';
-import {Loader2, AlertCircle, Inbox, Clock, Radio} from 'lucide-react';
+import {Loader2, AlertCircle, Inbox, Clock, Radio, Reply} from 'lucide-react';
 import {useTranslations} from 'use-intl';
 import {
     ActivityDetails,
@@ -304,11 +304,20 @@ function ReplyActivityCard({details, beforeClick}: ReplyActivityCardProps) {
                 void navigateReplies(e);
             }}
         >
-            <StyledAvatar
-                avatarClassName="w-10 h-10"
-                nickname={details.post.owner.nickname}
-                src={avatar}
-            />
+            <span className="relative pb-2 pe-2">
+                <StyledAvatar
+                    avatarClassName="w-10 h-10"
+                    nickname={details.post.owner.nickname}
+                    src={avatar}
+                />
+                <Reply
+                    className={cn(
+                        'absolute bottom-0 right-0',
+                        'w-6 h-6 bg-card border border-muted-foreground',
+                        'rounded-full p-1',
+                    )}
+                />
+            </span>
             <span className="line-clamp-2 text-foreground break-words">
                 {text} "
                 <MarkdownSpan text={details.post.text} />"
