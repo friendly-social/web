@@ -157,7 +157,12 @@ function ActivityList({activity, onFetch, hasNext}: ActivityListProps) {
                 ...activity.map(details => {
                     return {
                         key: details.id.toString(),
-                        Component: <ActivityCard id={details.id} />,
+                        Component: (
+                            <ActivityCard
+                                id={details.id}
+                                timeGroup={timeGroup as TimeGroup}
+                            />
+                        ),
                     };
                 }),
             ];
@@ -201,9 +206,10 @@ function TimeGroupHeading({timeGroup}: TimeGroupHeadingProps) {
 
 interface ActivityCardProps {
     id: ActivityId;
+    timeGroup: TimeGroup;
 }
 
-function ActivityCard({id}: ActivityCardProps) {
+function ActivityCard({id, timeGroup}: ActivityCardProps) {
     const app = useAppContext();
 
     const details = activity.useDetails(id).data;
@@ -236,6 +242,7 @@ function ActivityCard({id}: ActivityCardProps) {
             content = (
                 <ReplyActivityCard
                     details={details}
+                    timeGroup={timeGroup}
                     beforeClick={beforeClick}
                 />
             );
@@ -244,6 +251,7 @@ function ActivityCard({id}: ActivityCardProps) {
             content = (
                 <IndirectRepliesActivityCard
                     details={details}
+                    timeGroup={timeGroup}
                     beforeClick={beforeClick}
                 />
             );
@@ -264,10 +272,15 @@ function ActivityCard({id}: ActivityCardProps) {
 
 export interface ReplyActivityCardProps {
     details: ActivityDetailsReply;
+    timeGroup: TimeGroup;
     beforeClick: () => void;
 }
 
-function ReplyActivityCard({details, beforeClick}: ReplyActivityCardProps) {
+function ReplyActivityCard({
+    details,
+    timeGroup,
+    beforeClick,
+}: ReplyActivityCardProps) {
     const t = useTranslations('activity');
 
     const navigate = useNavigate();
@@ -325,7 +338,11 @@ function ReplyActivityCard({details, beforeClick}: ReplyActivityCardProps) {
             <div className="flex-1" />
             <span
                 title={details.instant.toLocaleString()}
-                className="flex items-center gap-1 text-sm text-muted-foreground whitespace-nowrap"
+                className={cn(
+                    'flex items-center gap-1 text-sm text-muted-foreground',
+                    'whitespace-nowrap',
+                    timeGroup !== 'older' && 'hidden sm:inline-flex',
+                )}
             >
                 <Clock className="h-3 w-3" />
                 {formatTimeAgo(t, details.instant)}
@@ -336,11 +353,13 @@ function ReplyActivityCard({details, beforeClick}: ReplyActivityCardProps) {
 
 export interface IndirectRepliesActivityCardProps {
     details: ActivityDetailsIndirectReplies;
+    timeGroup: TimeGroup;
     beforeClick: () => void;
 }
 
 function IndirectRepliesActivityCard({
     details,
+    timeGroup,
     beforeClick,
 }: IndirectRepliesActivityCardProps) {
     const t = useTranslations('activity');
@@ -397,7 +416,11 @@ function IndirectRepliesActivityCard({
             <div className="flex-1" />
             <span
                 title={details.instant.toLocaleString()}
-                className="flex items-center gap-1 text-sm text-muted-foreground whitespace-nowrap"
+                className={cn(
+                    'flex items-center gap-1 text-sm text-muted-foreground',
+                    'whitespace-nowrap',
+                    timeGroup !== 'older' && 'hidden sm:inline-flex',
+                )}
             >
                 <Clock className="h-3 w-3" />
                 {formatTimeAgo(t, details.instant)}
