@@ -4,6 +4,7 @@ import {openBlankShortcut} from '@/lib/open-blank-shortcut';
 import {useNavigationType, NavigationType} from 'react-router';
 import {useVirtualizer, VirtualItem} from '@tanstack/react-virtual';
 import {activity} from '@/services/activity-service';
+import {users} from '@/services/users-service';
 import {cn, createFileLink} from '@/lib/utils';
 import {communityPosts} from '@/services/community-posts-service';
 import {useNavigate} from 'react-router';
@@ -11,11 +12,20 @@ import {useState, useEffect, ReactElement, useRef, useMemo, lazy} from 'react';
 import {StyledAvatar} from '@/components/styled-avatar';
 import {forceUnwrap} from '@/network/result';
 import {Button} from '@/components/ui/button';
-import {Loader2, AlertCircle, Inbox, Clock, Radio, Reply} from 'lucide-react';
+import {
+    Loader2,
+    AlertCircle,
+    Inbox,
+    Clock,
+    Radio,
+    User,
+    Reply,
+} from 'lucide-react';
 import {useTranslations} from 'use-intl';
 import {
     ActivityDetails,
-    ActivityDetailsReply,
+    ActivityDetailsNewReply,
+    ActivityDetailsNewRequest,
     ActivityDetailsIndirectReplies,
     ActivityId,
 } from '@/network/friendly-client';
@@ -113,6 +123,9 @@ function ActivityList({activity, onFetch, hasNext}: ActivityListProps) {
                             item.commonDenominator.id,
                             {staleTime: Infinity},
                         );
+                        break;
+                    case 'new_request':
+                        await users.prefetchDetails(app, item.from.id);
                         break;
                     default:
                         item satisfies never;
@@ -256,6 +269,15 @@ function ActivityCard({id, timeGroup}: ActivityCardProps) {
                 />
             );
             break;
+        case 'new_request':
+            content = (
+                <NewRequestActivityCard
+                    details={details}
+                    timeGroup={timeGroup}
+                    beforeClick={beforeClick}
+                />
+            );
+            break;
     }
 
     return (
@@ -271,7 +293,7 @@ function ActivityCard({id, timeGroup}: ActivityCardProps) {
 }
 
 export interface ReplyActivityCardProps {
-    details: ActivityDetailsReply;
+    details: ActivityDetailsNewReply;
     timeGroup: TimeGroup;
     beforeClick: () => void;
 }
@@ -412,6 +434,86 @@ function IndirectRepliesActivityCard({
             <span className="line-clamp-2 text-foreground break-words">
                 {text} "
                 <MarkdownSpan text={details.post.text} />"
+            </span>
+            <div className="flex-1" />
+            <span
+                title={details.instant.toLocaleString()}
+                className={cn(
+                    'flex items-center gap-1 text-sm text-muted-foreground',
+                    'whitespace-nowrap',
+                    timeGroup !== 'older' && 'hidden sm:inline-flex',
+                )}
+            >
+                <Clock className="h-3 w-3" />
+                {formatTimeAgo(t, details.instant)}
+            </span>
+        </div>
+    );
+}
+
+export interface NewRequestActivityCardProps {
+    details: ActivityDetailsNewRequest;
+    timeGroup: TimeGroup;
+    beforeClick: () => void;
+}
+
+function NewRequestActivityCard({
+    details,
+    timeGroup,
+    beforeClick,
+}: NewRequestActivityCardProps) {
+    const t = useTranslations('activity');
+
+    const navigate = useNavigate();
+    const avatar = details.from.avatar
+        ? createFileLink(details.from.avatar)
+        : undefined;
+    const text = t.rich(details.isMutual ? 'new-friend' : 'new-request', {
+        nickname: details.from.nickname,
+        b: text => <strong>{text}</strong>,
+    });
+
+    function navigateProfile(event: React.MouseEvent) {
+        openBlankShortcut(event, {
+            url: `/user/${details.from.id}`,
+            onNavigate: url =>
+                void navigate(url, {
+                    state: {
+                        popDepth: 1,
+                    },
+                }),
+        });
+    }
+
+    return (
+        <div
+            className="flex gap-2 items-center m-4"
+            onClick={e => {
+                if (window.getSelection()?.isCollapsed === false) return;
+                beforeClick();
+                navigateProfile(e);
+            }}
+            onAuxClick={e => {
+                beforeClick();
+                navigateProfile(e);
+            }}
+        >
+            <span className="relative pb-2 pe-2">
+                <StyledAvatar
+                    avatarClassName="w-10 h-10"
+                    nickname={details.from.nickname}
+                    src={avatar}
+                />
+                <User
+                    className={cn(
+                        'absolute bottom-0 right-0',
+                        'w-6 h-6 bg-card border border-muted-foreground',
+                        'rounded-full p-1',
+                    )}
+                />
+            </span>
+            <span className="line-clamp-2 text-foreground break-words">
+                {text}
             </span>
             <div className="flex-1" />
             <span

@@ -721,11 +721,12 @@ export interface CommunityPostReplyThread {
 export type ActivityId = number & {readonly __brand: unique symbol};
 
 export type ActivityDetails =
-    | ActivityDetailsReply
+    | ActivityDetailsNewReply
     | ActivityDetailsIndirectReplies
+    | ActivityDetailsNewRequest
     | ActivityDetailsUnknown;
 
-export interface ActivityDetailsReply {
+export interface ActivityDetailsNewReply {
     type: 'new_reply';
     id: ActivityId;
     instant: string;
@@ -741,6 +742,15 @@ export interface ActivityDetailsIndirectReplies {
     post: CommunityPostDetailsPlain;
     newUnreadId: CommunityPostId;
     commonDenominator: CommunityPostDetails;
+}
+
+export interface ActivityDetailsNewRequest {
+    type: 'new_request';
+    id: ActivityId;
+    instant: string;
+    isRead: boolean;
+    from: UserDetails;
+    isMutual: boolean;
 }
 
 export interface ActivityDetailsUnknown {

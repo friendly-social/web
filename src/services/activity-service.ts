@@ -98,6 +98,8 @@ async function setDetails(app: AppContext, values: ActivityDetails[]) {
                         {type: 'plain' as const, ...value.post},
                         value.commonDenominator,
                     ];
+                case 'new_request':
+                    return null;
                 default:
                     value satisfies never;
                     return null;
@@ -106,6 +108,21 @@ async function setDetails(app: AppContext, values: ActivityDetails[]) {
         .filter(value => value !== null)
         .flat();
     await communityPosts.setPosts(app, posts);
+    const users = values
+        .map(value => {
+            switch (value.type) {
+                case 'new_request':
+                    return value.from;
+                case 'new_reply':
+                case 'indirect_replies':
+                    return null;
+                default:
+                    value satisfies never;
+                    return null;
+            }
+        })
+        .filter(value => value !== null);
+    await app.storage.userAccessHashes.save(users);
     for (const value of values) {
         app.queryClient.setQueryData(
             detailsOptions(value.id).queryKey,

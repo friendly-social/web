@@ -1,7 +1,9 @@
 import {FileDescriptor} from './file-descriptor';
 
+export type UserId = number & {readonly __brand: unique symbol};
+
 export interface UserDetails {
-    id: number;
+    id: UserId;
     accessHash: string;
     nickname: string;
     email: string | null;

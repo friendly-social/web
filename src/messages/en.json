@@ -202,6 +202,8 @@
         "load-more": "Load more",
         "reply": "Reply from <b>{nickname}</b>:",
         "indirect_replies": "New replies under",
+        "new-request": "New friend request from <b>{nickname}</b>",
+        "new-friend": "<b>{nickname}</b> is your friend now",
         "just_now": "Just now",
         "minutes_ago": "{count, plural, one {1 min} other {# mins}} ago",
         "hours_ago": "{count, plural, one {1 hour} other {# hours}} ago",

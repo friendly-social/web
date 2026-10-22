@@ -1,10 +1,26 @@
 import {Resource} from '@/network/resource';
 import {UserDetailsResponse} from '@/network/friendly-client';
+import {UserId} from '@/types/user-details';
 import {useEffect} from 'react';
 import {useQuery, queryOptions} from '@tanstack/react-query';
 import {AppContext} from '@/app.context';
 import {forceUnwrap} from '@/network/result';
 import {useSession} from '@/components/session-provider';
+
+function userOptions(app: AppContext, id: UserId) {
+    return queryOptions({
+        queryKey: ['user', id],
+        queryFn: async () => {
+            const userPair = await app.storage.userAccessHashes.get(id);
+            const accessHash = userPair.accessHash;
+            const result = await app.backend.getUserDetailsById2(
+                id,
+                accessHash,
+            );
+            return forceUnwrap(result);
+        },
+    });
+}
 
 function selfOptions(app: AppContext) {
     return queryOptions({
@@ -55,6 +71,12 @@ function useSelf(app: AppContext): Resource<UserDetailsResponse> {
     return Resource.ofUseQuery(query);
 }
 
+function prefetchDetails(app: AppContext, id: UserId) {
+    return app.queryClient.prefetchQuery({
+        ...userOptions(app, id),
+    });
+}
+
 export const users = {
     use,
     self,
@@ -62,4 +84,5 @@ export const users = {
     ensureCachedSelf,
     ensureFreshSelf,
     useSelf,
+    prefetchDetails,
 };
