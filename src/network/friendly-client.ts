@@ -726,7 +726,7 @@ export type ActivityDetails =
     | ActivityDetailsUnknown;
 
 export interface ActivityDetailsReply {
-    type: 'reply';
+    type: 'new_reply';
     id: ActivityId;
     instant: string;
     isRead: boolean;

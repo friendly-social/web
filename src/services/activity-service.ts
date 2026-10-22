@@ -91,7 +91,7 @@ async function setDetails(app: AppContext, values: ActivityDetails[]) {
     const posts = values
         .map(value => {
             switch (value.type) {
-                case 'reply':
+                case 'new_reply':
                     return [{type: 'plain' as const, ...value.post}];
                 case 'indirect_replies':
                     return [

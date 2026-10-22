@@ -100,7 +100,7 @@ function ActivityList({activity, onFetch, hasNext}: ActivityListProps) {
             for (const item of activity) {
                 if (shouldBreak) break;
                 switch (item.type) {
-                    case 'reply':
+                    case 'new_reply':
                         await communityPosts.prefetchDetails(
                             app,
                             item.post.id,
@@ -238,7 +238,7 @@ function ActivityCard({id, timeGroup}: ActivityCardProps) {
     let content;
 
     switch (details.type) {
-        case 'reply':
+        case 'new_reply':
             content = (
                 <ReplyActivityCard
                     details={details}
