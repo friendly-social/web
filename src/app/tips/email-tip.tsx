@@ -22,27 +22,33 @@ export async function shouldShow({
     app,
     visits,
     firstVisit,
-}: ShouldShowProps): Promise<boolean> {
+}: ShouldShowProps): Promise<Payload | undefined> {
     const self = await users.ensureCachedSelf(app);
-    if (self.user.email) return false;
+    if (self.user.email) return;
 
     const counter: number = (await idb.get(COUNTER)) ?? 0;
-
     const now = Date.now();
+
     if (counter === 0) {
-        return true;
+        return {firstTime: true};
     }
     if (counter === 1) {
-        return visits > 3;
+        return visits > 3 ? {firstTime: false} : undefined;
     }
     if (counter === 2) {
-        return now - firstVisit > 1_000 * 60 * 60 * 24 * 7; // 1 week
+        return now - firstVisit > 1_000 * 60 * 60 * 24 * 7 // 1 week
+            ? {firstTime: false}
+            : undefined;
     }
     if (counter === 3) {
-        return now - firstVisit > 1_000 * 60 * 60 * 24 * 30; // 1 month
+        return now - firstVisit > 1_000 * 60 * 60 * 24 * 30 // 1 month
+            ? {firstTime: false}
+            : undefined;
     }
     const year = 1_000 * 60 * 60 * 24 * 360; // 1 year
-    return now - firstVisit > year * (counter - 2);
+    return now - firstVisit > year * (counter - 2)
+        ? {firstTime: false}
+        : undefined;
 }
 
 export async function recordShow() {
@@ -53,14 +59,14 @@ export async function recordShow() {
 export function Content() {
     const t = useTranslations('email-tip');
     const navigate = useNavigate();
-    const {open, setOpen} = useController();
+    const {payload, setPayload} = useController();
 
     function decline() {
-        void setOpen(false);
+        void setPayload(undefined);
     }
 
     function confirm() {
-        void setOpen(false).then(() =>
+        void setPayload(undefined).then(() =>
             navigate('/profile', {
                 state: {edit: true},
             }),
@@ -70,8 +76,8 @@ export function Content() {
     return (
         <>
             <StyledDialogWrapper
-                open={open}
-                onOpenChange={value => void setOpen(value)}
+                open={!!payload}
+                onOpenChange={() => void setPayload(undefined)}
             >
                 <div
                     className={cn(
@@ -95,7 +101,11 @@ export function Content() {
                 </div>
                 <div className="px-4 pb-4">
                     <Dialog.Description className="text-center font-normal">
-                        {t('description')}
+                        {t(
+                            payload?.firstTime
+                                ? 'description-first-time'
+                                : 'description',
+                        )}
                     </Dialog.Description>
                     <div className="w-full flex flex-row grow-1 mt-2">
                         <Button
@@ -116,11 +126,15 @@ export function Content() {
     );
 }
 
-type State = {emailTip?: true} | null;
+type State = {emailTip?: Payload} | null;
+
+export interface Payload {
+    firstTime: boolean;
+}
 
 export interface Controller {
-    open: boolean;
-    setOpen: (open: boolean) => Promise<void>;
+    payload?: Payload;
+    setPayload: (payload?: Payload) => Promise<void>;
 }
 
 export function useController(): Controller {
@@ -128,15 +142,15 @@ export function useController(): Controller {
     const location = useLocation();
     const navigate = useNavigate();
 
-    const open = !!(location.state as State)?.emailTip;
+    const payload = (location.state as State)?.emailTip;
 
-    function setOpen(value: boolean) {
+    function setPayload(payload?: Payload) {
         const location = router.location();
-        if (value) {
+        if (payload) {
             return navigate(location, {
                 state: {
                     ...(location.state as object),
-                    emailTip: true,
+                    emailTip: payload,
                 },
             }) as Promise<void>;
         } else {
@@ -145,7 +159,7 @@ export function useController(): Controller {
     }
 
     return {
-        open,
-        setOpen,
+        payload,
+        setPayload,
     };
 }

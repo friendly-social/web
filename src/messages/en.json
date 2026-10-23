@@ -82,6 +82,7 @@
     },
     "email-tip": {
         "title": "Don't loose your account!",
+        "description-first-time": "If you want to access your account later, consider binding an email to it",
         "description": "Seems like you enjoy our app. If you don't want to loose access to your account, bind an email",
         "confirm": "Yes",
         "decline": "No"

@@ -1,4 +1,5 @@
 import {ReactNode} from 'react';
+import {useBlockingQR} from '@/app/blocking-qr/page';
 import {useAppContext} from '@/app.context';
 import {useEffect} from 'react';
 import * as idb from 'idb-keyval';
@@ -17,9 +18,12 @@ export function VisitTip({children}: VisitTipProps) {
     const app = useAppContext();
     const emailTipController = emailTip.useController();
     const notificationsTipController = notificationsTip.useController();
+    const blockingQR = useBlockingQR();
 
     useEffect(() => {
         void (async () => {
+            if (blockingQR.shouldBlock) return;
+
             let visits: number = (await idb.get(VISITS)) ?? 0;
             const visitRecorded = sessionStorage.getItem(VISIT_RECORDED);
             if (visitRecorded) {
@@ -41,7 +45,7 @@ export function VisitTip({children}: VisitTipProps) {
             ]);
             if (showEmail) {
                 await emailTip.recordShow();
-                await emailTipController.setOpen(true);
+                await emailTipController.setPayload(showEmail);
                 return;
             }
             if (showNotifications) {
