@@ -167,29 +167,41 @@ function UserPageGuarded({userId}: UserPageGuardedProps) {
 
     const {mutate: declineFriend, isPending: isDeclinePending} = useMutation({
         mutationFn: async () => {
-            await backend.declineFriendRequest({
-                userId: userId,
-                userAccessHash: (await storage.userAccessHashes.get(userId))
-                    .accessHash,
-            });
+            forceUnwrap(
+                await backend.declineFriendRequest({
+                    userId: userId,
+                    userAccessHash: (await storage.userAccessHashes.get(userId))
+                        .accessHash,
+                }),
+            );
         },
-        onSuccess: () =>
+        onSuccess: () => {
             void queryClient.invalidateQueries({
                 queryKey: userKey,
-            }),
+            });
+            void queryClient.invalidateQueries({
+                queryKey: ['activityNewUnreads'],
+            });
+        },
     });
     const {mutate: requestFriend, isPending: isRequestPending} = useMutation({
         mutationFn: async () => {
-            await backend.sendFriendRequest({
-                userId: userId,
-                userAccessHash: (await storage.userAccessHashes.get(userId))
-                    .accessHash,
-            });
+            forceUnwrap(
+                await backend.sendFriendRequest({
+                    userId: userId,
+                    userAccessHash: (await storage.userAccessHashes.get(userId))
+                        .accessHash,
+                }),
+            );
         },
-        onSuccess: () =>
+        onSuccess: () => {
             void queryClient.invalidateQueries({
                 queryKey: userKey,
-            }),
+            });
+            void queryClient.invalidateQueries({
+                queryKey: ['activityNewUnreads'],
+            });
+        },
     });
 
     const userQuery = useQuery({

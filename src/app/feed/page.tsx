@@ -1,4 +1,5 @@
 import {FeedQueueResponse} from '@/network/friendly-client';
+import {useAppContext} from '@/app.context';
 import {useQueryClient} from '@tanstack/react-query';
 import {forceUnwrap} from '@/network/result';
 import {Button} from '@/components/ui/button';
@@ -32,6 +33,7 @@ function FeedEmptyState() {
 
 export default function FeedPage() {
     const t = useTranslations('profile.feed');
+    const app = useAppContext();
 
     const backend = useBackend();
     const queryClient = useQueryClient();
@@ -55,6 +57,10 @@ export default function FeedPage() {
                 direction === 'right'
                     ? await backend.sendFriendRequest(request)
                     : await backend.declineFriendRequest(request);
+
+            void app.queryClient.invalidateQueries({
+                queryKey: ['activityNewUnreads'],
+            });
 
             if (!result.ok) {
                 toast.error(t('error-connection'));
