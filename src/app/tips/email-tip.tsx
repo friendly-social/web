@@ -29,16 +29,16 @@ export async function shouldShow({
     const counter: number = (await idb.get(COUNTER)) ?? 0;
 
     const now = Date.now();
-    if (visits < 3) {
-        return false;
-    }
     if (counter === 0) {
         return true;
     }
     if (counter === 1) {
-        return now - firstVisit > 1_000 * 60 * 60 * 24 * 7; // 1 week
+        return visits > 3;
     }
     if (counter === 2) {
+        return now - firstVisit > 1_000 * 60 * 60 * 24 * 7; // 1 week
+    }
+    if (counter === 3) {
         return now - firstVisit > 1_000 * 60 * 60 * 24 * 30; // 1 month
     }
     const year = 1_000 * 60 * 60 * 24 * 360; // 1 year
