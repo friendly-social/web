@@ -93,6 +93,8 @@ export function MainPostCard(props: MainPostCardProps) {
     );
 }
 
+// TODO: make simpler, much simpler. Unify approach for edit/send. Many a
+// separate component for that exact behavior?
 export function MainPostCardImpl({
     first,
     details,
