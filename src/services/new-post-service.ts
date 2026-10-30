@@ -1,26 +1,30 @@
 import {useState, useEffect} from 'react';
 
-function useNewText() {
-    const [text, setText] = useState(
-        () => localStorage.getItem('main-post.text') ?? '',
+function useNewLexicalJson() {
+    const [json, setJson] = useState(() =>
+        localStorage.getItem('new-post.lexical-json'),
     );
     useEffect(() => {
-        localStorage.setItem('main-post.text', text);
-    }, [text]);
-    return [text, setText] as const;
+        if (json) {
+            localStorage.setItem('new-post.lexical-json', json);
+        }
+    }, []);
+    return [json, setJson] as const;
 }
 
-function useReplyText() {
-    const [text, setText] = useState(
-        () => sessionStorage.getItem('replies.text') ?? '',
+function useReplyLexicalJson() {
+    const [json, setJson] = useState(() =>
+        sessionStorage.getItem('reply.lexical-json'),
     );
     useEffect(() => {
-        sessionStorage.setItem('replies.text', text);
-    }, [text]);
-    return [text, setText] as const;
+        if (json) {
+            sessionStorage.setItem('reply.lexical-json', json);
+        }
+    }, [json]);
+    return [json, setJson] as const;
 }
 
 export const newPost = {
-    useNewText,
-    useReplyText,
+    useNewLexicalJson,
+    useReplyLexicalJson,
 };

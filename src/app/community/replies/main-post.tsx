@@ -1,4 +1,5 @@
 import {Button} from '@/components/ui/button';
+import * as richEditor from '@/components/lexical-rich-editor';
 import {useImagePreviewerController} from '@/components/image-previewer';
 import {AdjusterPayload, Adjuster, AdjusterCrop} from '@/components/adjuster';
 import {isMobile} from '@/lib/is-mobile';
@@ -30,7 +31,25 @@ import React, {
     useMemo,
     useEffect,
     lazy,
+    SetStateAction,
 } from 'react';
+import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
+import {
+    $createLineBreakNode,
+    $createTextNode,
+    $getRoot,
+    $isLineBreakNode,
+    $isParagraphNode,
+    COMMAND_PRIORITY_HIGH,
+    KEY_ENTER_COMMAND,
+} from 'lexical';
+import {
+    $appendFromRichText,
+    convertToRichText,
+    EmptyRichText,
+    RichText,
+} from '@/network/rich-text';
+import {useLatest} from '@/use-latest';
 
 const MarkdownArea = lazy(() =>
     import('@/components/ui/markdown-area').then(m => ({
@@ -66,7 +85,15 @@ const emojis = [
 
 type InputAction = 'send' | 'edit';
 
-export function MainPostCard({
+export function MainPostCard(props: MainPostCardProps) {
+    return (
+        <richEditor.Host>
+            <MainPostCardImpl {...props} />
+        </richEditor.Host>
+    );
+}
+
+export function MainPostCardImpl({
     first,
     details,
     postRef,
@@ -74,16 +101,20 @@ export function MainPostCard({
     showKeyboard,
 }: MainPostCardProps) {
     const app = useAppContext();
+    const [editor] = useLexicalComposerContext();
 
-    const inputRef = useRef<HTMLTextAreaElement>(null);
-    const [newText, setNewText] = newPost.useReplyText();
-    const [editText, setEditText] = useState('');
+    const inputRef = useRef<HTMLDivElement>(null);
+
     const [action, setAction] = useState<InputAction>('send');
+    const [newLexicalJson, setNewLexicalJson] = newPost.useReplyLexicalJson();
+    const [newText, setNewText] = useState(EmptyRichText);
+    const [editText, setEditText] = useState(EmptyRichText);
+
     const [adjuster, setAdjuster] = useState<AdjusterPayload>({type: 'close'});
     const imagePreviewer = useImagePreviewerController();
 
     const displayText = action === 'send' ? newText : editText;
-    function setDisplayText(value: string | ((value: string) => string)) {
+    function setDisplayText(value: SetStateAction<RichText>) {
         if (action === 'send') {
             setNewText(value);
         } else {
@@ -91,8 +122,8 @@ export function MainPostCard({
         }
     }
 
-    const textTooLong = displayText.length > 4096;
-    const showTextLength = displayText.length > 4000;
+    const textTooLong = displayText.markdown.length > 4096;
+    const showTextLength = displayText.markdown.length > 4000;
 
     const self = users.useSelf(app);
 
@@ -107,7 +138,9 @@ export function MainPostCard({
     const createMutation = useCreateMutation({
         details,
         popDepth,
-        onSuccess: () => setDisplayText(''),
+        onSuccess: () => {
+            richEditor.clearText(editor);
+        },
     });
 
     const editMutation = useEditMutation({
@@ -117,25 +150,22 @@ export function MainPostCard({
 
     const attachImageMutation = useAttachImageMutation({
         onSuccess: descriptor => {
-            const input = inputRef.current;
-            let selection = null;
-            if (input) {
-                selection = [input.selectionStart, input.selectionEnd] as const;
-            }
-            setDisplayText(current => {
-                let result = current;
-                if (!current.endsWith('\n')) {
-                    result += '\n';
+            const url = createFileLink(descriptor);
+            const markdown = `![](${url})`;
+            editor.update(() => {
+                const paragraph = $getRoot().getChildAtIndex(0);
+                if (!$isParagraphNode(paragraph)) {
+                    throw new Error('Can only append to a paragraph node');
                 }
-                const url = createFileLink(descriptor);
-                result += `![](${url})\n`;
-                return result;
+                const endsWithNewline = $isLineBreakNode(
+                    paragraph.getLastChild(),
+                );
+                if (!endsWithNewline) {
+                    paragraph.append($createLineBreakNode());
+                }
+                paragraph.append($createTextNode(markdown));
             });
-            if (input && selection !== null) {
-                setTimeout(() => {
-                    input.setSelectionRange(...selection);
-                }, 1);
-            }
+            // todo: focus
         },
     });
 
@@ -143,8 +173,40 @@ export function MainPostCard({
     const forbidSubmit =
         isSubmitting ||
         attachImageMutation.isPending ||
-        !displayText.trim() ||
+        !displayText.markdown.trim() ||
         textTooLong;
+
+    const latest = useLatest({handleSubmit, setDisplayText, action});
+
+    useEffect(() => {
+        if (newLexicalJson) {
+            editor.setEditorState(editor.parseEditorState(newLexicalJson));
+        }
+        const cancelEnter = editor.registerCommand(
+            KEY_ENTER_COMMAND,
+            event => {
+                const {handleSubmit} = latest.current;
+                if (!event || event.shiftKey || isMobile()) return false;
+                handleSubmit();
+                event.preventDefault();
+                return true;
+            },
+            COMMAND_PRIORITY_HIGH,
+        );
+        const cancelUpdates = editor.registerUpdateListener(({editorState}) => {
+            const {action, setDisplayText} = latest.current;
+            if (action === 'send') {
+                setNewLexicalJson(JSON.stringify(editorState));
+            }
+            editorState.read(() => {
+                setDisplayText(convertToRichText($getRoot()));
+            });
+        });
+        return () => {
+            cancelEnter();
+            cancelUpdates();
+        };
+    }, [editor]);
 
     function startEditing() {
         if (isSubmitting) return;
@@ -157,25 +219,32 @@ export function MainPostCard({
         if (details.post.type !== 'plain') {
             throw new Error('Can only edit plain posts');
         }
-        setEditText(details.post.text);
-        setTimeout(() => {
-            inputRef.current?.focus({preventScroll: true});
-        }, 1);
+        const markdown = details.post.text;
+        editor.update(() => {
+            $getRoot().clear();
+            $appendFromRichText($getRoot(), {markdown, entities: {}});
+        });
     }
 
     function stopEditing() {
-        setEditText('');
         setAction('send');
+        if (!newLexicalJson) {
+            throw new Error('newLexicalJson should not be null at that point');
+        }
+        editor.setEditorState(editor.parseEditorState(newLexicalJson));
     }
 
-    function handleSubmit(text: string) {
+    function handleSubmit() {
         if (forbidSubmit) return;
         switch (action) {
             case 'send':
-                createMutation.mutate({text, showKeyboard: true});
+                createMutation.mutate({
+                    text: newText.markdown,
+                    showKeyboard: true,
+                });
                 break;
             case 'edit':
-                editMutation.mutate(text);
+                editMutation.mutate(editText.markdown);
                 break;
             default:
                 action satisfies never;
@@ -185,13 +254,6 @@ export function MainPostCard({
     function onDelete() {
         if (isSubmitting) return;
         deleteMutation.mutate();
-    }
-
-    function onKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
-        if (event.key === 'Enter' && !event.shiftKey && !isMobile()) {
-            event.preventDefault();
-            handleSubmit(event.currentTarget.value);
-        }
     }
 
     function onAttach(data: File) {
@@ -294,7 +356,7 @@ export function MainPostCard({
                     {preview ? (
                         <MarkdownArea
                             className="text-foreground"
-                            text={displayText}
+                            text={displayText.markdown}
                             onImageClick={e => {
                                 e.stopPropagation();
                                 void imagePreviewer.setPayload({
@@ -304,18 +366,15 @@ export function MainPostCard({
                             }}
                         />
                     ) : (
-                        <textarea
+                        <richEditor.Content
                             ref={inputRef}
-                            className={cn(
+                            contentClassName={cn(
                                 'min-h-10 w-full content-center',
                                 'text-sm outline-none resize-none',
                                 'scroll-m-60 field-sizing-content',
                                 'space-y-[1em] leading-5',
                             )}
-                            id="reply"
-                            value={displayText}
-                            onKeyDown={onKeyDown}
-                            onChange={e => setDisplayText(e.target.value)}
+                            placeholderClassName="text-sm mt-2.5"
                             onPaste={onPaste}
                             placeholder={t('reply-placeholder')}
                         />
@@ -334,7 +393,7 @@ export function MainPostCard({
                                     textTooLong ? 'text-destructive' : '',
                                 )}
                             >
-                                {displayText.length} / 4096
+                                {displayText.markdown.length} / 4096
                             </div>
                         ) : undefined}
                     </div>
@@ -350,7 +409,7 @@ export function MainPostCard({
                     onStopEdit={stopEditing}
                     onAttach={onAttach}
                     onPreview={() => setPreview(!preview)}
-                    onSubmit={() => handleSubmit(displayText)}
+                    onSubmit={() => handleSubmit()}
                 />
             </div>
             <div className="h-2" />
@@ -364,7 +423,7 @@ export function MainPostCard({
                             const showKeyboard =
                                 inputRef?.current === document.activeElement;
                             if (
-                                displayText.trim().length === 0 &&
+                                displayText.markdown.length === 0 &&
                                 action === 'send'
                             ) {
                                 createMutation.mutate({
@@ -372,7 +431,7 @@ export function MainPostCard({
                                     showKeyboard,
                                 });
                             } else {
-                                setDisplayText(text => `${text}${emoji}`);
+                                richEditor.appendText(editor, emoji);
                             }
                         }}
                     />

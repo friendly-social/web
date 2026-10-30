@@ -1,5 +1,6 @@
 import {AdjusterPayload, Adjuster, AdjusterCrop} from '@/components/adjuster';
 import {useImagePreviewerController} from '@/components/image-previewer';
+import * as richEditor from '@/components/lexical-rich-editor';
 import {newPost} from '@/services/new-post-service';
 import {isMobile} from '@/lib/is-mobile';
 import {
@@ -41,6 +42,18 @@ import {toast} from 'sonner';
 import {StyledAvatar} from '@/components/styled-avatar';
 import {createFileLink} from '@/lib/utils';
 import {CommunityPostCard} from './post';
+import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
+import {
+    $createLineBreakNode,
+    $createTextNode,
+    $getRoot,
+    $isLineBreakNode,
+    $isParagraphNode,
+    COMMAND_PRIORITY_HIGH,
+    KEY_ENTER_COMMAND,
+} from 'lexical';
+import {convertToRichText} from '@/network/rich-text';
+import {useLatest} from '@/use-latest';
 
 const MarkdownArea = lazy(() =>
     import('@/components/ui/markdown-area').then(m => ({
@@ -187,9 +200,11 @@ export function CommunityPage() {
 
     return (
         <VisitTip>
-            <div className="flex flex-col items-center w-full h-full px-4">
-                {content}
-            </div>
+            <richEditor.Host>
+                <div className="flex flex-col items-center w-full h-full px-4">
+                    {content}
+                </div>
+            </richEditor.Host>
         </VisitTip>
     );
 }
@@ -200,14 +215,17 @@ interface CreatePostCardProps {
 }
 
 function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
-    const [text, setText] = newPost.useNewText();
+    const [editor] = useLexicalComposerContext();
+
+    const [lexicalJson, setLexicalJson] = newPost.useNewLexicalJson();
+    const [text, setText] = useState({markdown: '', entities: {}});
     const [preview, setPreview] = useState(false);
     const [showPreviewOption, setShowPreviewOption] = useState(false);
     const [adjuster, setAdjuster] = useState<AdjusterPayload>({type: 'close'});
     const imagePreviewer = useImagePreviewerController();
 
     const t = useTranslations('community');
-    const postRef = useRef<HTMLTextAreaElement>(null);
+    const postRef = useRef<HTMLDivElement>(null);
     const app = useAppContext();
     const backend = useBackend();
     const userQuery = useQuery({
@@ -215,8 +233,8 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
         queryFn: async () => forceUnwrap(await backend.getUserDetails2()),
     });
 
-    const textTooLong = text.length > 4096;
-    const showTextLength = text.length > 4000;
+    const textTooLong = text.markdown.length > 4096;
+    const showTextLength = text.markdown.length > 4000;
 
     const avatarUrl = useMemo(
         () =>
@@ -257,7 +275,7 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
             return details;
         },
         onSuccess: () => {
-            setText('');
+            richEditor.clearText(editor);
             setPreview(false);
             onPostCreated();
         },
@@ -269,45 +287,65 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
     const attachImageMutation = useMutation({
         mutationFn: async (props: {file: File; crop: AdjusterCrop}) => {
             const {file, crop} = props;
-            const post = postRef.current;
+            // const post = postRef.current;
             const compressed = await resizeImage(file, crop);
             const descriptor = forceUnwrap(
                 await backend.uploadFile(compressed),
             );
-            let selection = null;
-            if (post) {
-                selection = [post.selectionStart, post.selectionEnd] as const;
-            }
-            setText(current => {
-                let result = current;
-                if (!current.endsWith('\n')) {
-                    result += '\n';
+            const url = createFileLink(descriptor);
+            const markdown = `![](${url})`;
+            editor.update(() => {
+                const paragraph = $getRoot().getChildAtIndex(0);
+                if (!$isParagraphNode(paragraph)) {
+                    throw new Error('Can only append to a paragraph node');
                 }
-                const url = createFileLink(descriptor);
-                result += `![](${url})\n`;
-                return result;
+                const endsWithNewline = $isLineBreakNode(
+                    paragraph.getLastChild(),
+                );
+                if (!endsWithNewline) {
+                    paragraph.append($createLineBreakNode());
+                }
+                paragraph.append($createTextNode(markdown));
             });
-            if (post && selection !== null) {
-                setTimeout(() => {
-                    post.setSelectionRange(...selection);
-                }, 1);
-            }
+            // todo: focus
         },
     });
 
     const forbidSend =
         createMutation.isPending ||
         attachImageMutation.isPending ||
-        !text.trim() ||
+        !text.markdown.trim() ||
         textTooLong;
 
-    function onKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
-        if (event.key === 'Enter' && !event.shiftKey && !isMobile()) {
-            event.preventDefault();
-            if (forbidSend) return;
-            createMutation.mutate(event.currentTarget.value);
+    const latest = useLatest({forbidSend, text});
+
+    useEffect(() => {
+        if (lexicalJson) {
+            editor.setEditorState(editor.parseEditorState(lexicalJson));
         }
-    }
+        const cancelEnter = editor.registerCommand(
+            KEY_ENTER_COMMAND,
+            event => {
+                const {forbidSend, text} = latest.current;
+                if (!event || event.shiftKey || isMobile()) return false;
+                if (forbidSend) return true;
+                createMutation.mutate(text.markdown);
+                event.preventDefault();
+                return true;
+            },
+            COMMAND_PRIORITY_HIGH,
+        );
+        const cancelUpdates = editor.registerUpdateListener(({editorState}) => {
+            setLexicalJson(JSON.stringify(editorState));
+            editorState.read(() => {
+                setText(convertToRichText($getRoot()));
+            });
+        });
+        return () => {
+            cancelEnter();
+            cancelUpdates();
+        };
+    }, [editor]);
 
     function onPaste(event: React.ClipboardEvent) {
         const file = event.clipboardData.files[0];
@@ -349,6 +387,117 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
         };
     }, [preview]);
 
+    const content = (
+        <div className="w-full flex gap-3">
+            <StyledAvatar
+                avatarClassName="w-10 h-10"
+                src={avatarUrl}
+                nickname={userQuery?.data?.user?.nickname ?? ''}
+            />
+            <div className="w-full flex-1 flex flex-col min-w-0">
+                {preview ? (
+                    <MarkdownArea
+                        className="text-foreground mt-2"
+                        text={text.markdown}
+                        onImageClick={e => {
+                            e.stopPropagation();
+                            void imagePreviewer.setPayload({
+                                type: 'open',
+                                src: e.currentTarget.src,
+                            });
+                        }}
+                    />
+                ) : (
+                    <richEditor.Content
+                        ref={postRef}
+                        contentClassName={cn(
+                            'w-full mt-2',
+                            'outline-none resize-none field-sizing-content',
+                            'space-y-[1em] leading-5',
+                        )}
+                        onPaste={onPaste}
+                        placeholder={t('placeholder')}
+                    />
+                )}
+                <div className="mt-1 w-full flex items-center">
+                    {showTextLength ? (
+                        <div
+                            className={cn(
+                                'text-xs',
+                                textTooLong ? 'text-destructive' : '',
+                            )}
+                        >
+                            {text.markdown.length} / 4096
+                        </div>
+                    ) : undefined}
+                    <div className="flex-1" />
+                    {text.markdown.length > 0 && (
+                        <Button
+                            onClick={() => {
+                                richEditor.clearText(editor);
+                                setPreview(false);
+                            }}
+                            variant="ghost"
+                        >
+                            <Trash />
+                        </Button>
+                    )}
+                    {showPreviewOption && (
+                        <Button
+                            onClick={() => setPreview(!preview)}
+                            variant="ghost"
+                        >
+                            {preview ? <Pen /> : <Eye />}
+                        </Button>
+                    )}
+                    <Button
+                        onClick={attachImage}
+                        onMouseDown={event => event.preventDefault()}
+                        variant="ghost"
+                        className="me-2"
+                    >
+                        {attachImageMutation.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                            <Paperclip />
+                        )}
+                        <input
+                            className="hidden"
+                            ref={imageInputRef}
+                            type="file"
+                            accept="image/*"
+                            placeholder="Avatar"
+                            onChange={e => {
+                                const files = e.target.files;
+                                if (files) {
+                                    void onImageSelected(files[0]);
+                                }
+                            }}
+                        />
+                    </Button>
+                    <div className="flex flex-col">
+                        <Button
+                            onClick={() =>
+                                forbidSend ||
+                                createMutation.mutate(text.markdown)
+                            }
+                            disabled={forbidSend}
+                        >
+                            {createMutation.isPending ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                                <div className="flex items-center gap-1.5">
+                                    <SquarePen />
+                                    {t('create_post')}
+                                </div>
+                            )}
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
     return (
         <div
             className={cn(
@@ -356,116 +505,7 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
                 className,
             )}
         >
-            <div className="w-full flex gap-3">
-                <StyledAvatar
-                    avatarClassName="w-10 h-10"
-                    src={avatarUrl}
-                    nickname={userQuery?.data?.user?.nickname ?? ''}
-                />
-                <div className="w-full flex-1 flex flex-col min-w-0">
-                    {preview ? (
-                        <MarkdownArea
-                            className="text-foreground mt-2"
-                            text={text}
-                            onImageClick={e => {
-                                e.stopPropagation();
-                                void imagePreviewer.setPayload({
-                                    type: 'open',
-                                    src: e.currentTarget.src,
-                                });
-                            }}
-                        />
-                    ) : (
-                        <textarea
-                            ref={postRef}
-                            className={cn(
-                                'w-full mt-2',
-                                'outline-none resize-none field-sizing-content',
-                                'space-y-[1em] leading-5',
-                            )}
-                            value={text}
-                            onChange={e => setText(e.target.value)}
-                            onKeyDown={onKeyDown}
-                            onPaste={onPaste}
-                            placeholder={t('placeholder')}
-                        />
-                    )}
-                    <div className="mt-1 w-full flex items-center">
-                        {showTextLength ? (
-                            <div
-                                className={cn(
-                                    'text-xs',
-                                    textTooLong ? 'text-destructive' : '',
-                                )}
-                            >
-                                {text.length} / 4096
-                            </div>
-                        ) : undefined}
-                        <div className="flex-1" />
-                        {text.length > 0 && (
-                            <Button
-                                onClick={() => {
-                                    setText('');
-                                    setPreview(false);
-                                }}
-                                variant="ghost"
-                            >
-                                <Trash />
-                            </Button>
-                        )}
-                        {showPreviewOption && (
-                            <Button
-                                onClick={() => setPreview(!preview)}
-                                variant="ghost"
-                            >
-                                {preview ? <Pen /> : <Eye />}
-                            </Button>
-                        )}
-                        <Button
-                            onClick={attachImage}
-                            onMouseDown={event => event.preventDefault()}
-                            variant="ghost"
-                            className="me-2"
-                        >
-                            {attachImageMutation.isPending ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                                <Paperclip />
-                            )}
-                            <input
-                                className="hidden"
-                                ref={imageInputRef}
-                                type="file"
-                                accept="image/*"
-                                placeholder="Avatar"
-                                onChange={e => {
-                                    const files = e.target.files;
-                                    if (files) {
-                                        void onImageSelected(files[0]);
-                                    }
-                                }}
-                            />
-                        </Button>
-                        <div className="flex flex-col">
-                            <Button
-                                onClick={() =>
-                                    forbidSend || createMutation.mutate(text)
-                                }
-                                disabled={forbidSend}
-                            >
-                                {createMutation.isPending ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                    <div className="flex items-center gap-1.5">
-                                        <SquarePen />
-                                        {t('create_post')}
-                                    </div>
-                                )}
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            {content}
             <Adjuster
                 title={t('adjuster')}
                 payload={adjuster}
