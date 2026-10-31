@@ -35,12 +35,12 @@ export function $appendFromRichText(node: ElementNode, text: RichText) {
     const lines = text.markdown.split('\n');
     let first = true;
     for (const line of lines) {
-        paragraph.append($createTextNode(line));
         if (first) {
             first = false;
         } else {
             paragraph.append($createLineBreakNode());
         }
+        paragraph.append($createTextNode(line));
     }
     node.append(paragraph);
 }

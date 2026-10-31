@@ -48,12 +48,14 @@ export function useDeleteDialogController(): DeleteDialogController {
 export interface MainPostMenuProps {
     onEdit: () => void;
     onDelete: () => void;
+    onCloseAutoFocus?: () => void;
     showDelete: boolean;
 }
 
 export function MainPostMenu({
     onDelete,
     onEdit,
+    onCloseAutoFocus,
     showDelete,
 }: MainPostMenuProps) {
     const t = useTranslations('replies');
@@ -69,7 +71,13 @@ export function MainPostMenu({
                 <DropdownMenuTrigger asChild>
                     <Ellipsis className="h-[1.2em] w-[1.2em] shrink-0" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent
+                    align="end"
+                    onCloseAutoFocus={e => {
+                        e.preventDefault();
+                        onCloseAutoFocus?.();
+                    }}
+                >
                     <DropdownMenuGroup>
                         <DropdownMenuItem onClick={onEdit}>
                             <Pen className="size-4" />

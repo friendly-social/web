@@ -217,7 +217,6 @@ interface CreatePostCardProps {
 function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
     const [editor] = useLexicalComposerContext();
 
-    const [lexicalJson, setLexicalJson] = newPost.useNewLexicalJson();
     const [text, setText] = useState({markdown: '', entities: {}});
     const [preview, setPreview] = useState(false);
     const [showPreviewOption, setShowPreviewOption] = useState(false);
@@ -246,70 +245,8 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
 
     const imageInputRef = useRef<HTMLInputElement | null>(null);
 
-    const createMutation = useMutation({
-        mutationFn: async (text: string) => {
-            const result = await backend.communityPost({text});
-            const details = {
-                type: 'plain' as const,
-                ...forceUnwrap(result),
-                text,
-                owner: (await users.ensureCachedSelf(app)).user,
-                instant: new Date().toISOString(),
-                replyPreviews: [],
-                newUnreadId: null,
-                edited: false,
-            };
-            await communityPosts.setDetails(app, [
-                {
-                    post: details,
-                    replies: {
-                        data: [],
-                        nextId: null,
-                    },
-                    upstream: [],
-                },
-            ]);
-            await app.queryClient.invalidateQueries({
-                queryKey: ['communityPosts'],
-            });
-            return details;
-        },
-        onSuccess: () => {
-            richEditor.clearText(editor);
-            setPreview(false);
-            onPostCreated();
-        },
-        onError: error => {
-            toast.error(error.message ?? t('post_create_error'));
-        },
-    });
-
-    const attachImageMutation = useMutation({
-        mutationFn: async (props: {file: File; crop: AdjusterCrop}) => {
-            const {file, crop} = props;
-            // const post = postRef.current;
-            const compressed = await resizeImage(file, crop);
-            const descriptor = forceUnwrap(
-                await backend.uploadFile(compressed),
-            );
-            const url = createFileLink(descriptor);
-            const markdown = `![](${url})`;
-            editor.update(() => {
-                const paragraph = $getRoot().getChildAtIndex(0);
-                if (!$isParagraphNode(paragraph)) {
-                    throw new Error('Can only append to a paragraph node');
-                }
-                const endsWithNewline = $isLineBreakNode(
-                    paragraph.getLastChild(),
-                );
-                if (!endsWithNewline) {
-                    paragraph.append($createLineBreakNode());
-                }
-                paragraph.append($createTextNode(markdown));
-            });
-            // todo: focus
-        },
-    });
+    const createMutation = useCreatePostMutation();
+    const attachImageMutation = useAttachImageMutation();
 
     const forbidSend =
         createMutation.isPending ||
@@ -317,35 +254,50 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
         !text.markdown.trim() ||
         textTooLong;
 
-    const latest = useLatest({forbidSend, text});
+    function handleSend() {
+        if (forbidSend) return;
+        createMutation.mutate(text.markdown);
+    }
 
-    useEffect(() => {
+    const latest = useLatest({handleSend, saveEditor});
+
+    function bootstrapEditor() {
+        restoreEditor();
+        const enter = registerEnter(() => latest.current.handleSend());
+        const updates = editor.registerUpdateListener(({editorState}) => {
+            latest.current.saveEditor();
+            editorState.read(() => setText(convertToRichText($getRoot())));
+        });
+        return () => {
+            enter();
+            updates();
+        };
+    }
+    useEffect(() => bootstrapEditor(), [editor]);
+
+    function restoreEditor() {
+        const lexicalJson = newPost.getNewLexicalJson();
         if (lexicalJson) {
             editor.setEditorState(editor.parseEditorState(lexicalJson));
         }
-        const cancelEnter = editor.registerCommand(
+    }
+
+    function saveEditor() {
+        newPost.setNewLexicalJson(JSON.stringify(editor.getEditorState()));
+    }
+
+    function registerEnter(handle: () => void) {
+        return editor.registerCommand(
             KEY_ENTER_COMMAND,
             event => {
-                const {forbidSend, text} = latest.current;
                 if (!event || event.shiftKey || isMobile()) return false;
-                if (forbidSend) return true;
-                createMutation.mutate(text.markdown);
+                handle();
                 event.preventDefault();
                 return true;
             },
             COMMAND_PRIORITY_HIGH,
         );
-        const cancelUpdates = editor.registerUpdateListener(({editorState}) => {
-            setLexicalJson(JSON.stringify(editorState));
-            editorState.read(() => {
-                setText(convertToRichText($getRoot()));
-            });
-        });
-        return () => {
-            cancelEnter();
-            cancelUpdates();
-        };
-    }, [editor]);
+    }
 
     function onPaste(event: React.ClipboardEvent) {
         const file = event.clipboardData.files[0];
@@ -386,6 +338,75 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
             observer.disconnect();
         };
     }, [preview]);
+
+    function useCreatePostMutation() {
+        return useMutation({
+            mutationFn: async (text: string) => {
+                const result = await backend.communityPost({text});
+                const details = {
+                    type: 'plain' as const,
+                    ...forceUnwrap(result),
+                    text,
+                    owner: (await users.ensureCachedSelf(app)).user,
+                    instant: new Date().toISOString(),
+                    replyPreviews: [],
+                    newUnreadId: null,
+                    edited: false,
+                };
+                await communityPosts.setDetails(app, [
+                    {
+                        post: details,
+                        replies: {
+                            data: [],
+                            nextId: null,
+                        },
+                        upstream: [],
+                    },
+                ]);
+                await app.queryClient.invalidateQueries({
+                    queryKey: ['communityPosts'],
+                });
+                return details;
+            },
+            onSuccess: () => {
+                richEditor.clearText(editor);
+                setPreview(false);
+                onPostCreated();
+            },
+            onError: error => {
+                toast.error(error.message ?? t('post_create_error'));
+            },
+        });
+    }
+
+    function useAttachImageMutation() {
+        return useMutation({
+            mutationFn: async (props: {file: File; crop: AdjusterCrop}) => {
+                const {file, crop} = props;
+                // const post = postRef.current;
+                const compressed = await resizeImage(file, crop);
+                const descriptor = forceUnwrap(
+                    await backend.uploadFile(compressed),
+                );
+                const url = createFileLink(descriptor);
+                const markdown = `![](${url})`;
+                editor.update(() => {
+                    const paragraph = $getRoot().getChildAtIndex(0);
+                    if (!$isParagraphNode(paragraph)) {
+                        throw new Error('Can only append to a paragraph node');
+                    }
+                    const endsWithNewline = $isLineBreakNode(
+                        paragraph.getLastChild(),
+                    );
+                    if (!endsWithNewline) {
+                        paragraph.append($createLineBreakNode());
+                    }
+                    paragraph.append($createTextNode(markdown));
+                });
+                // todo: focus
+            },
+        });
+    }
 
     const content = (
         <div className="w-full flex gap-3">
@@ -475,12 +496,7 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
                             }}
                         />
                     </Button>
-                    <Button
-                        onClick={() =>
-                            forbidSend || createMutation.mutate(text.markdown)
-                        }
-                        disabled={forbidSend}
-                    >
+                    <Button onClick={() => handleSend()} disabled={forbidSend}>
                         {createMutation.isPending ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (

@@ -31,7 +31,7 @@ import React, {
     useMemo,
     useEffect,
     lazy,
-    SetStateAction,
+    useLayoutEffect,
 } from 'react';
 import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
 import {
@@ -41,7 +41,10 @@ import {
     $isLineBreakNode,
     $isParagraphNode,
     COMMAND_PRIORITY_HIGH,
+    HISTORY_MERGE_TAG,
     KEY_ENTER_COMMAND,
+    type EditorState,
+    type LexicalEditor,
 } from 'lexical';
 import {
     $appendFromRichText,
@@ -50,6 +53,8 @@ import {
     RichText,
 } from '@/network/rich-text';
 import {useLatest} from '@/use-latest';
+import {createEmptyHistoryState, HistoryExtension} from '@lexical/history';
+import {useExtensionDependency} from '@lexical/react/useExtensionComponent';
 
 const MarkdownArea = lazy(() =>
     import('@/components/ui/markdown-area').then(m => ({
@@ -93,8 +98,6 @@ export function MainPostCard(props: MainPostCardProps) {
     );
 }
 
-// TODO: make simpler, much simpler. Unify approach for edit/send. Many a
-// separate component for that exact behavior?
 export function MainPostCardImpl({
     first,
     details,
@@ -106,43 +109,30 @@ export function MainPostCardImpl({
     const [editor] = useLexicalComposerContext();
 
     const inputRef = useRef<HTMLDivElement>(null);
-
     const [action, setAction] = useState<InputAction>('send');
-    const [newLexicalJson, setNewLexicalJson] = newPost.useReplyLexicalJson();
-    const [newText, setNewText] = useState(EmptyRichText);
-    const [editText, setEditText] = useState(EmptyRichText);
+    const sendState = useSwappableEditorState({
+        initialJson: () => newPost.getReplyLexicalJson(),
+        saveJson: value => newPost.setReplyLexicalJson(value),
+    });
+    const editState = useSwappableEditorState();
+    const activeState = action === 'send' ? sendState : editState;
+
+    const text = useRichTextView();
 
     const [adjuster, setAdjuster] = useState<AdjusterPayload>({type: 'close'});
     const imagePreviewer = useImagePreviewerController();
 
-    const displayText = action === 'send' ? newText : editText;
-    function setDisplayText(value: SetStateAction<RichText>) {
-        if (action === 'send') {
-            setNewText(value);
-        } else {
-            setEditText(value);
-        }
-    }
-
-    const textTooLong = displayText.markdown.length > 4096;
-    const showTextLength = displayText.markdown.length > 4000;
+    const textTooLong = text.markdown.length > 4096;
+    const showTextLength = text.markdown.length > 4000;
 
     const self = users.useSelf(app);
-
-    useEffect(() => {
-        if (showKeyboard) {
-            inputRef.current?.focus();
-        }
-    }, []);
 
     const deleteMutation = useDeleteMutation({details, popDepth: popDepth - 1});
 
     const createMutation = useCreateMutation({
         details,
         popDepth,
-        onSuccess: () => {
-            richEditor.clearText(editor);
-        },
+        onSuccess: () => richEditor.clearText(editor),
     });
 
     const editMutation = useEditMutation({
@@ -167,7 +157,6 @@ export function MainPostCardImpl({
                 }
                 paragraph.append($createTextNode(markdown));
             });
-            // todo: focus
         },
     });
 
@@ -175,38 +164,25 @@ export function MainPostCardImpl({
     const forbidSubmit =
         isSubmitting ||
         attachImageMutation.isPending ||
-        !displayText.markdown.trim() ||
+        !text.markdown.trim() ||
         textTooLong;
 
-    const latest = useLatest({handleSubmit, setDisplayText, action});
+    const latest = useLatest({handleSubmit, activeState});
 
     useEffect(() => {
-        if (newLexicalJson) {
-            editor.setEditorState(editor.parseEditorState(newLexicalJson));
-        }
-        const cancelEnter = editor.registerCommand(
-            KEY_ENTER_COMMAND,
-            event => {
-                const {handleSubmit} = latest.current;
-                if (!event || event.shiftKey || isMobile()) return false;
-                handleSubmit();
-                event.preventDefault();
-                return true;
-            },
-            COMMAND_PRIORITY_HIGH,
+        sendState.reconcile();
+        const enter = registerEnter(editor, () =>
+            latest.current.handleSubmit(),
         );
-        const cancelUpdates = editor.registerUpdateListener(({editorState}) => {
-            const {action, setDisplayText} = latest.current;
-            if (action === 'send') {
-                setNewLexicalJson(JSON.stringify(editorState));
-            }
-            editorState.read(() => {
-                setDisplayText(convertToRichText($getRoot()));
-            });
+        const updates = editor.registerUpdateListener(({editorState}) => {
+            latest.current.activeState.onUpdate(editorState);
         });
+        if (showKeyboard) {
+            editor.focus();
+        }
         return () => {
-            cancelEnter();
-            cancelUpdates();
+            enter();
+            updates();
         };
     }, [editor]);
 
@@ -222,18 +198,22 @@ export function MainPostCardImpl({
             throw new Error('Can only edit plain posts');
         }
         const markdown = details.post.text;
-        editor.update(() => {
-            $getRoot().clear();
-            $appendFromRichText($getRoot(), {markdown, entities: {}});
-        });
+        editState.reconcile();
+        editor.update(
+            () => {
+                $getRoot().clear();
+                $appendFromRichText($getRoot(), {markdown, entities: {}});
+                $getRoot().selectEnd();
+            },
+            {
+                onUpdate: () => editor.focus(),
+            },
+        );
     }
 
     function stopEditing() {
         setAction('send');
-        if (!newLexicalJson) {
-            throw new Error('newLexicalJson should not be null at that point');
-        }
-        editor.setEditorState(editor.parseEditorState(newLexicalJson));
+        sendState.reconcile();
     }
 
     function handleSubmit() {
@@ -241,12 +221,12 @@ export function MainPostCardImpl({
         switch (action) {
             case 'send':
                 createMutation.mutate({
-                    text: newText.markdown,
+                    text: text.markdown,
                     showKeyboard: true,
                 });
                 break;
             case 'edit':
-                editMutation.mutate(editText.markdown);
+                editMutation.mutate(text.markdown);
                 break;
             default:
                 action satisfies never;
@@ -311,13 +291,13 @@ export function MainPostCardImpl({
     const [showPreviewOption, setShowPreviewOption] = useState(false);
     const [preview, setPreview] = useState(false);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         setVerticalMenu(false);
         setShowPreviewOption(false);
         setPreview(false);
     }, [action]);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         const input = inputRef.current;
         if (!input) return;
 
@@ -339,6 +319,57 @@ export function MainPostCardImpl({
         };
     }, [preview]);
 
+    interface SwappableEditorStateOptions {
+        initialJson?: () => string | null;
+        saveJson?: (value: string) => void;
+    }
+
+    interface SwappableEditorState {
+        reconcile: () => void;
+        onUpdate: (state: EditorState) => void;
+    }
+
+    function useSwappableEditorState({
+        initialJson,
+        saveJson,
+    }: SwappableEditorStateOptions = {}): SwappableEditorState {
+        const [initialJsonFrozen] = useState(() => initialJson?.() ?? null);
+        const jsonRef = useRef(initialJsonFrozen);
+        const [history] = useState(() => createEmptyHistoryState());
+        const historyExtension = useExtensionDependency(HistoryExtension);
+
+        function reconcile() {
+            if (jsonRef.current !== null) {
+                editor.setEditorState(
+                    editor.parseEditorState(jsonRef.current),
+                    {tag: HISTORY_MERGE_TAG},
+                );
+            }
+            historyExtension.output.historyState.value = history;
+        }
+        function onUpdate(state: EditorState) {
+            jsonRef.current = JSON.stringify(state);
+            saveJson?.(jsonRef.current);
+        }
+
+        return {reconcile, onUpdate};
+    }
+
+    function useRichTextView(): RichText {
+        const [text, setText] = useState(EmptyRichText);
+        useEffect(() => {
+            const updates = editor.registerUpdateListener(({editorState}) => {
+                editorState.read(() => {
+                    setText(convertToRichText($getRoot()));
+                });
+            });
+            return () => {
+                updates();
+            };
+        }, [editor]);
+        return text;
+    }
+
     return (
         <div className="scroll-m-40" ref={postRef}>
             {card}
@@ -358,7 +389,7 @@ export function MainPostCardImpl({
                     {preview ? (
                         <MarkdownArea
                             className="text-foreground"
-                            text={displayText.markdown}
+                            text={text.markdown}
                             onImageClick={e => {
                                 e.stopPropagation();
                                 void imagePreviewer.setPayload({
@@ -395,7 +426,7 @@ export function MainPostCardImpl({
                                     textTooLong ? 'text-destructive' : '',
                                 )}
                             >
-                                {displayText.markdown.length} / 4096
+                                {text.markdown.length} / 4096
                             </div>
                         ) : undefined}
                     </div>
@@ -425,7 +456,7 @@ export function MainPostCardImpl({
                             const showKeyboard =
                                 inputRef?.current === document.activeElement;
                             if (
-                                displayText.markdown.length === 0 &&
+                                text.markdown.length === 0 &&
                                 action === 'send'
                             ) {
                                 createMutation.mutate({
@@ -514,6 +545,7 @@ function MainPostCardPlain({
     isAuthor,
 }: MainPostCardPlainProps) {
     const t = useTranslations('post');
+    const [editor] = useLexicalComposerContext();
     const navigate = useNavigate();
     const storage = useFriendlyStorage();
 
@@ -579,6 +611,7 @@ function MainPostCardPlain({
                         <MainPostMenu
                             onDelete={onDelete}
                             onEdit={onEdit}
+                            onCloseAutoFocus={() => editor.focus()}
                             showDelete={isAuthor}
                         />
                     </div>
@@ -759,26 +792,32 @@ function useCreateMutation({
                 text: props.text,
             };
             const result = await app.backend.communityPost(post);
-            const response = {
-                post: {
-                    type: 'plain',
-                    ...post,
-                    ...forceUnwrap(result),
-                    replyPreviews: [],
-                    newUnreadId: null,
-                    instant: new Date().toISOString(),
-                    owner: (await users.ensureCachedSelf(app)).user,
-                    edited: false,
-                },
-                replies: {data: [], nextId: null},
-                upstream: [...details.upstream, details.post],
-            } satisfies CommunityDetailsResponse;
-            await communityPosts.setDetails(app, [response]);
-            void app.queryClient.invalidateQueries({
-                queryKey: ['communityReplies', details.post.id],
-            });
-            onSuccess();
-            await navigateReplies(response.post, props.showKeyboard);
+            try {
+                const response = {
+                    post: {
+                        type: 'plain',
+                        ...post,
+                        ...forceUnwrap(result),
+                        replyPreviews: [],
+                        newUnreadId: null,
+                        instant: new Date().toISOString(),
+                        owner: (await users.ensureCachedSelf(app)).user,
+                        edited: false,
+                    },
+                    replies: {data: [], nextId: null},
+                    upstream: [...details.upstream, details.post],
+                } satisfies CommunityDetailsResponse;
+                await communityPosts.setDetails(app, [response]);
+                void app.queryClient.invalidateQueries({
+                    queryKey: ['communityReplies', details.post.id],
+                });
+                onSuccess();
+                await navigateReplies(response.post, props.showKeyboard);
+            } catch (error) {
+                if (error instanceof Error) {
+                    toast.error(error.message ?? t('post_create_error'));
+                }
+            }
         },
         onError: error => {
             toast.error(error.message ?? t('post_create_error'));
@@ -980,5 +1019,18 @@ function SubmitMenu({
                 ) : undefined}
             </div>
         </>
+    );
+}
+
+function registerEnter(editor: LexicalEditor, handleSubmit: () => void) {
+    return editor.registerCommand(
+        KEY_ENTER_COMMAND,
+        event => {
+            if (!event || event.shiftKey || isMobile()) return false;
+            handleSubmit();
+            event.preventDefault();
+            return true;
+        },
+        COMMAND_PRIORITY_HIGH,
     );
 }
