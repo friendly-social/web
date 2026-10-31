@@ -419,7 +419,7 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
                         placeholder={t('placeholder')}
                     />
                 )}
-                <div className="mt-1 w-full flex items-center">
+                <div className="mt-2 w-full flex items-center">
                     {showTextLength ? (
                         <div
                             className={cn(
@@ -475,24 +475,21 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
                             }}
                         />
                     </Button>
-                    <div className="flex flex-col">
-                        <Button
-                            onClick={() =>
-                                forbidSend ||
-                                createMutation.mutate(text.markdown)
-                            }
-                            disabled={forbidSend}
-                        >
-                            {createMutation.isPending ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                                <div className="flex items-center gap-1.5">
-                                    <SquarePen />
-                                    {t('create_post')}
-                                </div>
-                            )}
-                        </Button>
-                    </div>
+                    <Button
+                        onClick={() =>
+                            forbidSend || createMutation.mutate(text.markdown)
+                        }
+                        disabled={forbidSend}
+                    >
+                        {createMutation.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                            <div className="flex items-center gap-1.5">
+                                <SquarePen />
+                                {t('create_post')}
+                            </div>
+                        )}
+                    </Button>
                 </div>
             </div>
         </div>

@@ -29,7 +29,9 @@ export function appendText(editor: LexicalEditor, text: string) {
             console.error('Cannot append text');
             return;
         }
-        paragraph.append($createTextNode(text));
+        const node = $createTextNode(text);
+        node.selectEnd();
+        paragraph.append(node);
     });
 }
 
