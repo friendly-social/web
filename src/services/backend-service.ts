@@ -236,4 +236,8 @@ export class BackendService {
     ): Promise<Result<void, NetworkError>> {
         return this.client.activityRead(request);
     }
+
+    async activityReadAll(): Promise<Result<void, NetworkError>> {
+        return this.client.activityReadAll();
+    }
 }

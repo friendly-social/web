@@ -7,6 +7,7 @@ import {
     queryOptions,
     useInfiniteQuery,
     infiniteQueryOptions,
+    useMutation,
 } from '@tanstack/react-query';
 import {useState, useEffect} from 'react';
 import {
@@ -157,6 +158,33 @@ function useNewUnreads(app: AppContext): Resource<ActivityNewUnreadsResponse> {
     return Resource.ofUseQuery(query);
 }
 
+function useReadAllMutation(app: AppContext) {
+    return useMutation({
+        mutationKey: ['activity', 'read', 'all'],
+        mutationFn: async () => {
+            const trackingIds = app.queryClient.getQueryData(
+                listOptions(app).queryKey,
+            );
+            if (trackingIds) {
+                const details = trackingIds.pages.flatMap(
+                    response => response.data,
+                );
+                for (const activity of details) {
+                    app.queryClient.setQueryData(
+                        detailsOptions(activity.id).queryKey,
+                        (old: ActivityDetails | undefined) => ({
+                            ...old!,
+                            isRead: true,
+                        }),
+                    );
+                }
+            }
+            const result = forceUnwrap(await app.backend.activityReadAll());
+            return result;
+        },
+    });
+}
+
 export const activity = {
     listOptions,
     useCachedQuery,
@@ -165,4 +193,5 @@ export const activity = {
     useDetails,
     useManyDetails,
     useNewUnreads,
+    useReadAllMutation,
 };

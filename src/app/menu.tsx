@@ -9,6 +9,7 @@ import {ReactNode} from 'react';
 
 export function MenuRail() {
     const hasActivityUnread = useHasActivityUnread();
+    const activityReadAll = useActivityReadAll();
 
     return (
         <div className="h-full p-1 flex flex-col gap-1.5 lg:p-4 lg:min-w-55">
@@ -23,6 +24,7 @@ export function MenuRail() {
                 title="activity"
                 icon={<Inbox />}
                 unread={hasActivityUnread}
+                atPathAction={activityReadAll}
             />
             <MenuRailItem path="/chat" title="chat" icon={<MessageCircle />} />
             <MenuRailItem path="/profile" title="profile" icon={<User />} />
@@ -35,10 +37,12 @@ interface MenuRailItemProps {
     title: string;
     icon: ReactNode;
     unread?: boolean;
+    atPathAction?: () => void;
 }
 
 function MenuRailItem(item: MenuRailItemProps) {
     const {pathname} = useLocation();
+    const atPath = pathname === item.path;
     const t = useTranslations('menu');
 
     return (
@@ -47,9 +51,10 @@ function MenuRailItem(item: MenuRailItemProps) {
                 variant="ghost"
                 className={cn(
                     'cursor-pointer justify-start w-full',
-                    pathname === item.path &&
+                    atPath &&
                         'bg-accent text-accent-foreground dark:bg-accent/50',
                 )}
+                onClick={atPath ? item.atPathAction : undefined}
             >
                 {item.icon}{' '}
                 <p className="hidden lg:block">
@@ -68,6 +73,7 @@ function MenuRailItem(item: MenuRailItemProps) {
 
 export function MenuBar() {
     const hasActivityUnread = useHasActivityUnread();
+    const activityReadAll = useActivityReadAll();
 
     return (
         <div className="grid grid-cols-5 gap-2 p-2 w-full max-w-md mx-auto">
@@ -86,6 +92,7 @@ export function MenuBar() {
                 title="activity"
                 icon={<Inbox className="size-icon m-2" />}
                 unread={hasActivityUnread}
+                atPathAction={activityReadAll}
             />
             <MenuBarItem
                 path="/chat"
@@ -106,10 +113,12 @@ interface MenuBarItemProps {
     title: string;
     icon: ReactNode;
     unread?: boolean;
+    atPathAction?: () => void;
 }
 
 function MenuBarItem(item: MenuBarItemProps) {
     const {pathname} = useLocation();
+    const atPath = pathname === item.path;
 
     return (
         <Link to={item.path} className="min-w-0 w-full">
@@ -118,9 +127,10 @@ function MenuBarItem(item: MenuBarItemProps) {
                 className={cn(
                     'cursor-pointer w-full h-full py-1 px-1 text-xs sm:text-sm',
                     'relative',
-                    pathname === item.path &&
+                    atPath &&
                         'bg-accent text-accent-foreground dark:bg-accent/50',
                 )}
+                onClick={atPath ? item.atPathAction : undefined}
             >
                 {item.icon}
                 {item.unread && (
@@ -142,4 +152,13 @@ function useHasActivityUnread() {
     const app = useAppContext();
     const newUnreads = activity.useNewUnreads(app);
     return newUnreads.data && newUnreads.data.type === 'some';
+}
+
+function useActivityReadAll(): () => void {
+    const app = useAppContext();
+    const mutation = activity.useReadAllMutation(app);
+    return () => {
+        if (mutation.isPending) return;
+        return mutation.mutate();
+    };
 }

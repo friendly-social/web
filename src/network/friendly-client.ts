@@ -95,6 +95,7 @@ export interface FriendlyClient {
     activityRead(
         request: ActivityReadRequest,
     ): Promise<Result<void, NetworkError>>;
+    activityReadAll(): Promise<Result<void, NetworkError>>;
 }
 
 export class FriendlyClientImpl implements FriendlyClient {
@@ -495,6 +496,12 @@ export class FriendlyClientImpl implements FriendlyClient {
     }: ActivityReadRequest): Promise<Result<void, NetworkError>> {
         return this.safeRequest(
             this.client.post(`/activity/read/${id}`).then(() => undefined),
+        );
+    }
+
+    activityReadAll(): Promise<Result<void, NetworkError>> {
+        return this.safeRequest(
+            this.client.post(`/activity/read/all`).then(() => undefined),
         );
     }
 }
