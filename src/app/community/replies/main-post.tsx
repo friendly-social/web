@@ -10,7 +10,6 @@ import {CommunityPostDescriptor} from '@/network/friendly-client';
 import {communityPosts} from '@/services/community-posts-service';
 import {forceUnwrap} from '@/network/result';
 import {CommunityDetailsResponse} from '@/network/friendly-client';
-import {newPost} from '@/services/new-post-service';
 import {useMutation} from '@tanstack/react-query';
 import {MainPostMenu} from '@/app/community/replies/main-post-menu';
 import {Send, Loader2, Pen, X, Paperclip, Check, Eye} from 'lucide-react';
@@ -29,11 +28,9 @@ import React, {
     useRef,
     useState,
     useMemo,
-    useEffect,
     lazy,
     useLayoutEffect,
 } from 'react';
-import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
 import {
     $createLineBreakNode,
     $createTextNode,
@@ -43,7 +40,6 @@ import {
     COMMAND_PRIORITY_HIGH,
     HISTORY_MERGE_TAG,
     KEY_ENTER_COMMAND,
-    type EditorState,
     type LexicalEditor,
 } from 'lexical';
 import {
@@ -53,8 +49,13 @@ import {
     RichText,
 } from '@/network/rich-text';
 import {useLatest} from '@/use-latest';
-import {createEmptyHistoryState, HistoryExtension} from '@lexical/history';
-import {useExtensionDependency} from '@lexical/react/useExtensionComponent';
+import {
+    createEmptyHistoryState,
+    HistoryExtension,
+    HistoryState,
+} from '@lexical/history';
+import {getExtensionDependencyFromEditor} from '@lexical/extension';
+import {newPost} from '@/services/new-post-service';
 
 const MarkdownArea = lazy(() =>
     import('@/components/ui/markdown-area').then(m => ({
@@ -90,15 +91,7 @@ const emojis = [
 
 type InputAction = 'send' | 'edit';
 
-export function MainPostCard(props: MainPostCardProps) {
-    return (
-        <richEditor.Host>
-            <MainPostCardImpl {...props} />
-        </richEditor.Host>
-    );
-}
-
-export function MainPostCardImpl({
+export function MainPostCard({
     first,
     details,
     postRef,
@@ -106,21 +99,22 @@ export function MainPostCardImpl({
     showKeyboard,
 }: MainPostCardProps) {
     const app = useAppContext();
-    const [editor] = useLexicalComposerContext();
-
-    const inputRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLDivElement | null>(null);
     const [action, setAction] = useState<InputAction>('send');
-    const sendState = useSwappableEditorState({
-        initialJson: () => newPost.getReplyLexicalJson(),
-        saveJson: value => newPost.setReplyLexicalJson(value),
-    });
-    const editState = useSwappableEditorState();
-    const activeState = action === 'send' ? sendState : editState;
+
+    const editorRef = useRef<LexicalEditor | null>(null);
+    function editor() {
+        if (!editorRef.current) {
+            throw new Error('Cannot get editor outside composition');
+        }
+        return editorRef.current;
+    }
+    useSendState();
+    useEditState();
+    useSubmitOnEnter();
+    useShowKeyboard();
 
     const text = useRichTextView();
-
-    const [adjuster, setAdjuster] = useState<AdjusterPayload>({type: 'close'});
-    const imagePreviewer = useImagePreviewerController();
 
     const textTooLong = text.markdown.length > 4096;
     const showTextLength = text.markdown.length > 4000;
@@ -132,7 +126,7 @@ export function MainPostCardImpl({
     const createMutation = useCreateMutation({
         details,
         popDepth,
-        onSuccess: () => richEditor.clearText(editor),
+        onSuccess: () => richEditor.clearText(editor()),
     });
 
     const editMutation = useEditMutation({
@@ -144,7 +138,7 @@ export function MainPostCardImpl({
         onSuccess: descriptor => {
             const url = createFileLink(descriptor);
             const markdown = `![](${url})`;
-            editor.update(() => {
+            editor().update(() => {
                 const paragraph = $getRoot().getChildAtIndex(0);
                 if (!$isParagraphNode(paragraph)) {
                     throw new Error('Can only append to a paragraph node');
@@ -167,56 +161,16 @@ export function MainPostCardImpl({
         !text.markdown.trim() ||
         textTooLong;
 
-    const latest = useLatest({handleSubmit, activeState});
-
-    useEffect(() => {
-        sendState.reconcile();
-        const enter = registerEnter(editor, () =>
-            latest.current.handleSubmit(),
-        );
-        const updates = editor.registerUpdateListener(({editorState}) => {
-            latest.current.activeState.onUpdate(editorState);
-        });
-        if (showKeyboard) {
-            editor.focus();
-        }
-        return () => {
-            enter();
-            updates();
-        };
-    }, [editor]);
-
     function startEditing() {
         if (isSubmitting) return;
-        inputRef.current?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-            inline: 'nearest',
-        });
         setAction('edit');
-        if (details.post.type !== 'plain') {
-            throw new Error('Can only edit plain posts');
-        }
-        const markdown = details.post.text;
-        editState.reconcile();
-        editor.update(
-            () => {
-                $getRoot().clear();
-                $appendFromRichText($getRoot(), {markdown, entities: {}});
-                $getRoot().selectEnd();
-            },
-            {
-                onUpdate: () => editor.focus(),
-            },
-        );
     }
 
     function stopEditing() {
         setAction('send');
-        sendState.reconcile();
     }
 
-    function handleSubmit() {
+    function onSubmit() {
         if (forbidSubmit) return;
         switch (action) {
             case 'send':
@@ -237,6 +191,228 @@ export function MainPostCardImpl({
         if (isSubmitting) return;
         deleteMutation.mutate();
     }
+
+    let card;
+    if (deleteMutation.isPending) {
+        card = <MainPostCardLoading first={first} />;
+    } else
+        switch (details.post.type) {
+            case 'plain':
+                card = (
+                    <MainPostCardPlain
+                        first={first}
+                        editorRef={editorRef}
+                        post={details.post}
+                        action={action}
+                        onDelete={onDelete}
+                        onEdit={startEditing}
+                        isAuthor={self.data?.user?.id === details.post.owner.id}
+                    />
+                );
+                break;
+            case 'deleted':
+                card = (
+                    <MainPostCardDeleted
+                        first={first}
+                        instant={details.post.instant}
+                    />
+                );
+                break;
+        }
+
+    function useRichTextView(): RichText {
+        const [text, setText] = useState(EmptyRichText);
+        useLayoutEffect(() => {
+            const updates = editor().registerUpdateListener(({editorState}) => {
+                editorState.read(() => {
+                    setText(convertToRichText($getRoot()));
+                });
+            });
+            return () => {
+                updates();
+            };
+        }, [action]);
+        return text;
+    }
+
+    function useSendState() {
+        const [initialJson] = useState(() => newPost.getNewLexicalJson());
+        const jsonRef = useRef<string | null>(initialJson);
+        const [initialHistory] = useState(() => createEmptyHistoryState());
+        const historyRef = useRef<HistoryState>(initialHistory);
+
+        useLayoutEffect(() => {
+            if (action !== 'send') return;
+            const updates = editor().registerUpdateListener(({editorState}) => {
+                jsonRef.current = JSON.stringify(editorState);
+            });
+            if (jsonRef.current) {
+                editor().setEditorState(
+                    editor().parseEditorState(jsonRef.current),
+                    {tag: HISTORY_MERGE_TAG},
+                );
+            }
+            console.log('setting history ref to', editor());
+            historyRef.current = {
+                current: historyRef.current.current
+                    ? {
+                          editor: editor(),
+                          editorState: historyRef.current.current.editorState,
+                      }
+                    : null,
+                undoStack: historyRef.current.undoStack.map(entry => ({
+                    editor: editor(),
+                    editorState: entry.editorState,
+                })),
+                redoStack: historyRef.current.redoStack.map(entry => ({
+                    editor: editor(),
+                    editorState: entry.editorState,
+                })),
+            };
+            getExtensionDependencyFromEditor(
+                editor(),
+                HistoryExtension,
+            ).output.historyState.value = historyRef.current;
+            return () => {
+                updates();
+            };
+        }, [action]);
+    }
+
+    function useEditState() {
+        useLayoutEffect(() => {
+            if (action !== 'edit') return;
+            if (details.post.type !== 'plain') {
+                throw new Error('Can only edit plain posts');
+            }
+            const markdown = details.post.text;
+            editor().update(
+                () => {
+                    $getRoot().clear();
+                    $appendFromRichText($getRoot(), {markdown, entities: {}});
+                    $getRoot().selectEnd();
+                },
+                {
+                    onUpdate: () => editor().focus(),
+                    tag: HISTORY_MERGE_TAG,
+                },
+            );
+            console.log('pushing history update to', editor());
+            inputRef.current?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start',
+                inline: 'nearest',
+            });
+        }, [action]);
+    }
+
+    function useSubmitOnEnter() {
+        const latest = useLatest({onSubmit});
+        useLayoutEffect(() => {
+            return registerEnter(editor(), () => latest.current.onSubmit());
+        }, [action]);
+    }
+
+    function useShowKeyboard() {
+        useLayoutEffect(() => {
+            if (showKeyboard) {
+                editor().focus();
+            }
+        }, [action]);
+    }
+
+    return (
+        <div className="scroll-m-40" ref={postRef}>
+            {card}
+            <InputField
+                ref={inputRef}
+                editorRef={editorRef}
+                key={action}
+                action={action}
+                text={text}
+                textTooLong={textTooLong}
+                showTextLength={showTextLength}
+                textLength={text.markdown.length}
+                forbidSubmit={forbidSubmit}
+                isSubmitting={isSubmitting}
+                onSubmit={onSubmit}
+                onAdjusted={(file, crop) =>
+                    attachImageMutation.mutate({file, crop})
+                }
+                isAttaching={attachImageMutation.isPending}
+                stopEditing={stopEditing}
+            />
+            <div className="h-2" />
+            <div className={cn('flex gap-1 overflow-x-auto scrollbar-none')}>
+                {emojis.map((emoji, index) => (
+                    <Emoji
+                        key={index}
+                        emoji={emoji}
+                        disabled={isSubmitting}
+                        onClick={() => {
+                            const showKeyboard =
+                                inputRef?.current === document.activeElement;
+                            if (
+                                text.markdown.length === 0 &&
+                                action === 'send'
+                            ) {
+                                createMutation.mutate({
+                                    text: emoji,
+                                    showKeyboard,
+                                });
+                            } else {
+                                richEditor.appendText(editor(), emoji);
+                            }
+                        }}
+                    />
+                ))}
+            </div>
+        </div>
+    );
+}
+
+// This used to be within MainPostCardImpl, but state gets so messy, so this is
+// extracted component abstracted away from edit/send state change.
+interface InputFieldProps {
+    ref: RefObject<HTMLDivElement | null>;
+    editorRef: RefObject<LexicalEditor | null>;
+    action: InputAction;
+    text: RichText;
+    textTooLong: boolean;
+    showTextLength: boolean;
+    textLength: number;
+    forbidSubmit: boolean;
+    isSubmitting: boolean;
+    onSubmit: () => void;
+    onAdjusted: (file: File, crop: AdjusterCrop) => void;
+    isAttaching: boolean;
+    stopEditing: () => void;
+}
+
+// todo: think about how i send command to parse from markdown
+// todo: for edit focus = true, for send take it from path
+//       maybe also set it to true on each consecutive change, so it gets focus
+//       each time it changes (on go to edit and on go from edit)
+function InputField({
+    ref,
+    editorRef,
+    action,
+    text,
+    textTooLong,
+    showTextLength,
+    forbidSubmit,
+    isSubmitting,
+    onSubmit,
+    onAdjusted,
+    isAttaching,
+    stopEditing,
+}: InputFieldProps) {
+    const app = useAppContext();
+
+    const [adjuster, setAdjuster] = useState<AdjusterPayload>({type: 'close'});
+    const imagePreviewer = useImagePreviewerController();
+
+    const self = users.useSelf(app);
 
     function onAttach(data: File) {
         setAdjuster({type: 'open', data});
@@ -260,45 +436,12 @@ export function MainPostCardImpl({
         [self],
     );
 
-    let card;
-    if (deleteMutation.isPending) {
-        card = <MainPostCardLoading first={first} />;
-    } else
-        switch (details.post.type) {
-            case 'plain':
-                card = (
-                    <MainPostCardPlain
-                        first={first}
-                        post={details.post}
-                        action={action}
-                        onDelete={onDelete}
-                        onEdit={startEditing}
-                        isAuthor={self.data?.user?.id === details.post.owner.id}
-                    />
-                );
-                break;
-            case 'deleted':
-                card = (
-                    <MainPostCardDeleted
-                        first={first}
-                        instant={details.post.instant}
-                    />
-                );
-                break;
-        }
-
     const [verticalMenu, setVerticalMenu] = useState(false);
     const [showPreviewOption, setShowPreviewOption] = useState(false);
     const [preview, setPreview] = useState(false);
 
     useLayoutEffect(() => {
-        setVerticalMenu(false);
-        setShowPreviewOption(false);
-        setPreview(false);
-    }, [action]);
-
-    useLayoutEffect(() => {
-        const input = inputRef.current;
+        const input = ref.current;
         if (!input) return;
 
         const observer = new ResizeObserver(([entry]) => {
@@ -319,165 +462,84 @@ export function MainPostCardImpl({
         };
     }, [preview]);
 
-    interface SwappableEditorStateOptions {
-        initialJson?: () => string | null;
-        saveJson?: (value: string) => void;
-    }
-
-    interface SwappableEditorState {
-        reconcile: () => void;
-        onUpdate: (state: EditorState) => void;
-    }
-
-    function useSwappableEditorState({
-        initialJson,
-        saveJson,
-    }: SwappableEditorStateOptions = {}): SwappableEditorState {
-        const [initialJsonFrozen] = useState(() => initialJson?.() ?? null);
-        const jsonRef = useRef(initialJsonFrozen);
-        const [history] = useState(() => createEmptyHistoryState());
-        const historyExtension = useExtensionDependency(HistoryExtension);
-
-        function reconcile() {
-            if (jsonRef.current !== null) {
-                editor.setEditorState(
-                    editor.parseEditorState(jsonRef.current),
-                    {tag: HISTORY_MERGE_TAG},
-                );
-            }
-            historyExtension.output.historyState.value = history;
-        }
-        function onUpdate(state: EditorState) {
-            jsonRef.current = JSON.stringify(state);
-            saveJson?.(jsonRef.current);
-        }
-
-        return {reconcile, onUpdate};
-    }
-
-    function useRichTextView(): RichText {
-        const [text, setText] = useState(EmptyRichText);
-        useEffect(() => {
-            const updates = editor.registerUpdateListener(({editorState}) => {
-                editorState.read(() => {
-                    setText(convertToRichText($getRoot()));
-                });
-            });
-            return () => {
-                updates();
-            };
-        }, [editor]);
-        return text;
-    }
-
     return (
-        <div className="scroll-m-40" ref={postRef}>
-            {card}
-            <div
-                className={cn(
-                    'flex bg-card flex-row gap-2 px-2 py-1',
-                    'rounded-bl-xl rounded-br-xl',
-                    'border border-border',
-                )}
-            >
-                <StyledAvatar
-                    avatarClassName="mt-1 w-8 h-8"
-                    src={selfAvatar}
-                    nickname={self.data?.user?.nickname ?? ''}
-                />
-                <div className="flex-1 min-w-0 flex flex-col">
-                    {preview ? (
-                        <MarkdownArea
-                            className="text-foreground"
-                            text={text.markdown}
-                            onImageClick={e => {
-                                e.stopPropagation();
-                                void imagePreviewer.setPayload({
-                                    type: 'open',
-                                    src: e.currentTarget.src,
-                                });
-                            }}
-                        />
-                    ) : (
-                        <richEditor.Content
-                            ref={inputRef}
-                            contentClassName={cn(
-                                'min-h-10 w-full content-center',
-                                'text-sm outline-none resize-none',
-                                'scroll-m-60 field-sizing-content',
-                                'space-y-[1em] leading-5',
-                            )}
-                            placeholderClassName="text-sm mt-2.5"
-                            onPaste={onPaste}
-                            placeholder={t('reply-placeholder')}
-                        />
-                    )}
-                    <div className="w-full flex">
-                        {textTooLong ? (
-                            <div className="text-destructive text-xs mb-2">
-                                {t('too-long')}
-                            </div>
-                        ) : undefined}
-                        <div className="flex-1" />
-                        {showTextLength ? (
-                            <div
-                                className={cn(
-                                    'text-xs mb-2',
-                                    textTooLong ? 'text-destructive' : '',
-                                )}
-                            >
-                                {text.markdown.length} / 4096
-                            </div>
-                        ) : undefined}
-                    </div>
-                </div>
-                <SubmitMenu
-                    vertical={verticalMenu}
-                    preview={preview}
-                    showPreviewOption={showPreviewOption}
-                    action={action}
-                    forbidSubmit={forbidSubmit}
-                    isSubmitting={isSubmitting}
-                    isAttaching={attachImageMutation.isPending}
-                    onStopEdit={stopEditing}
-                    onAttach={onAttach}
-                    onPreview={() => setPreview(!preview)}
-                    onSubmit={() => handleSubmit()}
-                />
-            </div>
-            <div className="h-2" />
-            <div className={cn('flex gap-1 overflow-x-auto scrollbar-none')}>
-                {emojis.map((emoji, index) => (
-                    <Emoji
-                        key={index}
-                        emoji={emoji}
-                        disabled={isSubmitting}
-                        onClick={() => {
-                            const showKeyboard =
-                                inputRef?.current === document.activeElement;
-                            if (
-                                text.markdown.length === 0 &&
-                                action === 'send'
-                            ) {
-                                createMutation.mutate({
-                                    text: emoji,
-                                    showKeyboard,
-                                });
-                            } else {
-                                richEditor.appendText(editor, emoji);
-                            }
+        <div
+            className={cn(
+                'flex bg-card flex-row gap-2 px-2 py-1',
+                'rounded-bl-xl rounded-br-xl',
+                'border border-border',
+            )}
+        >
+            <StyledAvatar
+                avatarClassName="mt-1 w-8 h-8"
+                src={selfAvatar}
+                nickname={self.data?.user?.nickname ?? ''}
+            />
+            <div className="flex-1 min-w-0 flex flex-col">
+                {preview ? (
+                    <MarkdownArea
+                        className="text-foreground"
+                        text={text.markdown}
+                        onImageClick={e => {
+                            e.stopPropagation();
+                            void imagePreviewer.setPayload({
+                                type: 'open',
+                                src: e.currentTarget.src,
+                            });
                         }}
                     />
-                ))}
+                ) : (
+                    <richEditor.Content
+                        ref={ref}
+                        editorRef={editorRef}
+                        contentClassName={cn(
+                            'min-h-10 w-full content-center',
+                            'text-sm outline-none resize-none',
+                            'scroll-m-60 field-sizing-content',
+                            'space-y-[1em] leading-5',
+                        )}
+                        placeholderClassName="text-sm mt-2.5"
+                        onPaste={onPaste}
+                        placeholder={t('reply-placeholder')}
+                    />
+                )}
+                <div className="w-full flex">
+                    {textTooLong ? (
+                        <div className="text-destructive text-xs mb-2">
+                            {t('too-long')}
+                        </div>
+                    ) : undefined}
+                    <div className="flex-1" />
+                    {showTextLength ? (
+                        <div
+                            className={cn(
+                                'text-xs mb-2',
+                                textTooLong ? 'text-destructive' : '',
+                            )}
+                        >
+                            {text.markdown.length} / 4096
+                        </div>
+                    ) : undefined}
+                </div>
             </div>
-            <div className="h-4" />
+            <SubmitMenu
+                vertical={verticalMenu}
+                preview={preview}
+                showPreviewOption={showPreviewOption}
+                action={action}
+                forbidSubmit={forbidSubmit}
+                isSubmitting={isSubmitting}
+                isAttaching={isAttaching}
+                onStopEdit={stopEditing}
+                onAttach={onAttach}
+                onPreview={() => setPreview(!preview)}
+                onSubmit={() => onSubmit()}
+            />
             <Adjuster
                 title={t('adjuster')}
                 payload={adjuster}
                 setPayload={setAdjuster}
-                onAdjusted={(file, crop) =>
-                    void attachImageMutation.mutate({file, crop})
-                }
+                onAdjusted={onAdjusted}
             />
         </div>
     );
@@ -529,6 +591,7 @@ function MainPostCardLoading({first}: MainPostCardLoading) {
 
 export interface MainPostCardPlainProps {
     first: boolean;
+    editorRef: RefObject<LexicalEditor | null>;
     post: CommunityPostDetailsPlain;
     action: InputAction;
     onDelete: () => void;
@@ -538,6 +601,7 @@ export interface MainPostCardPlainProps {
 
 function MainPostCardPlain({
     first,
+    editorRef,
     post,
     action,
     onDelete,
@@ -545,7 +609,6 @@ function MainPostCardPlain({
     isAuthor,
 }: MainPostCardPlainProps) {
     const t = useTranslations('post');
-    const [editor] = useLexicalComposerContext();
     const navigate = useNavigate();
     const storage = useFriendlyStorage();
 
@@ -611,7 +674,7 @@ function MainPostCardPlain({
                         <MainPostMenu
                             onDelete={onDelete}
                             onEdit={onEdit}
-                            onCloseAutoFocus={() => editor.focus()}
+                            onCloseAutoFocus={() => editorRef.current?.focus()}
                             showDelete={isAuthor}
                         />
                     </div>

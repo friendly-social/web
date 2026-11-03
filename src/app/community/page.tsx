@@ -37,12 +37,12 @@ import React, {
     useEffect,
     useState,
     lazy,
+    useLayoutEffect,
 } from 'react';
 import {toast} from 'sonner';
 import {StyledAvatar} from '@/components/styled-avatar';
 import {createFileLink} from '@/lib/utils';
 import {CommunityPostCard} from './post';
-import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
 import {
     $createLineBreakNode,
     $createTextNode,
@@ -51,8 +51,9 @@ import {
     $isParagraphNode,
     COMMAND_PRIORITY_HIGH,
     KEY_ENTER_COMMAND,
+    type LexicalEditor,
 } from 'lexical';
-import {convertToRichText} from '@/network/rich-text';
+import {convertToRichText, EmptyRichText, RichText} from '@/network/rich-text';
 import {useLatest} from '@/use-latest';
 
 const MarkdownArea = lazy(() =>
@@ -200,11 +201,9 @@ export function CommunityPage() {
 
     return (
         <VisitTip>
-            <richEditor.Host>
-                <div className="flex flex-col items-center w-full h-full px-4">
-                    {content}
-                </div>
-            </richEditor.Host>
+            <div className="flex flex-col items-center w-full h-full px-4">
+                {content}
+            </div>
         </VisitTip>
     );
 }
@@ -215,9 +214,15 @@ interface CreatePostCardProps {
 }
 
 function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
-    const [editor] = useLexicalComposerContext();
+    const editorRef = useRef<LexicalEditor | null>(null);
+    function editor(): LexicalEditor {
+        if (!editorRef.current) {
+            throw new Error('Accessing editor outside of composition');
+        }
+        return editorRef.current;
+    }
 
-    const [text, setText] = useState({markdown: '', entities: {}});
+    const text = useRichText();
     const [preview, setPreview] = useState(false);
     const [showPreviewOption, setShowPreviewOption] = useState(false);
     const [adjuster, setAdjuster] = useState<AdjusterPayload>({type: 'close'});
@@ -264,30 +269,29 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
     function bootstrapEditor() {
         restoreEditor();
         const enter = registerEnter(() => latest.current.handleSend());
-        const updates = editor.registerUpdateListener(({editorState}) => {
-            latest.current.saveEditor();
-            editorState.read(() => setText(convertToRichText($getRoot())));
-        });
+        const updates = editor().registerUpdateListener(() =>
+            latest.current.saveEditor(),
+        );
         return () => {
             enter();
             updates();
         };
     }
-    useEffect(() => bootstrapEditor(), [editor]);
+    useEffect(() => bootstrapEditor(), []);
 
     function restoreEditor() {
         const lexicalJson = newPost.getNewLexicalJson();
         if (lexicalJson) {
-            editor.setEditorState(editor.parseEditorState(lexicalJson));
+            editor().setEditorState(editor().parseEditorState(lexicalJson));
         }
     }
 
     function saveEditor() {
-        newPost.setNewLexicalJson(JSON.stringify(editor.getEditorState()));
+        newPost.setNewLexicalJson(JSON.stringify(editor().getEditorState()));
     }
 
     function registerEnter(handle: () => void) {
-        return editor.registerCommand(
+        return editor().registerCommand(
             KEY_ENTER_COMMAND,
             event => {
                 if (!event || event.shiftKey || isMobile()) return false;
@@ -320,6 +324,19 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
 
     function onImageAdjusted(file: File, crop: AdjusterCrop) {
         attachImageMutation.mutate({file, crop});
+    }
+
+    function useRichText(): RichText {
+        const [text, setText] = useState(EmptyRichText);
+        useLayoutEffect(() => {
+            editor().read(() => {
+                setText(convertToRichText($getRoot()));
+            });
+            return editor().registerUpdateListener(({editorState}) => {
+                editorState.read(() => setText(convertToRichText($getRoot())));
+            });
+        }, []);
+        return text;
     }
 
     useEffect(() => {
@@ -369,7 +386,7 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
                 return details;
             },
             onSuccess: () => {
-                richEditor.clearText(editor);
+                richEditor.clearText(editor());
                 setPreview(false);
                 onPostCreated();
             },
@@ -390,7 +407,7 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
                 );
                 const url = createFileLink(descriptor);
                 const markdown = `![](${url})`;
-                editor.update(() => {
+                editor().update(() => {
                     const paragraph = $getRoot().getChildAtIndex(0);
                     if (!$isParagraphNode(paragraph)) {
                         throw new Error('Can only append to a paragraph node');
@@ -431,6 +448,7 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
                 ) : (
                     <richEditor.Content
                         ref={postRef}
+                        editorRef={editorRef}
                         contentClassName={cn(
                             'w-full mt-2',
                             'outline-none resize-none field-sizing-content',
@@ -455,7 +473,7 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
                     {text.markdown.length > 0 && (
                         <Button
                             onClick={() => {
-                                richEditor.clearText(editor);
+                                richEditor.clearText(editor());
                                 setPreview(false);
                             }}
                             variant="ghost"

@@ -1,5 +1,5 @@
 import {cn} from '@/lib/utils';
-import {ReactNode, RefObject} from 'react';
+import {RefCallback, RefObject, useLayoutEffect} from 'react';
 import {ContentEditable} from '@lexical/react/LexicalContentEditable';
 import {HistoryExtension} from '@lexical/history';
 import {LexicalExtensionComposer} from '@lexical/react/LexicalExtensionComposer';
@@ -14,6 +14,7 @@ import {
 } from 'lexical';
 import {HMRExtension} from '@lexical/extension';
 import {PlainTextExtension} from '@lexical/plain-text';
+import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
 
 export function clearText(editor: LexicalEditor) {
     editor.update(() => {
@@ -35,23 +36,9 @@ export function appendText(editor: LexicalEditor, text: string) {
     });
 }
 
-export interface HostProps {
-    children: ReactNode;
-}
-
-export function Host({children}: HostProps): ReactNode {
-    return (
-        <LexicalExtensionComposer
-            extension={appExtension}
-            contentEditable={null}
-        >
-            {children}
-        </LexicalExtensionComposer>
-    );
-}
-
 export interface ContentProps {
     ref: RefObject<HTMLDivElement | null>;
+    editorRef: RefObject<LexicalEditor | null>;
     contentClassName: string;
     placeholderClassName?: string;
     placeholder: string;
@@ -60,6 +47,7 @@ export interface ContentProps {
 
 export function Content({
     ref,
+    editorRef,
     contentClassName,
     placeholderClassName,
     placeholder,
@@ -67,23 +55,29 @@ export function Content({
 }: ContentProps) {
     return (
         <div className="relative">
-            <ContentEditable
-                ref={ref}
-                className={contentClassName}
-                aria-placeholder={placeholder}
-                onPaste={onPaste}
-                placeholder={
-                    <div
-                        className={cn(
-                            'absolute top-0 left-0 right-0 mt-1.5',
-                            'pointer-events-none text-foreground opacity-50',
-                            placeholderClassName,
-                        )}
-                    >
-                        {placeholder}
-                    </div>
-                }
-            />
+            <LexicalExtensionComposer
+                extension={appExtension}
+                contentEditable={null}
+            >
+                <ContentEditable
+                    ref={ref}
+                    className={contentClassName}
+                    aria-placeholder={placeholder}
+                    onPaste={onPaste}
+                    placeholder={
+                        <div
+                            className={cn(
+                                'absolute top-0 left-0 right-0 mt-1.5',
+                                'pointer-events-none text-foreground opacity-50',
+                                placeholderClassName,
+                            )}
+                        >
+                            {placeholder}
+                        </div>
+                    }
+                />
+                <EditorRefPlugin editorRef={editorRef} />
+            </LexicalExtensionComposer>
         </div>
     );
 }
@@ -97,3 +91,34 @@ const appExtension = defineExtension({
         PlainTextExtension,
     ],
 });
+
+export function EditorRefPlugin({
+    editorRef,
+}: {
+    editorRef:
+        | RefCallback<LexicalEditor>
+        | RefObject<LexicalEditor | null | undefined>;
+}): null {
+    const [editor] = useLexicalComposerContext();
+
+    useLayoutEffect(() => {
+        let cleanup: (() => void) | undefined;
+        if (typeof editorRef === 'function') {
+            const editorRefCleanup = editorRef(editor);
+            if (typeof editorRefCleanup === 'function') {
+                cleanup = editorRefCleanup;
+            } else {
+                cleanup = () => editorRef(null);
+            }
+        } else if (typeof editorRef === 'object' && editorRef !== null) {
+            // eslint-disable-next-line react-hooks/immutability
+            editorRef.current = editor;
+            cleanup = () => {
+                editorRef.current = null;
+            };
+        }
+        return cleanup;
+    }, [editor, editorRef]);
+
+    return null;
+}
