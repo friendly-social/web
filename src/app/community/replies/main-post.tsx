@@ -315,7 +315,7 @@ export function MainPostCard({
 
     function useShowKeyboard() {
         useLayoutEffect(() => {
-            if (showKeyboard) {
+            if (showKeyboard || action === 'edit') {
                 editor().focus();
             }
         }, [action]);
@@ -371,8 +371,6 @@ export function MainPostCard({
     );
 }
 
-// This used to be within MainPostCardImpl, but state gets so messy, so this is
-// extracted component abstracted away from edit/send state change.
 interface InputFieldProps {
     ref: RefObject<HTMLDivElement | null>;
     editorRef: RefObject<LexicalEditor | null>;
@@ -389,10 +387,6 @@ interface InputFieldProps {
     stopEditing: () => void;
 }
 
-// todo: think about how i send command to parse from markdown
-// todo: for edit focus = true, for send take it from path
-//       maybe also set it to true on each consecutive change, so it gets focus
-//       each time it changes (on go to edit and on go from edit)
 function InputField({
     ref,
     editorRef,
