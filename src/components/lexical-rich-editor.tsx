@@ -15,6 +15,7 @@ import {
 import {HMRExtension} from '@lexical/extension';
 import {PlainTextExtension} from '@lexical/plain-text';
 import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
+import {ImageNode} from './lexical-image-node';
 
 export function clearText(editor: LexicalEditor) {
     editor.update(() => {
@@ -84,6 +85,7 @@ export function Content({
 
 const appExtension = defineExtension({
     name: '[root]',
+    nodes: () => [ImageNode],
     onError: (error: unknown) => console.error(error),
     dependencies: [
         configExtension(HMRExtension, {hot: import.meta.hot ?? null}),

@@ -45,7 +45,6 @@ import {createFileLink} from '@/lib/utils';
 import {CommunityPostCard} from './post';
 import {
     $createLineBreakNode,
-    $createTextNode,
     $getRoot,
     $isLineBreakNode,
     $isParagraphNode,
@@ -55,6 +54,7 @@ import {
 } from 'lexical';
 import {convertToRichText, EmptyRichText, RichText} from '@/network/rich-text';
 import {useLatest} from '@/use-latest';
+import {$createImageNode} from '@/components/lexical-image-node';
 
 const MarkdownArea = lazy(() =>
     import('@/components/ui/markdown-area').then(m => ({
@@ -400,13 +400,11 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
         return useMutation({
             mutationFn: async (props: {file: File; crop: AdjusterCrop}) => {
                 const {file, crop} = props;
-                // const post = postRef.current;
                 const compressed = await resizeImage(file, crop);
                 const descriptor = forceUnwrap(
                     await backend.uploadFile(compressed),
                 );
                 const url = createFileLink(descriptor);
-                const markdown = `![](${url})`;
                 editor().update(() => {
                     const paragraph = $getRoot().getChildAtIndex(0);
                     if (!$isParagraphNode(paragraph)) {
@@ -418,9 +416,9 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
                     if (!endsWithNewline) {
                         paragraph.append($createLineBreakNode());
                     }
-                    paragraph.append($createTextNode(markdown));
+                    paragraph.append($createImageNode(url));
                 });
-                // todo: focus
+                editor().focus();
             },
         });
     }

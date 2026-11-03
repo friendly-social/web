@@ -1,3 +1,4 @@
+import {$isImageNode} from '@/components/lexical-image-node';
 import {
     $createLineBreakNode,
     $createParagraphNode,
@@ -77,6 +78,12 @@ export function convertToRichText(
             },
             {markdown: '', entities: {}},
         );
+    }
+    if ($isImageNode(node)) {
+        return {
+            markdown: `![](${node.$getSrc()})`,
+            entities: [],
+        };
     }
     if ($isTextNode(node)) {
         return {
