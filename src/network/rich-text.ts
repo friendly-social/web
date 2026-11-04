@@ -1,4 +1,4 @@
-import {$isImageNode} from '@/components/lexical-image-node';
+import {$createImageNode, $isImageNode} from '@/components/lexical-image-node';
 import {
     $createLineBreakNode,
     $createParagraphNode,
@@ -10,6 +10,9 @@ import {
     ElementNode,
     type LexicalNode,
 } from 'lexical';
+import * as mdast from 'mdast';
+import remarkParse from 'remark-parse';
+import {unified} from 'unified';
 
 /*
  * Custom entities can be embedded in 2 formats:
@@ -29,21 +32,51 @@ export type RichTextEntity = {type: 'image'; url: string} | {type: never};
 
 export const EmptyRichText: RichText = {markdown: '', entities: []};
 
-// todo: lexical converters
+export const richTextParser = unified().use(remarkParse);
 
-export function $appendFromRichText(node: ElementNode, text: RichText) {
+export function $appendFromRichText(
+    node: ElementNode,
+    text: RichText,
+    parsed: mdast.Root,
+) {
     const paragraph = $createParagraphNode();
-    const lines = text.markdown.split('\n');
+    const entities = [...findImages(parsed), null];
+    for (const [i, next] of entities.entries()) {
+        const previous = entities[i - 1];
+        const startIndex = previous?.position?.end?.offset ?? 0;
+        const endIndex = next?.position?.start?.offset ?? text.markdown.length;
+        const textBefore = text.markdown.substring(startIndex, endIndex);
+        $importText(paragraph, textBefore);
+        if (next !== null) {
+            paragraph.append($createImageNode(next.url));
+        }
+    }
+    node.append(paragraph);
+}
+
+function findImages(node: mdast.Parent): mdast.Image[] {
+    return node.children.flatMap(node => {
+        if ('children' in node) {
+            return findImages(node);
+        }
+        if (node.type === 'image') {
+            return [node];
+        }
+        return [];
+    });
+}
+
+function $importText(node: ElementNode, text: string) {
+    const lines = text.split('\n');
     let first = true;
     for (const line of lines) {
         if (first) {
             first = false;
         } else {
-            paragraph.append($createLineBreakNode());
+            node.append($createLineBreakNode());
         }
-        paragraph.append($createTextNode(line));
+        node.append($createTextNode(line));
     }
-    node.append(paragraph);
 }
 
 export function convertToRichText(

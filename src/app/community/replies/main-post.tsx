@@ -33,7 +33,6 @@ import React, {
 } from 'react';
 import {
     $createLineBreakNode,
-    $createTextNode,
     $getRoot,
     $isLineBreakNode,
     $isParagraphNode,
@@ -47,6 +46,7 @@ import {
     convertToRichText,
     EmptyRichText,
     RichText,
+    richTextParser,
 } from '@/network/rich-text';
 import {useLatest} from '@/use-latest';
 import {
@@ -56,6 +56,7 @@ import {
 } from '@lexical/history';
 import {getExtensionDependencyFromEditor} from '@lexical/extension';
 import {newPost} from '@/services/new-post-service';
+import {$createImageNode} from '@/components/lexical-image-node';
 
 const MarkdownArea = lazy(() =>
     import('@/components/ui/markdown-area').then(m => ({
@@ -137,7 +138,6 @@ export function MainPostCard({
     const attachImageMutation = useAttachImageMutation({
         onSuccess: descriptor => {
             const url = createFileLink(descriptor);
-            const markdown = `![](${url})`;
             editor().update(() => {
                 const paragraph = $getRoot().getChildAtIndex(0);
                 if (!$isParagraphNode(paragraph)) {
@@ -149,7 +149,7 @@ export function MainPostCard({
                 if (!endsWithNewline) {
                     paragraph.append($createLineBreakNode());
                 }
-                paragraph.append($createTextNode(markdown));
+                paragraph.append($createImageNode(url));
             });
         },
     });
@@ -236,7 +236,7 @@ export function MainPostCard({
     }
 
     function useSendState() {
-        const [initialJson] = useState(() => newPost.getNewLexicalJson());
+        const [initialJson] = useState(() => newPost.getReplyLexicalJson());
         const jsonRef = useRef<string | null>(initialJson);
         const [initialHistory] = useState(() => createEmptyHistoryState());
         const historyRef = useRef<HistoryState>(initialHistory);
@@ -245,14 +245,17 @@ export function MainPostCard({
             if (action !== 'send') return;
             const updates = editor().registerUpdateListener(({editorState}) => {
                 jsonRef.current = JSON.stringify(editorState);
+                newPost.setReplyLexicalJson(jsonRef.current);
             });
             if (jsonRef.current) {
                 editor().setEditorState(
                     editor().parseEditorState(jsonRef.current),
                     {tag: HISTORY_MERGE_TAG},
                 );
+                editor().update(() => {
+                    $getRoot().selectEnd();
+                });
             }
-            console.log('setting history ref to', editor());
             historyRef.current = {
                 current: historyRef.current.current
                     ? {
@@ -286,10 +289,15 @@ export function MainPostCard({
                 throw new Error('Can only edit plain posts');
             }
             const markdown = details.post.text;
+            const root = richTextParser.parse(markdown);
             editor().update(
                 () => {
                     $getRoot().clear();
-                    $appendFromRichText($getRoot(), {markdown, entities: {}});
+                    $appendFromRichText(
+                        $getRoot(),
+                        {markdown, entities: {}},
+                        root,
+                    );
                     $getRoot().selectEnd();
                 },
                 {
@@ -297,7 +305,6 @@ export function MainPostCard({
                     tag: HISTORY_MERGE_TAG,
                 },
             );
-            console.log('pushing history update to', editor());
             inputRef.current?.scrollIntoView({
                 behavior: 'smooth',
                 block: 'start',
@@ -336,9 +343,10 @@ export function MainPostCard({
                 forbidSubmit={forbidSubmit}
                 isSubmitting={isSubmitting}
                 onSubmit={onSubmit}
-                onAdjusted={(file, crop) =>
-                    attachImageMutation.mutate({file, crop})
-                }
+                onAdjusted={(file, crop) => {
+                    editor().focus();
+                    attachImageMutation.mutate({file, crop});
+                }}
                 isAttaching={attachImageMutation.isPending}
                 stopEditing={stopEditing}
             />

@@ -283,6 +283,9 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
         const lexicalJson = newPost.getNewLexicalJson();
         if (lexicalJson) {
             editor().setEditorState(editor().parseEditorState(lexicalJson));
+            editor().update(() => {
+                $getRoot().selectEnd();
+            });
         }
     }
 
@@ -323,6 +326,7 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
     }
 
     function onImageAdjusted(file: File, crop: AdjusterCrop) {
+        editor().focus();
         attachImageMutation.mutate({file, crop});
     }
 
@@ -418,7 +422,6 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
                     }
                     paragraph.append($createImageNode(url));
                 });
-                editor().focus();
             },
         });
     }
