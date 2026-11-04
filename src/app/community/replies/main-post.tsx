@@ -445,6 +445,7 @@ function InputField({
     useLayoutEffect(() => {
         const input = ref.current;
         if (!input) return;
+        if (preview) return;
 
         const observer = new ResizeObserver(([entry]) => {
             const style = window.getComputedStyle(input);
@@ -478,7 +479,7 @@ function InputField({
                 nickname={self.data?.user?.nickname ?? ''}
             />
             <div className="flex-1 min-w-0 flex flex-col">
-                {preview ? (
+                {preview && (
                     <MarkdownArea
                         className="text-foreground"
                         text={text.markdown}
@@ -490,21 +491,21 @@ function InputField({
                             });
                         }}
                     />
-                ) : (
-                    <richEditor.Content
-                        ref={ref}
-                        editorRef={editorRef}
-                        contentClassName={cn(
-                            'min-h-10 w-full content-center',
-                            'text-sm outline-none resize-none',
-                            'scroll-m-60 field-sizing-content',
-                            'space-y-[1em] leading-5',
-                        )}
-                        placeholderClassName="text-sm mt-2.5"
-                        onPaste={onPaste}
-                        placeholder={t('reply-placeholder')}
-                    />
                 )}
+                <richEditor.Content
+                    ref={ref}
+                    editorRef={editorRef}
+                    contentClassName={cn(
+                        'min-h-10 w-full content-center',
+                        'text-sm outline-none resize-none',
+                        'scroll-m-60 field-sizing-content',
+                        'space-y-[1em] leading-5',
+                        preview ? 'hidden' : 'block',
+                    )}
+                    placeholderClassName="text-sm mt-2.5"
+                    onPaste={onPaste}
+                    placeholder={t('reply-placeholder')}
+                />
                 <div className="w-full flex">
                     {textTooLong ? (
                         <div className="text-destructive text-xs mb-2">

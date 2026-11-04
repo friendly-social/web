@@ -346,6 +346,7 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
     useEffect(() => {
         const post = postRef.current;
         if (!post) return;
+        if (preview) return;
 
         const observer = new ResizeObserver(([entry]) => {
             const style = window.getComputedStyle(post);
@@ -434,7 +435,7 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
                 nickname={userQuery?.data?.user?.nickname ?? ''}
             />
             <div className="w-full flex-1 flex flex-col min-w-0">
-                {preview ? (
+                {preview && (
                     <MarkdownArea
                         className="text-foreground mt-2"
                         text={text.markdown}
@@ -446,19 +447,19 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
                             });
                         }}
                     />
-                ) : (
-                    <richEditor.Content
-                        ref={postRef}
-                        editorRef={editorRef}
-                        contentClassName={cn(
-                            'w-full mt-2',
-                            'outline-none resize-none field-sizing-content',
-                            'space-y-[1em] leading-5',
-                        )}
-                        onPaste={onPaste}
-                        placeholder={t('placeholder')}
-                    />
                 )}
+                <richEditor.Content
+                    ref={postRef}
+                    editorRef={editorRef}
+                    contentClassName={cn(
+                        'w-full mt-2',
+                        'outline-none resize-none field-sizing-content',
+                        'space-y-[1em] leading-5',
+                        preview ? 'hidden' : 'block',
+                    )}
+                    onPaste={onPaste}
+                    placeholder={t('placeholder')}
+                />
                 <div className="mt-2 w-full flex items-center">
                     {showTextLength ? (
                         <div
