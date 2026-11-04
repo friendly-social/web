@@ -5,6 +5,8 @@ import {
     $setState,
     createState,
     DecoratorNode,
+    DOMConversionOutput,
+    DOMExportOutput,
     type LexicalNode,
 } from 'lexical';
 import {ReactNode} from 'react';
@@ -16,6 +18,16 @@ export class ImageNode extends DecoratorNode<ReactNode> {
         return this.config('friendly:image', {
             extends: DecoratorNode,
             stateConfigs: [{flat: true, stateConfig: srcState}],
+            importDOM: {
+                img: () => ({
+                    conversion: (element): DOMConversionOutput => {
+                        const src = element.getAttribute('src');
+                        const node = $createImageNode(src ?? 'broken');
+                        return {node};
+                    },
+                    priority: 0,
+                }),
+            },
         });
     }
 
@@ -32,7 +44,13 @@ export class ImageNode extends DecoratorNode<ReactNode> {
     }
 
     decorate(): ReactNode {
-        return <img className="rounded-lg" src={$getState(this, srcState)} />;
+        return <img className="rounded-lg" src={this.$getSrc()} />;
+    }
+
+    exportDOM(): DOMExportOutput {
+        const element = $getDocument().createElement('img');
+        element.setAttribute('src', this.$getSrc());
+        return {element};
     }
 
     $setSrc(value: string): this {

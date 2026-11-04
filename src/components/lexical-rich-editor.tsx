@@ -11,11 +11,13 @@ import {
     $getRoot,
     type LexicalEditor,
     $isParagraphNode,
+    $insertNodes,
 } from 'lexical';
 import {HMRExtension} from '@lexical/extension';
 import {PlainTextExtension} from '@lexical/plain-text';
 import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
 import {ImageNode} from './lexical-image-node';
+import {$generateNodesFromDOM} from '@lexical/html';
 
 export function clearText(editor: LexicalEditor) {
     editor.update(() => {
@@ -52,8 +54,24 @@ export function Content({
     contentClassName,
     placeholderClassName,
     placeholder,
-    onPaste,
+    onPaste: onUserPaste,
 }: ContentProps) {
+    function onPaste(event: React.ClipboardEvent<HTMLDivElement>) {
+        const html = event.clipboardData.getData('text/html');
+        if (!html) {
+            onUserPaste(event);
+            return;
+        }
+        const editor = editorRef.current;
+        if (!editor) return;
+        editor.update(() => {
+            const parser = new DOMParser();
+            const dom = parser.parseFromString(html, 'text/html');
+            const nodes = $generateNodesFromDOM(editor, dom);
+            $getRoot().select();
+            $insertNodes(nodes);
+        });
+    }
     return (
         <div className="relative">
             <LexicalExtensionComposer

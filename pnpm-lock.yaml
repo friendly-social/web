@@ -172,6 +172,9 @@ importers:
       '@lexical/history':
         specifier: ^0.52.0
         version: 0.52.0(@typescript/typescript6@6.0.2)
+      '@lexical/html':
+        specifier: ^0.52.0
+        version: 0.52.0(@typescript/typescript6@6.0.2)
       '@lexical/plain-text':
         specifier: ^0.52.0
         version: 0.52.0(@typescript/typescript6@6.0.2)
