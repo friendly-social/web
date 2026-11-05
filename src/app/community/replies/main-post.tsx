@@ -201,7 +201,6 @@ export function MainPostCard({
                 card = (
                     <MainPostCardPlain
                         first={first}
-                        editorRef={editorRef}
                         post={details.post}
                         action={action}
                         onDelete={onDelete}
@@ -298,15 +297,21 @@ export function MainPostCard({
                     $getRoot().selectEnd();
                 },
                 {
-                    onUpdate: () => editor().focus(),
                     tag: HISTORY_MERGE_TAG,
                 },
             );
-            inputRef.current?.scrollIntoView({
+            // Radix even with preventDefault() hijacks focus with animation
+            // frame
+            const promise = inputRef.current?.scrollIntoView({
                 behavior: 'smooth',
                 block: 'start',
                 inline: 'nearest',
-            });
+            }) as Promise<void> | void;
+            if (promise instanceof Promise) {
+                void promise.then(() => editor().focus());
+            } else {
+                setTimeout(() => editor().focus(), 500);
+            }
         }, [action]);
     }
 
@@ -319,7 +324,7 @@ export function MainPostCard({
 
     function useShowKeyboard() {
         useLayoutEffect(() => {
-            if (showKeyboard || action === 'edit') {
+            if (showKeyboard) {
                 editor().update(() => {
                     $getRoot().selectEnd();
                 });
@@ -422,9 +427,10 @@ function InputField({
     function onPaste(event: ClipboardEvent) {
         const file = event.clipboardData?.files[0];
         if (file && file.type.startsWith('image')) {
-            event.preventDefault();
             onAttach(file);
+            return true;
         }
+        return false;
     }
 
     const t = useTranslations('replies');
@@ -593,7 +599,6 @@ function MainPostCardLoading({first}: MainPostCardLoading) {
 
 export interface MainPostCardPlainProps {
     first: boolean;
-    editorRef: RefObject<LexicalEditor | null>;
     post: CommunityPostDetailsPlain;
     action: InputAction;
     onDelete: () => void;
@@ -603,7 +608,6 @@ export interface MainPostCardPlainProps {
 
 function MainPostCardPlain({
     first,
-    editorRef,
     post,
     action,
     onDelete,
@@ -620,6 +624,10 @@ function MainPostCardPlain({
         ? createFileLink(post.owner.avatar)
         : undefined;
     const postTime = new Date(post.instant);
+
+    function onCopyMarkdown() {
+        void navigator.clipboard?.writeText(post.text);
+    }
 
     async function navigateProfile(event: React.MouseEvent) {
         event.stopPropagation();
@@ -674,10 +682,11 @@ function MainPostCardPlain({
                         </span>
                         <div className="flex-1" />
                         <MainPostMenu
+                            onCopyMarkdown={onCopyMarkdown}
                             onDelete={onDelete}
                             onEdit={onEdit}
-                            onCloseAutoFocus={() => editorRef.current?.focus()}
                             showDelete={isAuthor}
+                            showEdit={isAuthor}
                         />
                     </div>
                     <MarkdownArea

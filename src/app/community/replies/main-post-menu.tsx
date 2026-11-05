@@ -1,4 +1,4 @@
-import {Ellipsis, Trash, Pen} from 'lucide-react';
+import {Ellipsis, Trash, Pen, Code} from 'lucide-react';
 import {useAppRouter} from '@/components/app-router-provider';
 import {useNavigate, useLocation} from 'react-router';
 import {useTranslations} from 'use-intl';
@@ -48,22 +48,22 @@ export function useDeleteDialogController(): DeleteDialogController {
 export interface MainPostMenuProps {
     onEdit: () => void;
     onDelete: () => void;
+    onCopyMarkdown: () => void;
     onCloseAutoFocus?: () => void;
     showDelete: boolean;
+    showEdit: boolean;
 }
 
 export function MainPostMenu({
     onDelete,
     onEdit,
+    onCopyMarkdown,
     onCloseAutoFocus,
     showDelete,
+    showEdit,
 }: MainPostMenuProps) {
     const t = useTranslations('replies');
     const deleteDialog = useDeleteDialogController();
-
-    if (!showDelete) {
-        return;
-    }
 
     return (
         <>
@@ -79,17 +79,25 @@ export function MainPostMenu({
                     }}
                 >
                     <DropdownMenuGroup>
-                        <DropdownMenuItem onClick={onEdit}>
-                            <Pen className="size-4" />
-                            {t('edit')}
+                        <DropdownMenuItem onClick={() => onCopyMarkdown()}>
+                            <Code className="size-4" />
+                            {t('copy-markdown')}
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                            variant="destructive"
-                            onClick={() => void deleteDialog.setOpen(true)}
-                        >
-                            <Trash className="size-4" />
-                            {t('delete.trigger')}
-                        </DropdownMenuItem>
+                        {showEdit && (
+                            <DropdownMenuItem onClick={onEdit}>
+                                <Pen className="size-4" />
+                                {t('edit')}
+                            </DropdownMenuItem>
+                        )}
+                        {showDelete && (
+                            <DropdownMenuItem
+                                variant="destructive"
+                                onClick={() => void deleteDialog.setOpen(true)}
+                            >
+                                <Trash className="size-4" />
+                                {t('delete.trigger')}
+                            </DropdownMenuItem>
+                        )}
                     </DropdownMenuGroup>
                 </DropdownMenuContent>
             </DropdownMenu>

@@ -244,7 +244,8 @@
         "go-back": "Go back",
         "upstream": "Upstream",
         "too-long": "Post can't be longer than 4096 chars",
-        "adjuster": "Crop image"
+        "adjuster": "Crop image",
+        "copy-markdown": "Copy markdown"
     },
     "chat": {
         "title": "Work in progress...",

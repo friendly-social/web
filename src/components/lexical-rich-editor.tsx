@@ -50,7 +50,7 @@ export interface ContentProps {
     contentClassName: string;
     placeholderClassName?: string;
     placeholder: string;
-    onPaste: (event: ClipboardEvent) => void;
+    onPaste: (event: ClipboardEvent) => boolean;
 }
 
 export function Content({
@@ -61,15 +61,15 @@ export function Content({
     placeholder,
     onPaste: onUserPaste,
 }: ContentProps) {
-    function onPaste(event: ClipboardEvent) {
+    function onPaste(event: ClipboardEvent): boolean {
         const html = event.clipboardData?.getData('text/html');
         if (!html) {
-            onUserPaste(event);
-            return;
+            return onUserPaste(event);
         }
-        event.preventDefault();
         const editor = editorRef.current;
-        if (!editor) return;
+        if (!editor) {
+            return false;
+        }
         editor.update(() => {
             const parser = new DOMParser();
             const dom = parser.parseFromString(html, 'text/html');
@@ -83,6 +83,7 @@ export function Content({
             }
             $insertNodes(nodes);
         });
+        return true;
     }
 
     useLayoutEffect(() => {
@@ -92,8 +93,7 @@ export function Content({
             PASTE_COMMAND,
             event => {
                 if ('clipboardData' in event) {
-                    onPaste(event);
-                    return true;
+                    return onPaste(event);
                 }
                 return false;
             },

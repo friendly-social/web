@@ -306,9 +306,10 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
     function onPaste(event: ClipboardEvent) {
         const file = event.clipboardData?.files[0];
         if (file && file.type.startsWith('image')) {
-            event.preventDefault();
             onImageSelected(file);
+            return true;
         }
+        return false;
     }
 
     function attachImage() {
