@@ -127,7 +127,7 @@ export function MainPostCard({
     const createMutation = useCreateMutation({
         details,
         popDepth,
-        onSuccess: () => richEditor.clearText(editor()),
+        onSuccess: () => editorRef.current && richEditor.clearText(editor()),
     });
 
     const editMutation = useEditMutation({
@@ -252,9 +252,6 @@ export function MainPostCard({
                     editor().parseEditorState(jsonRef.current),
                     {tag: HISTORY_MERGE_TAG},
                 );
-                editor().update(() => {
-                    $getRoot().selectEnd();
-                });
             }
             historyRef.current = {
                 current: historyRef.current.current
@@ -323,7 +320,9 @@ export function MainPostCard({
     function useShowKeyboard() {
         useLayoutEffect(() => {
             if (showKeyboard || action === 'edit') {
-                editor().focus();
+                editor().update(() => {
+                    $getRoot().selectEnd();
+                });
             }
         }, [action]);
     }

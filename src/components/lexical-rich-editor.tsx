@@ -1,11 +1,10 @@
 import {cn} from '@/lib/utils';
-import {RefCallback, RefObject, useEffect, useLayoutEffect} from 'react';
+import {RefCallback, RefObject, useLayoutEffect} from 'react';
 import {ContentEditable} from '@lexical/react/LexicalContentEditable';
 import {HistoryExtension} from '@lexical/history';
 import {LexicalExtensionComposer} from '@lexical/react/LexicalExtensionComposer';
 import {
     defineExtension,
-    configExtension,
     $createParagraphNode,
     $createTextNode,
     $getRoot,
@@ -16,7 +15,6 @@ import {
     PASTE_COMMAND,
     $getSelection,
 } from 'lexical';
-import {HMRExtension} from '@lexical/extension';
 import {PlainTextExtension} from '@lexical/plain-text';
 import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
 import {ImageNode} from './lexical-image-node';
@@ -40,6 +38,10 @@ export function appendText(editor: LexicalEditor, text: string) {
         node.selectEnd();
         paragraph.append(node);
     });
+}
+
+function $initialState() {
+    $getRoot().append($createParagraphNode());
 }
 
 export interface ContentProps {
@@ -83,7 +85,7 @@ export function Content({
         });
     }
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         const editor = editorRef.current;
         if (!editor) throw new Error('Cannot access editor');
         return editor.registerCommand(
@@ -127,17 +129,6 @@ export function Content({
     );
 }
 
-const appExtension = defineExtension({
-    name: '[root]',
-    nodes: () => [ImageNode],
-    onError: (error: unknown) => console.error(error),
-    dependencies: [
-        configExtension(HMRExtension, {hot: import.meta.hot ?? null}),
-        HistoryExtension,
-        PlainTextExtension,
-    ],
-});
-
 export function EditorRefPlugin({
     editorRef,
 }: {
@@ -168,3 +159,14 @@ export function EditorRefPlugin({
 
     return null;
 }
+
+const appExtension = defineExtension({
+    name: '[root]',
+    nodes: () => [ImageNode],
+    onError: (error: unknown) => console.error(error),
+    $initialEditorState: $initialState,
+    dependencies: [
+        HistoryExtension,
+        PlainTextExtension,
+    ],
+});

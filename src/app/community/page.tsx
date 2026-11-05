@@ -283,9 +283,6 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
         const lexicalJson = newPost.getNewLexicalJson();
         if (lexicalJson) {
             editor().setEditorState(editor().parseEditorState(lexicalJson));
-            editor().update(() => {
-                $getRoot().selectEnd();
-            });
         }
     }
 

@@ -295,7 +295,7 @@ function ReplyContent({
     } else {
         repliesContent = (
             <div className="w-full min-h-[70dvh] flex flex-col">
-                <p className="text-sm font-semibold uppercase text-foreground pb-4">
+                <p className="text-sm font-semibold uppercase text-foreground py-2">
                     {t('replies')}
                 </p>
                 {replies.map(reply => {
