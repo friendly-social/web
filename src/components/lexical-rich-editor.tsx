@@ -165,8 +165,5 @@ const appExtension = defineExtension({
     nodes: () => [ImageNode],
     onError: (error: unknown) => console.error(error),
     $initialEditorState: $initialState,
-    dependencies: [
-        HistoryExtension,
-        PlainTextExtension,
-    ],
+    dependencies: [HistoryExtension, PlainTextExtension],
 });
