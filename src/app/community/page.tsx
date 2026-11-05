@@ -306,8 +306,8 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
         );
     }
 
-    function onPaste(event: React.ClipboardEvent) {
-        const file = event.clipboardData.files[0];
+    function onPaste(event: ClipboardEvent) {
+        const file = event.clipboardData?.files[0];
         if (file && file.type.startsWith('image')) {
             event.preventDefault();
             onImageSelected(file);

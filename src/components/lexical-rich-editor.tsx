@@ -1,5 +1,5 @@
 import {cn} from '@/lib/utils';
-import {RefCallback, RefObject, useLayoutEffect} from 'react';
+import {RefCallback, RefObject, useEffect, useLayoutEffect} from 'react';
 import {ContentEditable} from '@lexical/react/LexicalContentEditable';
 import {HistoryExtension} from '@lexical/history';
 import {LexicalExtensionComposer} from '@lexical/react/LexicalExtensionComposer';
@@ -12,6 +12,9 @@ import {
     type LexicalEditor,
     $isParagraphNode,
     $insertNodes,
+    COMMAND_PRIORITY_HIGH,
+    PASTE_COMMAND,
+    $getSelection,
 } from 'lexical';
 import {HMRExtension} from '@lexical/extension';
 import {PlainTextExtension} from '@lexical/plain-text';
@@ -45,7 +48,7 @@ export interface ContentProps {
     contentClassName: string;
     placeholderClassName?: string;
     placeholder: string;
-    onPaste: (event: React.ClipboardEvent<HTMLDivElement>) => void;
+    onPaste: (event: ClipboardEvent) => void;
 }
 
 export function Content({
@@ -56,22 +59,46 @@ export function Content({
     placeholder,
     onPaste: onUserPaste,
 }: ContentProps) {
-    function onPaste(event: React.ClipboardEvent<HTMLDivElement>) {
-        const html = event.clipboardData.getData('text/html');
+    function onPaste(event: ClipboardEvent) {
+        const html = event.clipboardData?.getData('text/html');
         if (!html) {
             onUserPaste(event);
             return;
         }
+        event.preventDefault();
         const editor = editorRef.current;
         if (!editor) return;
         editor.update(() => {
             const parser = new DOMParser();
             const dom = parser.parseFromString(html, 'text/html');
             const nodes = $generateNodesFromDOM(editor, dom);
-            $getRoot().select();
+            const paragraph = $getRoot().getChildAtIndex(0);
+            if (!paragraph || !$isParagraphNode(paragraph)) {
+                throw new Error('Should always have a single root paragraph');
+            }
+            if (!$getSelection()) {
+                paragraph.select();
+            }
             $insertNodes(nodes);
         });
     }
+
+    useEffect(() => {
+        const editor = editorRef.current;
+        if (!editor) throw new Error('Cannot access editor');
+        return editor.registerCommand(
+            PASTE_COMMAND,
+            event => {
+                if ('clipboardData' in event) {
+                    onPaste(event);
+                    return true;
+                }
+                return false;
+            },
+            COMMAND_PRIORITY_HIGH,
+        );
+    }, []);
+
     return (
         <div className="relative">
             <LexicalExtensionComposer
@@ -82,7 +109,6 @@ export function Content({
                     ref={ref}
                     className={contentClassName}
                     aria-placeholder={placeholder}
-                    onPaste={onPaste}
                     placeholder={
                         <div
                             className={cn(

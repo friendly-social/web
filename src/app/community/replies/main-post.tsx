@@ -420,8 +420,8 @@ function InputField({
         setAdjuster({type: 'open', data});
     }
 
-    function onPaste(event: React.ClipboardEvent) {
-        const file = event.clipboardData.files[0];
+    function onPaste(event: ClipboardEvent) {
+        const file = event.clipboardData?.files[0];
         if (file && file.type.startsWith('image')) {
             event.preventDefault();
             onAttach(file);
