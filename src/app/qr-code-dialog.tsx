@@ -120,7 +120,9 @@ function QrCodeDialogContent({setOpen}: QrCodeDialogContentProps) {
     }, [inviteQuery.data?.expiration]);
 
     const url =
-        inviteQuery.data && !inviteQuery.isPending && !forceRefreshMutation.isPending
+        inviteQuery.data &&
+        !inviteQuery.isPending &&
+        !forceRefreshMutation.isPending
             ? createFriendInviteLink(inviteQuery.data.token)
             : null;
 
@@ -151,9 +153,7 @@ function QrCodeDialogContent({setOpen}: QrCodeDialogContentProps) {
                 <div className="w-full flex flex-col items-center gap-1">
                     {url && expiration && (
                         <span className="text-sm text-muted-foreground">
-                            {t('qr.expiration')}
-                            {' '}
-                            {expiration}
+                            {t('qr.expiration')} {expiration}
                             <span
                                 className="underline cursor-pointer ms-1"
                                 onClick={() => forceRefresh()}
