@@ -1,6 +1,5 @@
 import {useAppRouter} from '@/components/app-router-provider';
 import {useNavigate, useLocation} from 'react-router';
-import {useAppContext} from '@/app.context';
 import * as Dialog from '@radix-ui/react-dialog';
 import {useBackend} from '@/backend.context';
 import {Button} from '@/components/ui/button';
@@ -11,7 +10,6 @@ import {Copy, Loader2, X} from 'lucide-react';
 import QRCode from 'react-qr-code';
 import {toast} from 'sonner';
 import {useTranslations} from 'use-intl';
-import {users} from '@/services/users-service';
 
 type QrCodeDialogState = {qrCodeDialog?: true} | null;
 
@@ -52,8 +50,6 @@ export function QrCodeDialog() {
 
     const t = useTranslations('profile');
     const backend = useBackend();
-    const app = useAppContext();
-    const user = users.useSelf(app).data!.user;
 
     const inviteQuery = useQuery({
         queryKey: ['inviteToken'],
@@ -61,10 +57,9 @@ export function QrCodeDialog() {
         enabled: open,
     });
 
-    const url =
-        user?.id && inviteQuery.data?.ok
-            ? createFriendInviteLink(user.id, inviteQuery.data.data)
-            : null;
+    const url = inviteQuery.data?.ok
+        ? createFriendInviteLink(inviteQuery.data.data)
+        : null;
 
     return (
         <StyledDialogWrapper

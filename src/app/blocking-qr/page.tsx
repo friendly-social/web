@@ -51,8 +51,8 @@ export function BlockingQR(): ReactNode {
                 setLinkError(t('link-invalid'));
                 return;
             }
-            const {userId, token} = parseLinkResult.data;
-            const result = await backend.addFriend({userId, token});
+            const {token} = parseLinkResult.data;
+            const result = await backend.addFriend({token});
             if (!result.ok) {
                 if (result.error.type === 'status') {
                     toast.error(t('link-expired'));
@@ -210,7 +210,6 @@ type ParseLinkResult =
     | {
           ok: true;
           data: {
-              userId: number;
               token: string;
           };
       }
@@ -222,7 +221,7 @@ type ParseLinkResult =
 // Add behavior locality by introducing Deeplink entity that can parse both
 // /redirect-like urls and ?reference-like URLs
 function parseLink({raw}: ParseLinkParams): ParseLinkResult {
-    // https://getfriend.ly/#?reference=add/userId/token
+    // https://getfriend.ly/#?reference=add/token
     const parsed = URL.parse(raw);
     if (!parsed) {
         return {
@@ -247,10 +246,10 @@ function parseLink({raw}: ParseLinkParams): ParseLinkResult {
         };
     }
     const segments = reference.split('/');
-    if (segments.length !== 3) {
+    if (segments.length !== 2) {
         return {
             ok: false,
-            message: `segments.length (${segments.length}) != 3`,
+            message: `segments.length (${segments.length}) != 2`,
         };
     }
     if (segments[0] !== 'add') {
@@ -259,16 +258,9 @@ function parseLink({raw}: ParseLinkParams): ParseLinkResult {
             message: `segments[0] (${segments[0]}) != 'add'`,
         };
     }
-    const userId = Number(segments[1]);
-    if (Number.isNaN(userId)) {
-        return {
-            ok: false,
-            message: 'Number.isNan',
-        };
-    }
-    const token = segments[2];
+    const token = segments[1];
     return {
         ok: true,
-        data: {userId, token},
+        data: {token},
     };
 }

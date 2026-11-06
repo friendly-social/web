@@ -67,13 +67,13 @@ export default function SignUpPage() {
         const link = deferredLink;
         if (!link) return;
         if (link.type !== 'add-friend') return;
-        const {userId, token} = link;
+        const {token} = link;
         while (true) {
             // If profile account is created, network conditions were good.
             // If we have a problem after we already created account,
             // it's very hard to rollback. So we just retry indefinitely and
             // show no indication on failure since it's very unlikely also.
-            const result = await backend.addFriend({userId, token});
+            const result = await backend.addFriend({token});
             if (result.ok) {
                 if (result.data.type === 'Success') {
                     blockingQR.dismissBlockingQR();

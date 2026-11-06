@@ -539,6 +539,7 @@ export interface EditField<T> {
 
 export interface GenerateFriendInvitationTokenResponse {
     token: string;
+    expiration: string;
 }
 
 export interface FriendsGenerateForceResponse {
@@ -547,7 +548,6 @@ export interface FriendsGenerateForceResponse {
 
 export interface AddFriendRequest {
     token: string;
-    userId: number;
 }
 
 export interface AddFriendResponse {

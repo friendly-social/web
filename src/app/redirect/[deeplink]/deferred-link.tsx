@@ -13,7 +13,6 @@ const DeferredLinkContext = createContext<DeferredLinkState | undefined>(
 
 export interface DeferredLink {
     type: 'add-friend';
-    userId: number;
     token: string;
 }
 

@@ -7,8 +7,8 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-export function createFriendInviteLink(userId: number, token: string) {
-    return `${backendConfig.landing}#?reference=add%2F${userId}%2F${token}`;
+export function createFriendInviteLink(token: string) {
+    return `https://invite.${backendConfig.landing.domain}/${token}`;
 }
 
 export function createFileLink(descriptor: FileDescriptor): string {

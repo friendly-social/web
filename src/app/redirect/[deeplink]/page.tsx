@@ -24,19 +24,18 @@ export default function DeeplinkPage(): ReactNode {
     const {deeplink} = useParams();
     const [_, setDeferredLink] = useDeferredLink();
 
-    async function addFriend(userId: number, token: string) {
+    async function addFriend(token: string) {
         setHandling(true);
         if (session.status === 'guest') {
             setDeferredLink({
                 type: 'add-friend',
-                userId,
                 token,
             });
             void navigate('/sign-up');
             return;
         }
         while (true) {
-            const result = await backend.addFriend({userId, token});
+            const result = await backend.addFriend({token});
             if (!result.ok) {
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 continue;
@@ -60,8 +59,8 @@ export default function DeeplinkPage(): ReactNode {
         if (!deeplink) return;
 
         if (deeplink.startsWith('add/')) {
-            const [userId, token] = deeplink.slice(4).split('/');
-            return void addFriend(Number(userId), token);
+            const [token] = deeplink.slice(4).split('/');
+            return void addFriend(token);
         }
 
         throw Error(
