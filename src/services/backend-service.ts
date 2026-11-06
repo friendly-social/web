@@ -25,6 +25,7 @@ import {
     CommunityPostDescriptor,
     CommunityPostId,
     FilePreuploadDescriptor,
+    GenerateFriendInvitationTokenResponse,
 } from '@/network/friendly-client';
 import {NetworkError} from '@/network/errors';
 import {err, ok, Result} from '@/network/result';
@@ -98,10 +99,9 @@ export class BackendService {
     }
 
     async generateFriendInvitationToken(): Promise<
-        Result<string, NetworkError>
+        Result<GenerateFriendInvitationTokenResponse, NetworkError>
     > {
-        const result = await this.client.generateFriendInvitationToken();
-        return mapResult(result, data => data.token);
+        return this.client.generateFriendInvitationToken();
     }
 
     friendsGenerateForce: typeof this.client.friendsGenerateForce = (

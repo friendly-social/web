@@ -5,11 +5,13 @@ import {useBackend} from '@/backend.context';
 import {Button} from '@/components/ui/button';
 import {StyledDialogWrapper} from '@/components/styled-dialog-wrapper';
 import {createFriendInviteLink} from '@/lib/utils';
-import {useQuery} from '@tanstack/react-query';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {Copy, Loader2, X} from 'lucide-react';
 import QRCode from 'react-qr-code';
 import {toast} from 'sonner';
 import {useTranslations} from 'use-intl';
+import {useEffect, useState} from 'react';
+import {forceUnwrap} from '@/network/result';
 
 type QrCodeDialogState = {qrCodeDialog?: true} | null;
 
@@ -48,24 +50,82 @@ export function useQrCodeDialogController(): QrCodeDialogController {
 export function QrCodeDialog() {
     const {open, setOpen} = useQrCodeDialogController();
 
-    const t = useTranslations('profile');
-    const backend = useBackend();
-
-    const inviteQuery = useQuery({
-        queryKey: ['inviteToken'],
-        queryFn: () => backend.generateFriendInvitationToken(),
-        enabled: open,
-    });
-
-    const url = inviteQuery.data?.ok
-        ? createFriendInviteLink(inviteQuery.data.data)
-        : null;
-
     return (
         <StyledDialogWrapper
             open={open}
             onOpenChange={value => void setOpen(value)}
         >
+            <QrCodeDialogContent setOpen={value => void setOpen(value)} />
+        </StyledDialogWrapper>
+    );
+}
+
+interface QrCodeDialogContentProps {
+    setOpen: (value: boolean) => void;
+}
+
+function QrCodeDialogContent({setOpen}: QrCodeDialogContentProps) {
+    const t = useTranslations('profile');
+    const backend = useBackend();
+    const queryClient = useQueryClient();
+
+    const [expiration, setExpiration] = useState<string | null>(null);
+
+    const inviteQuery = useQuery({
+        queryKey: ['inviteToken'],
+        queryFn: async () => {
+            return forceUnwrap(await backend.generateFriendInvitationToken());
+        },
+    });
+
+    const forceRefreshMutation = useMutation({
+        mutationFn: async () => {
+            return forceUnwrap(await backend.friendsGenerateForce());
+        },
+        onSuccess: () => {
+            void queryClient.invalidateQueries({queryKey: ['inviteToken']});
+        },
+    });
+
+    function forceRefresh() {
+        if (forceRefreshMutation.isPending) return;
+        forceRefreshMutation.mutate();
+    }
+
+    useEffect(() => {
+        const expiration = inviteQuery.data?.expiration;
+        if (!expiration) {
+            setExpiration(null);
+            return;
+        }
+        const nudge = () => {
+            const duration = Date.parse(expiration) - Date.now();
+            if (duration < 0) {
+                setExpiration(null);
+                return;
+            }
+            const seconds = String(Math.floor((duration / 1_000) % 60));
+            const minutes = String(Math.floor((duration / 1_000 / 60) % 60));
+            const hours = Math.floor(duration / 1_000 / 60 / 60);
+            const display =
+                `${hours}:` +
+                minutes.padStart(2, '0') +
+                ':' +
+                seconds.padStart(2, '0');
+            setExpiration(display);
+        };
+        nudge();
+        const intervalId = window.setInterval(() => nudge(), 500);
+        return () => window.clearInterval(intervalId);
+    }, [inviteQuery.data?.expiration]);
+
+    const url =
+        inviteQuery.data && !inviteQuery.isPending && !forceRefreshMutation.isPending
+            ? createFriendInviteLink(inviteQuery.data.token)
+            : null;
+
+    return (
+        <>
             <div className="relative flex items-center mt-1 mx-1">
                 <Dialog.Title className="w-full text-base font-semibold text-center pt-2">
                     {t('qr.title')}
@@ -88,10 +148,23 @@ export function QrCodeDialog() {
                         </div>
                     )}
                 </div>
-                <div className="flex gap-3 w-full">
+                <div className="w-full flex flex-col items-center gap-1">
+                    {url && expiration && (
+                        <span className="text-sm text-muted-foreground">
+                            {t('qr.expiration')}
+                            {' '}
+                            {expiration}
+                            <span
+                                className="underline cursor-pointer ms-1"
+                                onClick={() => forceRefresh()}
+                            >
+                                ({t('qr.revoke')})
+                            </span>
+                        </span>
+                    )}
                     <Button
                         variant="default"
-                        className="flex-1 cursor-pointer"
+                        className="flex-1 cursor-pointer max-w-sm w-full"
                         onClick={() => {
                             void setOpen(false);
                             void navigator.clipboard.writeText(url ?? '');
@@ -103,6 +176,6 @@ export function QrCodeDialog() {
                     </Button>
                 </div>
             </div>
-        </StyledDialogWrapper>
+        </>
     );
 }

@@ -51,8 +51,9 @@
             "desc": "Share your profile to make connections.",
             "copy": "Copy",
             "save": "Save",
-            "regenerate": "Regenerate code",
-            "copied": "Link Copied!"
+            "copied": "Link Copied!",
+            "expiration": "This QR Code expires in",
+            "revoke": "Revoke"
         },
         "feed": {
             "title": "Connection feed",
