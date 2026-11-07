@@ -57,7 +57,7 @@ async function handleMessage(payload) {
     switch (details.type) {
         case 'new_request':
             data = {
-                url: 'https://web.getfriend.ly/feed',
+                url: 'https://web.getfriend.ly/people',
             };
             if (details.isMutual) {
                 switch (language) {
