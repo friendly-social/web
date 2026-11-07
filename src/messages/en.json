@@ -180,7 +180,7 @@
         }
     },
     "not-found": {
-        "title": "Well, this is akward.",
+        "title": "Well, this is awkward.",
         "subtitle": "Sorry, the page you've requested does not exist.",
         "goback": "Go home"
     },
