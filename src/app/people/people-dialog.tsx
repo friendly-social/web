@@ -22,7 +22,7 @@ const MarkdownArea = lazy(() =>
     })),
 );
 
-interface FeedDialogProps {
+interface PeopleDialogProps {
     selectedCard: FeedItem;
     loading: boolean;
     handleReview: (direction: SwipeDirection) => void;
@@ -30,12 +30,12 @@ interface FeedDialogProps {
 
 export type SwipeDirection = 'left' | 'right';
 
-export function FeedDialog({
+export function PeopleDialog({
     selectedCard,
     loading,
     handleReview,
-}: FeedDialogProps) {
-    const t = useTranslations('profile.feed');
+}: PeopleDialogProps) {
+    const t = useTranslations('profile.people');
     const storage = useFriendlyStorage();
     const navigate = useNavigate();
     const allFriends = useAllFriendsDialogController();

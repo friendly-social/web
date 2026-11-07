@@ -7,7 +7,7 @@ import {FeedItem} from '@/network/friendly-client';
 import {Activity, BookUser, Loader2, X, Check, Heart} from 'lucide-react';
 import {useCallback, useState} from 'react';
 import {useTranslations} from 'use-intl';
-import {FeedDialog} from '@/app/feed/feed-dialog';
+import {PeopleDialog} from '@/app/people/people-dialog';
 import {useBackend} from '@/backend.context';
 import {useQuery} from '@tanstack/react-query';
 import {toast} from 'sonner';
@@ -16,7 +16,7 @@ import {cn} from '@/lib/utils';
 export type SwipeDirection = 'left' | 'right';
 
 function FeedEmptyState() {
-    const t = useTranslations('profile.feed');
+    const t = useTranslations('profile.people');
 
     return (
         <div className="h-full flex flex-col items-center justify-center gap-2 px-6 text-center">
@@ -31,8 +31,8 @@ function FeedEmptyState() {
     );
 }
 
-export default function FeedPage() {
-    const t = useTranslations('profile.feed');
+export default function PeoplePage() {
+    const t = useTranslations('profile.people');
     const app = useAppContext();
 
     const backend = useBackend();
@@ -148,7 +148,7 @@ export default function FeedPage() {
                     )}
                 >
                     {selectedCard && (
-                        <FeedDialog
+                        <PeopleDialog
                             selectedCard={selectedCard}
                             loading={loading}
                             handleReview={direction =>

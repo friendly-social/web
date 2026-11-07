@@ -126,6 +126,15 @@ function QrCodeDialogContent({setOpen}: QrCodeDialogContentProps) {
             ? createFriendInviteLink(inviteQuery.data.token)
             : null;
 
+    const revoke = (
+        <span
+            className="underline cursor-pointer"
+            onClick={() => forceRefresh()}
+        >
+            {t('qr.revoke')}
+        </span>
+    );
+
     return (
         <>
             <div className="relative flex items-center mt-1 mx-1">
@@ -153,13 +162,7 @@ function QrCodeDialogContent({setOpen}: QrCodeDialogContentProps) {
                 <div className="w-full flex flex-col items-center gap-1">
                     {url && expiration && (
                         <span className="text-sm text-muted-foreground">
-                            {t('qr.expiration')} {expiration}
-                            <span
-                                className="underline cursor-pointer ms-1"
-                                onClick={() => forceRefresh()}
-                            >
-                                ({t('qr.revoke')})
-                            </span>
+                            {t('qr.expiration')} {expiration} ({revoke})
                         </span>
                     )}
                     <Button

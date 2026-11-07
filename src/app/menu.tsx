@@ -18,7 +18,7 @@ export function MenuRail() {
                 title="community"
                 icon={<Newspaper />}
             />
-            <MenuRailItem path="/feed" title="feed" icon={<BookUser />} />
+            <MenuRailItem path="/people" title="people" icon={<BookUser />} />
             <MenuRailItem
                 path="/activity"
                 title="activity"
@@ -83,8 +83,8 @@ export function MenuBar() {
                 icon={<Newspaper className="size-icon m-2" />}
             />
             <MenuBarItem
-                path="/feed"
-                title="feed"
+                path="/people"
+                title="people"
                 icon={<BookUser className="size-icon m-2" />}
             />
             <MenuBarItem

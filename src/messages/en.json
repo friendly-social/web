@@ -55,7 +55,7 @@
             "expiration": "This QR Code expires in",
             "revoke": "Revoke"
         },
-        "feed": {
+        "people": {
             "title": "Connection feed",
             "desc": "Incoming requests and new people you may want to add.",
             "requests_badge": "Friend request",
@@ -258,7 +258,7 @@
         "profile": "Profile",
         "chat": "Chat",
         "community": "Community",
-        "feed": "People",
+        "people": "People",
         "activity": "Activity"
     },
     "markdown-input": {

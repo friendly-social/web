@@ -20,7 +20,7 @@ import {NotFoundPage} from '@/app/not-found';
 import {ProfilePage} from '@/app/profile/page';
 import {RootLayout} from '@/app/layout';
 import {createBrowserRouter, RouterProvider} from 'react-router';
-import FeedPage from '@/app/feed/page';
+import PeoplePage from '@/app/people/page';
 import RouteErrorScreen from '@/route-errorscreen';
 import IntlProvider from '@/components/intl-provider';
 import {AppContext} from '@/app.context';
@@ -105,8 +105,8 @@ const router = createBrowserRouter([
                         Component: ChatPage,
                     },
                     {
-                        path: 'feed',
-                        Component: FeedPage,
+                        path: 'people',
+                        Component: PeoplePage,
                     },
                 ],
             },
