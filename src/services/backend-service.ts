@@ -26,6 +26,7 @@ import {
     CommunityPostId,
     FilePreuploadDescriptor,
     GenerateFriendInvitationTokenResponse,
+    FriendsAddDetailsRequest,
 } from '@/network/friendly-client';
 import {NetworkError} from '@/network/errors';
 import {err, ok, Result} from '@/network/result';
@@ -147,6 +148,10 @@ export class BackendService {
     addFriend: typeof this.client.addFriend = (...args) => {
         return this.client.addFriend(...args);
     };
+
+    friendsAddDetails(request: FriendsAddDetailsRequest) {
+        return this.client.friendsAddDetails(request);
+    }
 
     async sendFriendRequest(
         request: SendFriendRequest,

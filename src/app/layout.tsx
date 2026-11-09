@@ -9,7 +9,7 @@ import {QueryProvider} from '@/components/query-provider';
 import {SessionProvider} from '@/components/session-provider';
 import IntlProvider from '@/components/intl-provider';
 import {FriendlyStorageProvider} from '@/components/friendly-storage-provider';
-import {DeferredLinkProvider} from '@/app/redirect/[deeplink]/deferred-link';
+import {PendingInviteProvider} from '@/app/redirect/[deeplink]/pending-invite';
 import {ImagePreviewer} from '@/components/image-previewer';
 import {AppPage} from '@/app/page';
 import {AppContext} from '@/app.context';
@@ -25,7 +25,7 @@ export function RootLayout({app}: RootLayoutProps) {
                 <QueryProvider>
                     <FriendlyStorageProvider>
                         <SessionProvider>
-                            <DeferredLinkProvider>
+                            <PendingInviteProvider>
                                 <IntlProvider>
                                     <RootContainer>
                                         <BlockingQRProvider>
@@ -37,7 +37,7 @@ export function RootLayout({app}: RootLayoutProps) {
                                         </BlockingQRProvider>
                                     </RootContainer>
                                 </IntlProvider>
-                            </DeferredLinkProvider>
+                            </PendingInviteProvider>
                         </SessionProvider>
                     </FriendlyStorageProvider>
                 </QueryProvider>

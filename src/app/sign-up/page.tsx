@@ -4,7 +4,7 @@ import {FilePreuploadDescriptor} from '@/network/friendly-client';
 import {useAppContext} from '@/app.context';
 import {Textarea} from '@/components/ui/textarea';
 import {User, Link, Heart} from 'lucide-react';
-import {useDeferredLink} from '@/app/redirect/[deeplink]/deferred-link';
+import {usePendingInvite} from '@/app/redirect/[deeplink]/pending-invite';
 import {
     InputGroup,
     InputGroupAddon,
@@ -30,7 +30,7 @@ export default function SignUpPage() {
     const app = useAppContext();
     const navigate = useNavigate();
     const session = useSession();
-    const [deferredLink, setDeferredLink] = useDeferredLink();
+    const [pendingInvite, setPendingInvite] = usePendingInvite();
     const blockingQR = useBlockingQR();
 
     const [loading, setLoading] = useState(false);
@@ -64,9 +64,8 @@ export default function SignUpPage() {
     });
 
     async function handleAddFriend() {
-        const link = deferredLink;
+        const link = pendingInvite;
         if (!link) return;
-        if (link.type !== 'add-friend') return;
         const {token} = link;
         while (true) {
             // If profile account is created, network conditions were good.
@@ -82,7 +81,7 @@ export default function SignUpPage() {
             }
             await new Promise(resolve => setTimeout(resolve, 1_000));
         }
-        setDeferredLink(undefined);
+        setPendingInvite(undefined);
     }
 
     async function onSignUp() {

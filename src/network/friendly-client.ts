@@ -36,6 +36,9 @@ export interface FriendlyClient {
     addFriend(
         request: AddFriendRequest,
     ): Promise<Result<AddFriendResponse, NetworkError>>;
+    friendsAddDetails(
+        request: FriendsAddDetailsRequest,
+    ): Promise<Result<FriendsAddDetailsResponse, NetworkError>>;
     sendFriendRequest(
         request: SendFriendRequest,
     ): Promise<Result<void, NetworkError>>;
@@ -276,6 +279,18 @@ export class FriendlyClientImpl implements FriendlyClient {
         return this.safeRequest(
             this.client
                 .post<AddFriendResponse>('/friends/add', request)
+                .then(r => r.data),
+        );
+    }
+
+    friendsAddDetails({
+        token,
+    }: FriendsAddDetailsRequest): Promise<
+        Result<FriendsAddDetailsResponse, NetworkError>
+    > {
+        return this.safeRequest(
+            this.client
+                .get<FriendsAddDetailsResponse>(`/friends/add/details/${token}`)
                 .then(r => r.data),
         );
     }
@@ -552,6 +567,17 @@ export interface AddFriendRequest {
 
 export interface AddFriendResponse {
     type: 'FriendTokenExpired' | 'Success';
+}
+
+export interface FriendsAddDetailsRequest {
+    token: string;
+}
+
+export interface FriendsAddDetailsResponse {
+    nickname: string;
+    description: string;
+    avatar: FileDescriptor;
+    interests: string[];
 }
 
 export interface SendFriendRequest {

@@ -3,7 +3,7 @@ import {useAppRouter} from '@/components/app-router-provider';
 import * as authService from '@/services/auth-service';
 import {useAppContext} from '@/app.context';
 import {useSession} from '@/components/session-provider';
-import {useDeferredLink} from '@/app/redirect/[deeplink]/deferred-link';
+import {usePendingInvite} from '@/app/redirect/[deeplink]/pending-invite';
 import {useBlockingQR} from '@/app/blocking-qr/page';
 import * as Dialog from '@radix-ui/react-dialog';
 import {toast} from 'sonner';
@@ -96,13 +96,12 @@ function CodeDialogContent({email}: CodeDialogProps): ReactNode {
     const backend = useBackend();
     const navigate = useNavigate();
     const session = useSession();
-    const [deferredLink, setDeferredLink] = useDeferredLink();
+    const [pendingInvite, setPendingInvite] = usePendingInvite();
     const blockingQR = useBlockingQR();
 
     async function handleAddFriend() {
-        const link = deferredLink;
+        const link = pendingInvite;
         if (!link) return;
-        if (link.type !== 'add-friend') return;
         const {token} = link;
         while (true) {
             // If sign in was successful, network conditions were good.
@@ -115,7 +114,7 @@ function CodeDialogContent({email}: CodeDialogProps): ReactNode {
             }
             await new Promise(resolve => setTimeout(resolve, 1_000));
         }
-        setDeferredLink(undefined);
+        setPendingInvite(undefined);
     }
 
     async function onComplete() {

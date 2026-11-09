@@ -9,7 +9,7 @@ import {useEffect, useState, ReactNode} from 'react';
 import {useSession} from '@/components/session-provider';
 import {useBlockingQR} from '@/app/blocking-qr/page';
 import {StyledDialogWrapper} from '@/components/styled-dialog-wrapper';
-import {useDeferredLink} from './deferred-link';
+import {usePendingInvite} from './pending-invite';
 
 type State = 'loading' | 'friend-token-expired';
 
@@ -22,15 +22,12 @@ export default function DeeplinkPage(): ReactNode {
     const [handling, setHandling] = useState(false);
     const [state, setState] = useState<State>('loading');
     const {deeplink} = useParams();
-    const [_, setDeferredLink] = useDeferredLink();
+    const [_, setPendingInvite] = usePendingInvite();
 
     async function addFriend(token: string) {
         setHandling(true);
         if (session.status === 'guest') {
-            setDeferredLink({
-                type: 'add-friend',
-                token,
-            });
+            setPendingInvite({token});
             void navigate('/sign-up');
             return;
         }
