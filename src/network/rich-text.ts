@@ -80,14 +80,14 @@ function $importText(node: ElementNode, text: string) {
 }
 
 export function convertToRichText(node: LexicalNode): RichText {
-    const {markdown, entities} = convertToRichTextResursion(node);
+    const {markdown, entities} = convertToRichTextRecursion(node);
     return {
         markdown: markdown.trim(),
         entities,
     };
 }
 
-function convertToRichTextResursion(
+function convertToRichTextRecursion(
     node: LexicalNode,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     nonce: number = 0,
@@ -99,7 +99,7 @@ function convertToRichTextResursion(
                 if (acc.markdown.length !== 0) {
                     markdown = markdown + '\n';
                 }
-                const richText = convertToRichText(node);
+                const richText = convertToRichTextRecursion(node);
                 return {
                     markdown: markdown + richText.markdown,
                     entities: Object.assign(acc.entities, richText.entities),
@@ -111,7 +111,7 @@ function convertToRichTextResursion(
     if ($isParagraphNode(node)) {
         return node.getChildren().reduce(
             (acc, node) => {
-                const richText = convertToRichText(node);
+                const richText = convertToRichTextRecursion(node);
                 return {
                     markdown: acc.markdown + richText.markdown,
                     entities: Object.assign(acc.entities, richText.entities),
