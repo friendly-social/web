@@ -91,7 +91,7 @@ function MarkdownAreaComponent(
                             {children}
                         </ul>,
                     li: ({children}) => (
-                        <div className="grid grid-cols-[min-content_1fr]">
+                        <div className="grid grid-cols-[min-content_minmax(0,1fr)]">
                             <li className="list-item" />
                             <div className="w-full ps-1 space-y-[1em] break-words">
                                 {children}
@@ -133,7 +133,7 @@ function MarkdownAreaComponent(
                             </SyntaxHighlighter>
                         ) : (
                             <code {...rest} className={cn(
-                                "bg-muted text-muted-foreground p-0.5 px-1 h-full text-xs rounded-lg",
+                                "bg-muted text-muted-foreground p-0.5 px-1 h-full text-xs rounded-lg whitespace-normal min-w-0",
                                 className,
                             )}>
                                 {String(children)}
