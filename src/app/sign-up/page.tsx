@@ -100,8 +100,8 @@ export default function SignUpPage() {
             if (result.ok) {
                 authService.save(app, result.data);
                 backend.setAuthorization(result.data);
-                session.setAuthed();
                 await handleAddFriend();
+                session.setAuthed();
                 await Notifications.nudge(app);
                 void navigate('/');
             } else {

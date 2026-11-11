@@ -46,7 +46,7 @@ export function BlockingQR(): ReactNode {
         setLinkError(null);
         setLoading(true);
         try {
-            const parseLinkResult = parseLink({raw: link});
+            const parseLinkResult = parseLink({link});
             if (!parseLinkResult.ok) {
                 setLinkError(t('link-invalid'));
                 return;
@@ -203,7 +203,7 @@ export function BlockingQRProvider({children}: BlockingQRProviderProps) {
 }
 
 interface ParseLinkParams {
-    raw: string;
+    link: string;
 }
 
 type ParseLinkResult =
@@ -215,51 +215,17 @@ type ParseLinkResult =
       }
     | {
           ok: false;
-          message: string;
       };
 
-// TODO: add new link format
-// Add behavior locality by introducing Deeplink entity that can parse both
-// /redirect-like urls and ?reference-like URLs
-function parseLink({raw}: ParseLinkParams): ParseLinkResult {
-    // https://getfriend.ly/#?redirect=add/token
-    const parsed = URL.parse(raw);
-    if (!parsed) {
+function parseLink({link}: ParseLinkParams): ParseLinkResult {
+    // https://invite.getfriend.ly/token
+    const prefix = 'https://invite.getfriend.ly/';
+    if (!link.startsWith(prefix)) {
         return {
             ok: false,
-            message: 'URL.parse(raw)',
         };
     }
-    const queryStart = parsed.hash.indexOf('?');
-    if (queryStart === -1) {
-        return {
-            ok: false,
-            message: 'indexOf() == -1',
-        };
-    }
-    const hash = parsed.hash.substring(queryStart);
-    const searchParams = new URLSearchParams(hash);
-    const reference = searchParams.get('reference');
-    if (!reference) {
-        return {
-            ok: false,
-            message: '!reference',
-        };
-    }
-    const segments = reference.split('/');
-    if (segments.length !== 2) {
-        return {
-            ok: false,
-            message: `segments.length (${segments.length}) != 2`,
-        };
-    }
-    if (segments[0] !== 'add') {
-        return {
-            ok: false,
-            message: `segments[0] (${segments[0]}) != 'add'`,
-        };
-    }
-    const token = segments[1];
+    const token = link.slice(prefix.length);
     return {
         ok: true,
         data: {token},
