@@ -129,14 +129,14 @@ function MarkdownAreaComponent(
                                         padding: 0,
                                     },
                                 }}>
-                                {String(children)}
+                                {String(children ?? "")}
                             </SyntaxHighlighter>
                         ) : (
                             <code {...rest} className={cn(
                                 "bg-muted text-muted-foreground p-0.5 px-1 h-full text-xs rounded-lg whitespace-normal",
                                 className,
                             )}>
-                                {String(children)}
+                                {String(children ?? "")}
                             </code>
                         )
                     },
