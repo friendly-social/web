@@ -79,7 +79,15 @@ function $importText(node: ElementNode, text: string) {
     }
 }
 
-export function convertToRichText(
+export function convertToRichText(node: LexicalNode): RichText {
+    const {markdown, entities} = convertToRichTextResursion(node);
+    return {
+        markdown: markdown.trim(),
+        entities,
+    };
+}
+
+function convertToRichTextResursion(
     node: LexicalNode,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     nonce: number = 0,
@@ -120,7 +128,7 @@ export function convertToRichText(
     }
     if ($isTextNode(node)) {
         return {
-            markdown: node.getTextContent().trim(),
+            markdown: node.getTextContent(),
             entities: [],
         };
     }
