@@ -51,7 +51,7 @@ function MarkdownAreaComponent(
             className={cn(
                 "w-full min-w-0",
                 "overflow-x-auto overflow-y-hidden scrollbar-none",
-                "break-words space-y-[1em] leading-5",
+                "break-words space-y-[1em] leading-5 py-1 -my-1",
                 className,
             )}>
             <ReactMarkdown
@@ -105,8 +105,8 @@ function MarkdownAreaComponent(
                             </table>
                         </div>
                     ),
-                    audio: ({node: _, ...props}) => (
-                        <audio controls {...props} />
+                    audio: ({className, node: _, ...props}) => (
+                        <audio className={cn("max-w-full", className)} controls {...props} />
                     ),
                     code: ({children, className, node: _, ...rest}) => {
                         const match = /language-(\w+)/.exec(className || '')
