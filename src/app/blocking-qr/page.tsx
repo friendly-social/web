@@ -218,10 +218,11 @@ type ParseLinkResult =
           message: string;
       };
 
+// TODO: add new link format
 // Add behavior locality by introducing Deeplink entity that can parse both
 // /redirect-like urls and ?reference-like URLs
 function parseLink({raw}: ParseLinkParams): ParseLinkResult {
-    // https://getfriend.ly/#?reference=add/token
+    // https://getfriend.ly/#?redirect=add/token
     const parsed = URL.parse(raw);
     if (!parsed) {
         return {
