@@ -124,7 +124,7 @@
             "nickname-empty": "Nickname cannot be empty",
             "nickname-long": "Nickname is too long (256 max)",
             "description-empty": "Description cannot be empty",
-            "description-long": "Description is too long (1024 max)",
+            "description-long": "Description is too long (10240 max)",
             "interests-too-many": "Max amount of interests is 100",
             "interest-empty": "Cannot have empty interest",
             "interest-too-long": "Interest is too long (64 max)",
@@ -245,7 +245,7 @@
         },
         "go-back": "Go back",
         "upstream": "Upstream",
-        "too-long": "Post can't be longer than 4096 chars",
+        "too-long": "Post can't be longer than 10240 chars",
         "adjuster": "Crop image",
         "copy-markdown": "Copy markdown"
     },

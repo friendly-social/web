@@ -237,8 +237,8 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
         queryFn: async () => forceUnwrap(await backend.getUserDetails2()),
     });
 
-    const textTooLong = text.markdown.length > 4096;
-    const showTextLength = text.markdown.length > 4000;
+    const textTooLong = text.markdown.length > 10240;
+    const showTextLength = text.markdown.length > 9999;
 
     const avatarUrl = useMemo(
         () =>
@@ -466,7 +466,7 @@ function CreatePostCard({className, onPostCreated}: CreatePostCardProps) {
                                 textTooLong ? 'text-destructive' : '',
                             )}
                         >
-                            {text.markdown.length} / 4096
+                            {text.markdown.length} / 10240
                         </div>
                     ) : undefined}
                     <div className="flex-1" />

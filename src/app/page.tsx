@@ -62,9 +62,9 @@ export function AuthorizedGuard() {
     }, [navigate, session.status, blockingQR.shouldBlock]);
 
     useEffect(() => {
-        if (session.status !== 'authed') return;
+        if (initialStatus !== 'authed') return;
         void users.ensureFreshSelf(app);
-    }, []);
+    }, [initialStatus]);
 
     if (initialStatus === 'authed') {
         return <Outlet />;

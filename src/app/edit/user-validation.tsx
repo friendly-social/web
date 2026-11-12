@@ -78,7 +78,7 @@ export function validateUser({
             setDescriptionError(translations('description-empty'));
             return;
         }
-        if (value.length > 1024) {
+        if (value.length > 10240) {
             setDescriptionError(translations('description-long'));
             return;
         }

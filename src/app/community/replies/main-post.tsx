@@ -117,8 +117,8 @@ export function MainPostCard({
 
     const text = useRichTextView();
 
-    const textTooLong = text.markdown.length > 4096;
-    const showTextLength = text.markdown.length > 4000;
+    const textTooLong = text.markdown.length > 10240;
+    const showTextLength = text.markdown.length > 999;
 
     const self = users.useSelf(app);
 
@@ -525,7 +525,7 @@ function InputField({
                                 textTooLong ? 'text-destructive' : '',
                             )}
                         >
-                            {text.markdown.length} / 4096
+                            {text.markdown.length} / 10240
                         </div>
                     ) : undefined}
                 </div>
