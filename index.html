@@ -12,28 +12,30 @@
         <meta name="description" content="Web client for Friendly" />
         <link
             rel="icon"
-            type="image/png"
+            type="image/svg+xml"
             href="/favicon-light.svg"
-            media="(prefers-color-scheme: light)"
+            media="(prefers-color-scheme: light) and (display-mode: browser)"
         />
         <link
             rel="icon"
-            type="image/png"
+            type="image/svg+xml"
             href="/favicon-dark.svg"
-            media="(prefers-color-scheme: dark)"
+            media="(prefers-color-scheme: dark), (display-mode: standalone)"
         />
         <meta name="apple-mobile-web-app-title" content="Friendly" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="mobile-web-app-capable" content="yes" />
+        <!-- Waiting until support of mode switching arrives to PWA. Only dark mode -->
+        <!-- is supported on PWA until then. -->
         <meta
             name="theme-color"
             content="#fcfcfc"
-            media="(prefers-color-scheme: light)"
+            media="(prefers-color-scheme: light) and (display-mode: browser)"
         />
         <meta
             name="theme-color"
             content="#191919"
-            media="(prefers-color-scheme: dark)"
+            media="(prefers-color-scheme: dark), (display-mode: standalone)"
         />
     </head>
     <body class="bg-background">

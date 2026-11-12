@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-base-to-string */
 
 import 'katex/dist/katex.min.css';
-import React, { useEffect, useState} from 'react';
+import React from 'react';
 import remarkBreaks from 'remark-breaks';
 import remarkGemoji from 'remark-gemoji';
 import rehypeRaw from 'rehype-raw';
@@ -160,35 +160,7 @@ const injectPlaintext = () => (tree: Root) => {
 };
 
 function useCodeStyle() {
-    const theme = useTheme().theme;
-    const [codeStyle, setCodeStyle] = useState(oneLight);
-
-    useEffect(() => {
-        switch (theme) {
-        case 'light':
-            setCodeStyle(oneLight);
-            return () => {};
-        case 'dark':
-            setCodeStyle(oneDark);
-            return () => {};
-        case 'system': {
-            const mediaQuery = window.matchMedia(
-                '(prefers-color-scheme: dark)',
-            );
-            const handleChange = () => {
-                setCodeStyle(
-                    window.matchMedia('(prefers-color-scheme: dark)')
-                        .matches ? oneDark : oneLight,
-                );
-            };
-            handleChange();
-            mediaQuery.addEventListener('change', handleChange);
-            return () => mediaQuery.removeEventListener('change', handleChange);
-        }
-        }
-    }, [theme]);
-
-    return codeStyle;
+    return useTheme().theme === 'light' ? oneLight : oneDark;
 }
 
 export const MarkdownArea = React.memo(MarkdownAreaComponent);

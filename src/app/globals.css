@@ -4,7 +4,11 @@
 @plugin "tailwindcss-animate";
 @plugin "tailwindcss-react-aria-components";
 
-@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant dark {
+    @media (prefers-color-scheme: dark), (display-mode: standalone) {
+        @slot;
+    }
+}
 @custom-variant label (& [data-label]);
 @custom-variant focus-input-within (&:has(input:focus));
 
@@ -78,7 +82,7 @@
     }
     html,
     body {
-        @apply m-0 p-0;
+        @apply m-0 p-0 bg-background text-foreground;
         height: 100%;
         width: 100%;
     }
@@ -125,26 +129,6 @@
 
     table {
         @apply text-xs;
-    }
-}
-
-/*
- * Dark theme that works before React.js generates page
- * You may need this in case of using
- * static builds.
- */
-@media (prefers-color-scheme: dark) {
-    body {
-        background-color: #0a0a0a;
-    }
-}
-
-@layer base {
-    * {
-        @apply border-border outline-ring/50;
-    }
-    body {
-        @apply bg-background text-foreground;
     }
 }
 
