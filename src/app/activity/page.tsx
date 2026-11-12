@@ -28,6 +28,7 @@ import {
     ActivityDetailsNewRequest,
     ActivityDetailsIndirectReplies,
     ActivityId,
+    CommunityPostDetailsPlain,
 } from '@/network/friendly-client';
 
 const MarkdownSpan = lazy(() =>
@@ -387,9 +388,15 @@ function IndirectRepliesActivityCard({
     const t = useTranslations('activity');
 
     const navigate = useNavigate();
-    const avatar = details.post.owner.avatar
-        ? createFileLink(details.post.owner.avatar)
+
+    function plainPost(): CommunityPostDetailsPlain | null {
+        return details.post.type === 'plain' ? details.post : null;
+    }
+
+    const avatar = plainPost()?.owner?.avatar
+        ? createFileLink(plainPost()!.owner.avatar!)
         : undefined;
+
     const text = t('indirect_replies');
 
     function navigateReplies(event: React.MouseEvent) {
@@ -420,7 +427,7 @@ function IndirectRepliesActivityCard({
             <span className="relative pb-2 pe-2">
                 <StyledAvatar
                     avatarClassName="w-10 h-10"
-                    nickname={details.post.owner.nickname}
+                    nickname={plainPost()?.owner?.nickname ?? '?'}
                     src={avatar}
                 />
                 <Radio
@@ -432,8 +439,13 @@ function IndirectRepliesActivityCard({
                 />
             </span>
             <span className="line-clamp-2 text-foreground break-words">
-                {text} "
-                <MarkdownSpan text={details.post.text} />"
+                {text}: "
+                {plainPost()?.text ? (
+                    <MarkdownSpan text={plainPost()!.text} />
+                ) : (
+                    t('deleted_post')
+                )}
+                "
             </span>
             <div className="flex-1" />
             <span

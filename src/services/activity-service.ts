@@ -95,10 +95,7 @@ async function setDetails(app: AppContext, values: ActivityDetails[]) {
                 case 'new_reply':
                     return [{type: 'plain' as const, ...value.post}];
                 case 'indirect_replies':
-                    return [
-                        {type: 'plain' as const, ...value.post},
-                        value.commonDenominator,
-                    ];
+                    return [{...value.post}, value.commonDenominator];
                 case 'new_request':
                     return null;
                 default:

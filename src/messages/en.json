@@ -204,6 +204,7 @@
         "load-more": "Load more",
         "reply": "Reply from <b>{nickname}</b>:",
         "indirect_replies": "New replies under",
+        "deleted_post": "Deleted post",
         "new-request": "New friend request from <b>{nickname}</b>",
         "new-friend": "<b>{nickname}</b> is your friend now",
         "just_now": "Just now",

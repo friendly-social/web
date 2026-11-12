@@ -205,6 +205,7 @@
         "load-more": "Загрузить",
         "reply": "Ответ от <b>{nickname}</b>",
         "indirect_replies": "Новые ответы под постом",
+        "deleted_post": "Удалённый пост",
         "new-request": "Новый запрос от <b>{nickname}</b>",
         "new-friend": "<b>{nickname}</b> принял запрос на дружбу",
         "just_now": "Только что",

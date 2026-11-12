@@ -772,8 +772,7 @@ export interface ActivityDetailsIndirectReplies {
     id: ActivityId;
     instant: string;
     isRead: boolean;
-    post: CommunityPostDetailsPlain;
-    newUnreadId: CommunityPostId;
+    post: CommunityPostDetails;
     commonDenominator: CommunityPostDetails;
 }
 
