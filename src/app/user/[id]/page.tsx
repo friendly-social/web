@@ -21,7 +21,6 @@ import {useTranslations} from 'use-intl';
 import {useMemo, useLayoutEffect, useEffect} from 'react';
 import {UserDetails} from '@/types/user-details';
 import {Badge} from '@/components/ui/badge';
-import {Separator} from '@/components/ui/separator';
 import {useNavigate, useParams, useLocation} from 'react-router';
 import {useFriendlyStorage} from '@/components/friendly-storage-provider';
 import {ProfileDescription} from '@/components/profile-description';
@@ -108,9 +107,11 @@ function ProfileHeader({
 function InterestsBlock({interests}: {interests: string[]}) {
     const t = useTranslations('profile');
 
+    if (interests.length === 0) return;
+
     return (
         <div className="flex flex-col gap-2">
-            <p className="text-sm font-semibold uppercase mb-2 text-foreground">
+            <p className="text-sm font-semibold uppercase text-foreground">
                 {t('interests')}
             </p>
             <div className="flex flex-row gap-2 flex-wrap">
@@ -234,17 +235,15 @@ function UserPageGuarded({userId}: UserPageGuardedProps) {
         );
     } else {
         content = (
-            <div className="flex flex-col gap-2 pb-12 p-4 sm:p-8 gap-8 w-full">
+            <div className="flex flex-col gap-2 pb-12 p-4 sm:p-8 gap-4 w-full">
                 <ProfileHeader
                     userDetails={userQuery.data.user}
                     onDecline={declineFriend}
                     onRequest={requestFriend}
                 />
-                <Separator />
                 <InterestsBlock interests={userQuery.data.user.interests} />
                 {userQuery.data.commonFriends!.length > 0 && (
                     <>
-                        <Separator />
                         <FriendsBlock
                             friends={userQuery.data.commonFriends!}
                             id={userId}
@@ -282,6 +281,11 @@ interface ActionButtonProps {
     onRequest: () => void;
 }
 
+// key is used in buttons, because there was a bug reported by Yura which
+// left 2 states at the same time and that _might_ be fixed by adding key here.
+//
+// The bug was that you click send request and it leaves both texts overlapping,
+// one being Send request and another being Request sent.
 function ActionButton({userDetails, onRequest}: ActionButtonProps) {
     const t = useTranslations('profile');
     if (userDetails.friendship === 'friends') {
@@ -289,6 +293,7 @@ function ActionButton({userDetails, onRequest}: ActionButtonProps) {
     } else if (userDetails.friendship === 'incomingRequest') {
         return (
             <Button
+                key="incomingRequest"
                 variant="secondary"
                 onClick={() => onRequest()}
                 className="grow-1 sm:grow-0 cursor-pointer"
@@ -300,6 +305,7 @@ function ActionButton({userDetails, onRequest}: ActionButtonProps) {
         return (
             <Button
                 disabled
+                key="outgoingRequest"
                 variant="secondary"
                 className="grow-1 sm:grow-0 cursor-pointer"
             >
@@ -310,6 +316,7 @@ function ActionButton({userDetails, onRequest}: ActionButtonProps) {
         return (
             <Button
                 variant="secondary"
+                key="sendRequest"
                 onClick={() => onRequest()}
                 className="grow-1 sm:grow-0 cursor-pointer"
             >

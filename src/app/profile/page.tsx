@@ -6,7 +6,6 @@ import {users} from '@/services/users-service';
 import {useAppContext} from '@/app.context';
 import {useMemo, useCallback, useEffect, useRef} from 'react';
 import {Badge} from '@/components/ui/badge';
-import {Separator} from '@/components/ui/separator';
 import {Activity, Loader2, LogOut, Pencil, QrCodeIcon} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {useNavigate, useLocation} from 'react-router';
@@ -143,7 +142,7 @@ function InterestsBlock({interests}: {interests: string[]}) {
 
     return (
         <div className="flex flex-col gap-2">
-            <p className="text-sm font-semibold uppercase mb-2 text-foreground">
+            <p className="text-sm font-semibold uppercase text-foreground">
                 {t('interests')}
             </p>
             <div className="flex flex-row gap-2 flex-wrap">
@@ -206,11 +205,9 @@ export function ProfilePage() {
         );
     } else {
         content = (
-            <div className="flex flex-col gap-2 pb-12 p-4 sm:p-8 gap-8 w-full">
+            <div className="flex flex-col gap-2 pb-12 p-4 sm:p-8 gap-4 w-full">
                 <ProfileHeader logOut={logOut} />
-                <Separator />
                 <InterestsBlock interests={user?.user?.interests ?? []} />
-                <Separator />
                 <FriendsBlock friends={friends} />
             </div>
         );

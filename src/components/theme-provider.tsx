@@ -1,4 +1,4 @@
-import {createContext, useContext, useEffect, useState} from 'react';
+import {createContext, useContext, useLayoutEffect, useState} from 'react';
 
 type Theme = 'dark' | 'light' | 'system';
 
@@ -49,7 +49,7 @@ export function ThemeProvider({
         root.classList.add(targetTheme);
     };
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         applyTheme(theme);
 
         if (theme === 'system') {

@@ -20,29 +20,27 @@ export function FriendsBlock({friends}: {friends: UserDetails[]}) {
     }));
 
     return (
-        <>
-            <div className="w-full flex flex-col gap-2">
-                <p className="flex flex-row gap-2 mb-2">
-                    <span className="flex-1 text-sm font-semibold uppercase text-foreground">
-                        {t('friends.title')}
-                    </span>
-                    <Button
-                        variant="ghost"
-                        className="text-sm text-muted-foreground font-normal hover:underline"
-                        hidden={friends.length < 1}
-                        onClick={() => void allFriends.setOpen(true)}
-                    >
-                        {t('friends.see-all')}
-                    </Button>
-                </p>
-                {friends.length > 0 ? (
-                    <List items={items} />
-                ) : (
-                    <p hidden={friends.length > 0}>{t('friends.no_friends')}</p>
-                )}
+        <div className="w-full flex flex-col gap-2">
+            <div className="flex flex-row gap-2 mb-2 items-center">
+                <span className="flex-1 text-sm font-semibold uppercase text-foreground">
+                    {t('friends.title')}
+                </span>
+                <Button
+                    variant="ghost"
+                    className="text-sm text-muted-foreground font-normal hover:underline"
+                    hidden={friends.length < 1}
+                    onClick={() => void allFriends.setOpen(true)}
+                >
+                    {t('friends.see-all')}
+                </Button>
             </div>
+            {friends.length > 0 ? (
+                <List items={items} />
+            ) : (
+                <p hidden={friends.length > 0}>{t('friends.no_friends')}</p>
+            )}
             <AllFriendsList friends={friends} />
-        </>
+        </div>
     );
 }
 
