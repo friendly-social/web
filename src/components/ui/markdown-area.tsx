@@ -51,7 +51,7 @@ function MarkdownAreaComponent(
             className={cn(
                 "w-full min-w-0",
                 "overflow-x-auto overflow-y-hidden scrollbar-none",
-                "break-words space-y-[1em] leading-5 py-1 -my-1",
+                "break-words space-y-[1em] leading-6 py-1 -my-1",
                 className,
             )}>
             <ReactMarkdown

@@ -27,7 +27,7 @@ export function FriendsBlock({friends, id}: FriendsBlockProps) {
     return (
         <>
             <div className="w-full flex flex-col gap-2">
-                <p className="flex flex-row gap-2 mb-2">
+                <div className="flex flex-row gap-2 items-center">
                     <span className="flex-1 text-sm font-semibold uppercase text-foreground">
                         {t('title')}
                     </span>
@@ -39,7 +39,7 @@ export function FriendsBlock({friends, id}: FriendsBlockProps) {
                     >
                         {t('see-all')}
                     </Button>
-                </p>
+                </div>
                 <List items={items} id={id} />
             </div>
             <AllFriendsList friends={friends} />

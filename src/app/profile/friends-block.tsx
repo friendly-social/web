@@ -21,7 +21,7 @@ export function FriendsBlock({friends}: {friends: UserDetails[]}) {
 
     return (
         <div className="w-full flex flex-col gap-2">
-            <div className="flex flex-row gap-2 mb-2 items-center">
+            <div className="flex flex-row gap-2 items-center">
                 <span className="flex-1 text-sm font-semibold uppercase text-foreground">
                     {t('friends.title')}
                 </span>
