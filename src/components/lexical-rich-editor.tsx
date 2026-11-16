@@ -92,6 +92,7 @@ export function Content({
         return editor.registerCommand(
             PASTE_COMMAND,
             event => {
+                event.preventDefault();
                 if ('clipboardData' in event) {
                     return onPaste(event);
                 }
