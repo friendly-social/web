@@ -2,10 +2,13 @@ import {initializeApp} from 'firebase/app';
 import {AppContext} from '@/app.context';
 import {
     getMessaging,
-    getToken,
     onMessage,
     MessagePayload,
+    onRegistered,
+    register,
+    unregister,
 } from 'firebase/messaging';
+import * as auth from '@/services/auth-service';
 
 // Erm... Actually, these are not private
 const firebaseConfig = {
@@ -16,32 +19,28 @@ const firebaseConfig = {
     messagingSenderId: '665338758593',
     appId: '1:665338758593:web:9674acf4e970d01c921b40',
     measurementId: 'G-R5K08P6EBR',
+    vapidKey: 'BAEj5IbZiBmuUHKNu1Z3hoM5OHEEETG63Lg7mcxxG-kX5t-r5minZEeZTFC-qlW5vYir7mSt3eruuZbr0WcORX0',
 };
 
 const firebaseApp = initializeApp(firebaseConfig);
 
-export async function main() {
+export async function main(app: AppContext) {
     const messaging = getMessaging(firebaseApp);
     onMessage(messaging, message => void postMessage(message));
+    onRegistered(messaging, token => void uploadToken(app, token));
+    await nudge(app);
 }
 
 export function request(app: AppContext) {
-    const messaging = getMessaging(firebaseApp);
-
     void window.Notification.requestPermission().then(permission => {
         if (permission !== 'granted') return;
-        void getToken(messaging, {
-            vapidKey:
-                'BAEj5IbZiBmuUHKNu1Z3hoM5OHEEETG63Lg7mcxxG-kX5t-r5minZEeZTFC-qlW5vYir7mSt3eruuZbr0WcORX0',
-        }).then(token => {
-            setFirebaseToken(token);
-            void nudge(app);
-        });
+        void nudge(app);
     });
 }
 
 /**
- * Nudging tries to upload firebase token to server. It happens in these cases:
+ * Nudging registers firebase if it is ready to be used. It may be called
+ * multiple times if qualifying requirements change.
  *
  * ø  Account sign-up / sign-in
  * |  If user logged in after authorization, we need to notify server about
@@ -49,39 +48,27 @@ export function request(app: AppContext) {
  *
  * ø  App initialization
  * |  We need to upload token if previous attempts were not successful.
- *
- * o  Firebase token change
- * |  We need to upload a new token if it was refreshed. Currently no change
- * |  callback is provided by firebase (but it will be provided in the future
- * |  versions).
  */
 export async function nudge(app: AppContext) {
-    const firebaseToken = getFirebaseToken();
-    if (!firebaseToken) return;
-    if (firebaseToken === getUploadedToken()) return;
+    if (window.Notification.permission !== 'granted') return;
+    if (auth.get(app) === undefined) return;
+    const messaging = getMessaging(firebaseApp);
+    await register(messaging, firebaseConfig);
+}
 
+async function uploadToken(app: AppContext, firebaseToken: string) {
+    if (firebaseToken === getUploadedToken()) return;
     while (true) {
         const result = await app.backend.authFirebase({firebaseToken});
         if (result.ok) break;
     }
-
     setUploadedToken(firebaseToken);
 }
 
 export function logout() {
+    const messaging = getMessaging(firebaseApp);
+    void unregister(messaging);
     setUploadedToken(null);
-}
-
-function getFirebaseToken(): string | null {
-    return localStorage.getItem('notifications.firebaseToken');
-}
-
-function setFirebaseToken(value: string | null) {
-    if (value === null) {
-        localStorage.removeItem('notifications.firebaseToken');
-    } else {
-        localStorage.setItem('notifications.firebaseToken', value);
-    }
 }
 
 function getUploadedToken(): string | null {

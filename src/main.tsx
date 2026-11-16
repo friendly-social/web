@@ -134,7 +134,7 @@ const start = performance.now();
 
 await authService.initialize(app);
 initializeBackendService(app);
-void Notifications.main();
+void Notifications.main(app);
 
 console.log(`Initialization finished in ${performance.now() - start}`);
 
