@@ -857,13 +857,16 @@ function useCreateMutation({
     return useMutation({
         mutationFn: async (props: {text: string; showKeyboard: boolean}) => {
             props.text = props.text.trim();
-
+            const continueThread =
+                details.upstream.length > 0 &&
+                details.replies.data.length === 0;
             const post = {
                 replyTo: {
                     id: details.post.id,
                     accessHash: details.post.accessHash,
                 },
                 text: props.text,
+                continueThread,
             };
             const result = await app.backend.communityPost(post);
             try {

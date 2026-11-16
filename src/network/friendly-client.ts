@@ -640,6 +640,7 @@ export type CommunityPostAccessHash = string & {
 export interface CommunityPostRequest {
     replyTo?: CommunityPostDescriptor;
     text: string;
+    continueThread?: boolean;
 }
 
 export interface CommunityListRequest {
