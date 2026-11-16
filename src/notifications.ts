@@ -19,7 +19,8 @@ const firebaseConfig = {
     messagingSenderId: '665338758593',
     appId: '1:665338758593:web:9674acf4e970d01c921b40',
     measurementId: 'G-R5K08P6EBR',
-    vapidKey: 'BAEj5IbZiBmuUHKNu1Z3hoM5OHEEETG63Lg7mcxxG-kX5t-r5minZEeZTFC-qlW5vYir7mSt3eruuZbr0WcORX0',
+    vapidKey:
+        'BAEj5IbZiBmuUHKNu1Z3hoM5OHEEETG63Lg7mcxxG-kX5t-r5minZEeZTFC-qlW5vYir7mSt3eruuZbr0WcORX0',
 };
 
 const firebaseApp = initializeApp(firebaseConfig);
