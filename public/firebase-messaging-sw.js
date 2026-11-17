@@ -53,12 +53,19 @@ async function handleMessage(payload) {
     let title;
     let body;
     let data;
+    let icon = '/pwa-icon.svg';
 
     switch (details.type) {
         case 'new_request':
             data = {
                 url: 'https://web.getfriend.ly/people',
             };
+            if (details.from.avatar) {
+                icon =
+                    'https://api.getfriend.ly/files/download/' +
+                    `${details.from.avatar.id}/` +
+                    `${details.from.avatar.accessHash}`;
+            }
             if (details.isMutual) {
                 switch (language) {
                     case 'en':
@@ -87,25 +94,44 @@ async function handleMessage(payload) {
             data = {
                 url: 'https://web.getfriend.ly/activity',
             };
+            const avatar = details.post.owner?.avatar;
+            if (avatar) {
+                icon =
+                    'https://api.getfriend.ly/files/download/' +
+                    `${avatar.id}/` +
+                    `${avatar.accessHash}`;
+            }
             switch (language) {
                 case 'en':
                     title = `New reply from ${details.post.owner.nickname}`;
-                    body = 'Click to view in browser';
+                    body = isSimpleText(details.post.text)
+                        ? details.post.text
+                        : 'Click to view in browser';
                     break;
                 case 'ru':
                     title = `Новый ответ от ${details.post.owner.nickname}`;
-                    body = 'Нажми, чтобы продолжить в браузере';
+                    body = isSimpleText(details.post.text)
+                        ? details.post.text
+                        : 'Нажми, чтобы продолжить в браузере';
                     break;
             }
     }
 
     if (title !== undefined && body !== undefined) {
-        self.registration.showNotification(title, {
-            body: body,
-            icon: '/pwa-icon.svg',
-            data,
-        });
+        self.registration.showNotification(title, {body, icon, data});
     }
+}
+
+const fancyMarkdownIndicators = ['* ', '- ', '+ ', '\n', '[', ']'];
+
+/**
+ * @param {string} text
+ * @return {boolean}
+ */
+function isSimpleText(text) {
+    return fancyMarkdownIndicators.every(
+        indicator => !text.includes(indicator),
+    );
 }
 
 async function handleClick(event) {

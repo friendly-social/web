@@ -58,30 +58,15 @@ export async function nudge(app: AppContext) {
 }
 
 async function uploadToken(app: AppContext, firebaseToken: string) {
-    if (firebaseToken === getUploadedToken()) return;
     while (true) {
         const result = await app.backend.authFirebase({firebaseToken});
         if (result.ok) break;
     }
-    setUploadedToken(firebaseToken);
 }
 
 export function logout() {
     const messaging = getMessaging(firebaseApp);
     void unregister(messaging);
-    setUploadedToken(null);
-}
-
-function getUploadedToken(): string | null {
-    return localStorage.getItem('notifications.uploadedToken');
-}
-
-function setUploadedToken(value: string | null) {
-    if (value === null) {
-        localStorage.removeItem('notifications.uploadedToken');
-    } else {
-        localStorage.setItem('notifications.uploadedToken', value);
-    }
 }
 
 async function postMessage(payload: MessagePayload) {
