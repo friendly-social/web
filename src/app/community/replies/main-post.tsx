@@ -1222,6 +1222,7 @@ function ThreadConfirmDialog({
                             {t('cancel')}
                         </Button>
                         <Button
+                            autoFocus
                             className="cursor-pointer"
                             onClick={() => void onConfirm(controller.payload!)}
                             disabled={loading}
