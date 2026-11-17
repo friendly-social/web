@@ -243,6 +243,12 @@
             "action": "Yes",
             "cancel": "Cancel"
         },
+        "thread-confirm": {
+            "title": "Creating a new thread",
+            "description": "By sending this message, you will create a new thread. It can make harder to follow conversation after this. Continue?",
+            "continue": "Continue",
+            "cancel": "Cancel"
+        },
         "go-back": "Go back",
         "upstream": "Upstream",
         "too-long": "Post can't be longer than 10240 chars",

@@ -21,7 +21,7 @@ import {useTranslations} from 'use-intl';
 import {CommunityPostDetailsPlain} from '@/network/friendly-client';
 import {StyledAvatar} from '@/components/styled-avatar';
 import {createFileLink} from '@/lib/utils';
-import {useNavigate} from 'react-router';
+import {useLocation, useNavigate} from 'react-router';
 import {useFriendlyStorage} from '@/components/friendly-storage-provider';
 import React, {
     RefObject,
@@ -57,6 +57,10 @@ import {
 import {getExtensionDependencyFromEditor} from '@lexical/extension';
 import {newPost} from '@/services/new-post-service';
 import {$createImageNode} from '@/components/lexical-image-node';
+import {useAppRouter} from '@/components/app-router-provider';
+import {StyledDialogWrapper} from '@/components/styled-dialog-wrapper';
+import {Dialog} from 'radix-ui';
+import {Spinner} from '@/components/ui/spinner';
 
 const MarkdownArea = lazy(() =>
     import('@/components/ui/markdown-area').then(m => ({
@@ -130,6 +134,8 @@ export function MainPostCard({
         onSuccess: () => editorRef.current && richEditor.clearText(editor()),
     });
 
+    const threadConfirmDialog = useThreadConfirmDialogController();
+
     const editMutation = useEditMutation({
         details,
         onSuccess: stopEditing,
@@ -174,7 +180,7 @@ export function MainPostCard({
         if (forbidSubmit) return;
         switch (action) {
             case 'send':
-                createMutation.mutate({
+                createMutationDecorator({
                     text: text.markdown,
                     showKeyboard: true,
                 });
@@ -332,6 +338,19 @@ export function MainPostCard({
         }, [action]);
     }
 
+    function createMutationDecorator(props: {
+        text: string;
+        showKeyboard: boolean;
+        confirmed?: boolean;
+    }) {
+        if (details.replies.data.length === 1 && details.upstream.length > 0) {
+            if (!props.confirmed) {
+                return void threadConfirmDialog.setPayload(props);
+            }
+        }
+        createMutation.mutate(props);
+    }
+
     return (
         <div className="scroll-m-40" ref={postRef}>
             {card}
@@ -368,7 +387,7 @@ export function MainPostCard({
                                 text.markdown.length === 0 &&
                                 action === 'send'
                             ) {
-                                createMutation.mutate({
+                                createMutationDecorator({
                                     text: emoji,
                                     showKeyboard,
                                 });
@@ -379,6 +398,13 @@ export function MainPostCard({
                     />
                 ))}
             </div>
+            <ThreadConfirmDialog
+                controller={threadConfirmDialog}
+                onConfirm={props =>
+                    createMutationDecorator({...props, confirmed: true})
+                }
+                loading={createMutation.isPending}
+            />
         </div>
     );
 }
@@ -1109,5 +1135,103 @@ function registerEnter(editor: LexicalEditor, handleSubmit: () => void) {
             return true;
         },
         COMMAND_PRIORITY_HIGH,
+    );
+}
+
+interface ThreadConfirmPayload {
+    text: string;
+    showKeyboard: boolean;
+}
+
+type ThreadConfirmDialogState = {
+    threadConfirmDialog?: ThreadConfirmPayload;
+} | null;
+
+export interface ThreadConfirmDialogController {
+    payload: ThreadConfirmPayload | null;
+    setPayload: (value: ThreadConfirmPayload | null) => Promise<void>;
+}
+
+export function useThreadConfirmDialogController(): ThreadConfirmDialogController {
+    const router = useAppRouter();
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    const payload =
+        (location.state as ThreadConfirmDialogState)?.threadConfirmDialog ??
+        null;
+
+    function setPayload(value: ThreadConfirmPayload | null) {
+        const location = router.location();
+        if (value) {
+            return navigate(location, {
+                state: {
+                    ...(location.state as object),
+                    threadConfirmDialog: value,
+                },
+            }) as Promise<void>;
+        } else {
+            return navigate(-1) as Promise<void>;
+        }
+    }
+
+    return {
+        payload,
+        setPayload,
+    };
+}
+
+interface ThreadConfirmDialogProps {
+    controller: ThreadConfirmDialogController;
+    onConfirm: (props: {text: string; showKeyboard: boolean}) => void;
+    loading: boolean;
+}
+
+function ThreadConfirmDialog({
+    controller,
+    onConfirm,
+    loading,
+}: ThreadConfirmDialogProps) {
+    const t = useTranslations('replies.thread-confirm');
+    return (
+        <StyledDialogWrapper
+            open={controller.payload !== null}
+            onOpenChange={() => void controller.setPayload(null)}
+        >
+            <div>
+                <div className="relative flex items-center mt-1 mx-1">
+                    <Dialog.Title className="w-full text-base font-semibold text-center pt-2">
+                        {t('title')}
+                    </Dialog.Title>
+
+                    <Dialog.Close className="absolute right-0 top-0" asChild>
+                        <Button variant="ghost" className="cursor-pointer">
+                            <X />
+                        </Button>
+                    </Dialog.Close>
+                </div>
+                <div className="p-4 space-y-4 flex flex-col items-center">
+                    <p className="text-center">{t('description')}</p>
+                    <div className="w-full flex gap-2 justify-between">
+                        <Button
+                            className="cursor-pointer"
+                            variant="outline"
+                            onClick={() => void controller.setPayload(null)}
+                            disabled={loading}
+                        >
+                            {t('cancel')}
+                        </Button>
+                        <Button
+                            className="cursor-pointer"
+                            onClick={() => void onConfirm(controller.payload!)}
+                            disabled={loading}
+                        >
+                            {!loading && t('continue')}
+                            {loading && <Spinner />}
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        </StyledDialogWrapper>
     );
 }
