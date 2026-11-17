@@ -204,6 +204,7 @@ function AdjusterContent({
                     {t('cancel')}
                 </Button>
                 <Button
+                    autoFocus
                     className="flex-grow cursor-pointer"
                     onClick={() => void onContinue()}
                 >
