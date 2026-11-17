@@ -343,6 +343,9 @@ importers:
       use-intl:
         specifier: ^4.14.9
         version: 4.14.9(@types/react@19.3.0)(react@19.3.1)
+      vfile:
+        specifier: ^6.0.3
+        version: 6.0.3
       zod:
         specifier: ^4.6.7
         version: 4.6.7

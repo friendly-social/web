@@ -17,6 +17,7 @@ import {oneLight} from 'react-syntax-highlighter/dist/esm/styles/prism'
 import {oneDark} from 'react-syntax-highlighter/dist/esm/styles/prism'
 import type { Root } from 'mdast';
 import { visit } from 'unist-util-visit';
+import { VFile } from 'vfile';
 
 const linkClass = cn(
     'font-medium text-primary underline underline-offset-4',
@@ -55,7 +56,7 @@ function MarkdownAreaComponent(
                 className,
             )}>
             <ReactMarkdown
-                remarkPlugins={[remarkBreaks, remarkGfm, remarkGemoji, injectPlaintext, remarkMath]}
+                remarkPlugins={[remarkBreaks, remarkGfm, remarkGemoji, injectPlaintext, avoidEmptyLists, remarkMath]}
                 rehypePlugins={[rehypeRaw, [rehypeSanitize, sanitizeSchema], rehypeKatex]}
                 components={{
                     img: ({ node: _, ...props }) => (
@@ -157,6 +158,25 @@ const injectPlaintext = () => (tree: Root) => {
   visit(tree, 'code', (node) => {
     node.lang = node.lang ?? 'plaintext';
   });
+};
+
+// Allows to render '+' or '-' literally, if nothing else is provided 
+const avoidEmptyLists = () => (tree: Root, file: VFile) => {
+    visit(tree, 'list', (node, index, parent) => {
+        if (parent === undefined) return;
+        if (index === undefined) return;
+        if (node.children.length !== 1) return;
+        const start = node?.position?.start?.offset;
+        const end = node?.position?.end?.offset;
+        if (start === undefined) return;
+        if (end === undefined) return;
+        const value = file.value.slice(start, end);
+        if (typeof value !== "string") return;
+        parent.children[index] = {
+            type: 'paragraph',
+            children: [{ type: 'text', value }],
+        };
+    })
 };
 
 function useCodeStyle() {
