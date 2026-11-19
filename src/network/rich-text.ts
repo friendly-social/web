@@ -18,7 +18,7 @@ import {unified} from 'unified';
  * Custom entities can be embedded in 2 formats:
  *
  * Markdown: ![](friendly://entity?id=0)
- * HTML: <friendly.entity id="0"></friendly.entity>
+ * HTML: <friendly-entity id="0"></friendly-entity>
  */
 export interface RichText {
     markdown: string;

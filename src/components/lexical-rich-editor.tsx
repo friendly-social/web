@@ -62,6 +62,10 @@ export function Content({
     onPaste: onUserPaste,
 }: ContentProps) {
     function onPaste(event: ClipboardEvent): boolean {
+        const files = event.clipboardData?.files?.length ?? 0;
+        if (files > 0) {
+            return onUserPaste(event);
+        }
         const html = event.clipboardData?.getData('text/html');
         if (!html) {
             return onUserPaste(event);
